@@ -12,13 +12,13 @@ class DiffModelFactory:
 
     def get_model(self):
         try:
-            return apps.get_model("nautobot-plugin-workflow-dolt", self.model_name)
+            return apps.get_model("nautobot_dolt", self.model_name)
         except LookupError:
             return self.make_model()
 
     def get_table_model(self):
         try:
-            return apps.get_model("nautobot-plugin-workflow-dolt", self.table_model_name)
+            return apps.get_model("nautobot_dolt", self.table_model_name)
         except LookupError:
             return self.make_table_model()
 
@@ -33,7 +33,7 @@ class DiffModelFactory:
     def make_model(self):
         fields = {df.name: df for df in self._get_diffable_fields()}
         props = {
-            "__module__": "nautobot.nautobot-plugin-workflow-dolt.models",
+            "__module__": "nautobot.nautobot_dolt.models",
             "_declared": timezone.now(),
             "Meta": self._model_meta(),
             "objects": RestrictedQuerySet.as_manager(),
@@ -44,7 +44,7 @@ class DiffModelFactory:
     def make_table_model(self):
         meta = self._table_model_meta(self.get_model())
         props = {
-            "__module__": "nautobot.nautobot-plugin-workflow-dolt.tables",
+            "__module__": "nautobot.nautobot_dolt.tables",
             "_declared": timezone.now(),
             "Meta": meta,
         }
@@ -52,7 +52,7 @@ class DiffModelFactory:
 
     def _model_meta(self):
         class Meta:
-            app_label = "nautobot-plugin-workflow-dolt"
+            app_label = "nautobot_dolt"
             managed = False
             db_table = self.db_view_name
             verbose_name = self.model_name

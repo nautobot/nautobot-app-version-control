@@ -3,7 +3,7 @@ from django.urls import path, include
 from nautobot.core.views import HomeView, SearchView
 from nautobot.vcs import views
 
-app_name = "nautobot-plugin-workflow-dolt"
+app_name = "nautobot_dolt"
 urlpatterns = [
     # Branches
     path("branches/", views.BranchListView.as_view(), name="branch_list"),

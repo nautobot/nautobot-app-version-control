@@ -66,7 +66,7 @@ class Branch(DoltSystemTable):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("nautobot-plugin-workflow-dolt:branch", args=[self.name])
+        return reverse("nautobot_dolt:branch", args=[self.name])
 
     def checkout_branch(self):
         """
@@ -116,7 +116,7 @@ class Commit(DoltSystemTable):
         return self.commit_hash
 
     def get_absolute_url(self):
-        return reverse("nautobot-plugin-workflow-dolt:commit", args=[self.commit_hash])
+        return reverse("nautobot_dolt:commit", args=[self.commit_hash])
 
     @property
     def parent_commits(self):

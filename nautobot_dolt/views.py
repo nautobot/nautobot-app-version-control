@@ -70,13 +70,13 @@ class BranchListView(generic.ObjectListView):
         "add",
         "merge",
     )
-    template_name = "nautobot-plugin-workflow-dolt/branch_list.html"
+    template_name = "nautobot_dolt/branch_list.html"
 
 
 class BranchEditView(generic.ObjectEditView):
     queryset = Branch.objects.all()
     model_form = forms.BranchForm
-    template_name = "nautobot-plugin-workflow-dolt/branch_edit.html"
+    template_name = "nautobot_dolt/branch_edit.html"
 
 
 class BranchDeleteView(generic.ObjectDeleteView):
@@ -104,7 +104,7 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
 class BranchMergeView(GetReturnURLMixin, View):
     queryset = Branch.objects.all()
     form = forms.MergeForm
-    template_name = "nautobot-plugin-workflow-dolt/branch_merge.html"
+    template_name = "nautobot_dolt/branch_merge.html"
 
     def get(self, request, *args, **kwargs):
         return render(
@@ -176,7 +176,7 @@ class CommitListView(generic.ObjectListView):
 class CommitEditView(generic.ObjectEditView):
     queryset = Commit.objects.all()
     model_form = forms.CommitForm
-    template_name = "nautobot-plugin-workflow-dolt/commit_edit.html"
+    template_name = "nautobot_dolt/commit_edit.html"
 
 
 class CommitDeleteView(generic.ObjectDeleteView):

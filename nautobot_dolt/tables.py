@@ -20,7 +20,7 @@ __all__ = (
 class BranchTable(BaseTable):
     pk = ToggleColumn()
     name = tables.LinkColumn()
-    hash = tables.LinkColumn("nautobot-plugin-workflow-dolt:commit", args=[A("hash")])
+    hash = tables.LinkColumn("nautobot_dolt:commit", args=[A("hash")])
     actions = ButtonsColumn(
         Branch,
         pk_field="name",
