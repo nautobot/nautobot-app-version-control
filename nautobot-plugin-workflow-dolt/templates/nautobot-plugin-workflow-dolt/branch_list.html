@@ -1,0 +1,10 @@
+{% extends 'generic/object_list.html' %}
+{% load helpers %}
+
+{% block buttons %}
+    <a href="{% url 'vcs:branch_merge' %}">
+        <div class="btn btn-warning">
+            Merge Branch
+        </div>
+    </a>
+{% endblock %}
