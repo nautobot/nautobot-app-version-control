@@ -10,12 +10,12 @@
     <div class="row noprint">
         <div class="col-sm-8 col-md-9">
             <ol class="breadcrumb">
-                <li><a href="{% url 'vcs:commit_list' %}">Commits</a></li>
+                <li><a href="{% url 'plugins:dolt_commit_list' %}">Commits</a></li>
                 <li>{{ object }}</li>
             </ol>
         </div>
         <div class="col-sm-4 col-md-3">
-            <form action="{% url 'vcs:commit_list' %}" method="get">
+            <form action="{% url 'plugins:dolt_commit_list' %}" method="get">
                 <div class="input-group">
                     <input type="text" name="q" class="form-control" placeholder="Search commits" />
                     <span class="input-group-btn">
@@ -75,6 +75,6 @@
 	</div>
 </div>
 
-{% include 'vcs/diffs.html' with results=results %}
+{% include 'nautobot_dolt/diffs.html' with results=results %}
 
 {% endblock %}

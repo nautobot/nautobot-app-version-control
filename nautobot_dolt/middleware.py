@@ -1,7 +1,7 @@
 from django.shortcuts import redirect
 
-from nautobot.vcs.contants import DOLT_BRANCH_KEYWORD, DOLT_VERSIONED_URL_PREFIXES, DOLT_DEFAULT_BRANCH
-from nautobot.vcs.models import Branch
+from nautobot_dolt.constants import DOLT_BRANCH_KEYWORD, DOLT_VERSIONED_URL_PREFIXES, DOLT_DEFAULT_BRANCH
+from nautobot_dolt.models import Branch
 
 
 class DoltMiddleware:

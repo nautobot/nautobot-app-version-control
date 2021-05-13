@@ -1,6 +1,6 @@
 from django.db import connection
 
-from nautobot.vcs.diff.factory import DiffModelFactory
+from nautobot_dolt.diff.factory import DiffModelFactory
 
 
 def diffable_content_types():

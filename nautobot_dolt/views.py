@@ -7,11 +7,11 @@ from nautobot.core.views import generic
 from nautobot.utilities.utils import normalize_querydict
 from nautobot.utilities.views import GetReturnURLMixin
 
-from nautobot.vcs import filters, forms, tables
-from nautobot.vcs.contants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
-from nautobot.vcs.diff.factory import DiffModelFactory
-from nautobot.vcs.diff.util import diffable_content_types
-from nautobot.vcs.models import Branch, Commit
+from nautobot_dolt import filters, forms, tables
+from nautobot_dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
+from nautobot_dolt.diff.factory import DiffModelFactory
+from nautobot_dolt.diff.util import diffable_content_types
+from nautobot_dolt.models import Branch, Commit
 
 
 #

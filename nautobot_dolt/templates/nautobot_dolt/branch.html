@@ -10,12 +10,12 @@
     <div class="row noprint">
         <div class="col-sm-8 col-md-9">
             <ol class="breadcrumb">
-                <li><a href="{% url 'vcs:branch_list' %}">Branches</a></li>
+                <li><a href="{% url 'plugins:dolt_branch_list' %}">Branches</a></li>
                 <li>{{ object }}</li>
             </ol>
         </div>
         <div class="col-sm-4 col-md-3">
-            <form action="{% url 'vcs:branch_list' %}" method="get">
+            <form action="{% url 'plugins:dolt_branch_list' %}" method="get">
                 <div class="input-group">
                     <input type="text" name="q" class="form-control" placeholder="Search branches" />
                     <span class="input-group-btn">
@@ -76,6 +76,6 @@
     </div>
 </div>
 
-{% include 'vcs/diffs.html' with results=results %}
+{% include 'nautobot_dolt/diffs.html' with results=results %}
 
 {% endblock %}

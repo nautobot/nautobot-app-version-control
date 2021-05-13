@@ -2,7 +2,7 @@ import django_filters
 from django.db.models import Q
 
 from nautobot.utilities.filters import BaseFilterSet
-from nautobot.vcs.models import Branch, Commit
+from nautobot_dolt.models import Branch, Commit
 
 
 class BranchFilterSet(BaseFilterSet):

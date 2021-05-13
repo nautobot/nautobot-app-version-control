@@ -6,7 +6,7 @@
             <div class="col-md-10">
                 {% for obj_type in results %}
                     <h3 id="{{ obj_type.name|lower }}">{{ obj_type.name }}</h3>
-                    {% include 'vcs/diff_panel.html' with table=obj_type.table %}
+                    {% include 'nautobot_dolt/diff_panel.html' with table=obj_type.table %}
                     <div class="clearfix"></div>
                 {% endfor %}
             </div>

@@ -2,8 +2,8 @@ import django_tables2 as tables
 from django_tables2 import A
 
 from nautobot.dcim.tables import RegionTable, ManufacturerTable
-from nautobot.vcs.contants import DOLT_BRANCH_KEYWORD
-from nautobot.vcs.models import Branch, Commit
+from nautobot_dolt.constants import DOLT_BRANCH_KEYWORD
+from nautobot_dolt.models import Branch, Commit
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
 __all__ = (
@@ -20,7 +20,7 @@ __all__ = (
 class BranchTable(BaseTable):
     pk = ToggleColumn()
     name = tables.LinkColumn()
-    hash = tables.LinkColumn("nautobot_dolt:commit", args=[A("hash")])
+    hash = tables.LinkColumn("plugins:nautobot_dolt:commit", args=[A("hash")])
     actions = ButtonsColumn(
         Branch,
         pk_field="name",

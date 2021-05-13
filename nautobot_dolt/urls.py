@@ -1,9 +1,7 @@
-from django.urls import path, include
+from django.urls import path
 
-from nautobot.core.views import HomeView, SearchView
-from nautobot.vcs import views
+from nautobot_dolt import views
 
-app_name = "nautobot_dolt"
 urlpatterns = [
     # Branches
     path("branches/", views.BranchListView.as_view(), name="branch_list"),
@@ -20,5 +18,4 @@ urlpatterns = [
     path("commits/<str:pk>/", views.CommitView.as_view(), name="commit"),
     path("commits/<str:pk>/edit/", views.CommitEditView.as_view(), name="commit_edit"),
     path("commits/<str:pk>/delete/", views.CommitDeleteView.as_view(), name="commit_delete"),
-    # Merge
 ]

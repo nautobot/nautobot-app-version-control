@@ -12,6 +12,7 @@ class DiffModelFactory:
 
     def get_model(self):
         try:
+            breakpoint()
             return apps.get_model("nautobot_dolt", self.model_name)
         except LookupError:
             return self.make_model()
