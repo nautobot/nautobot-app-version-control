@@ -1,6 +1,10 @@
 from django.shortcuts import redirect
 
-from nautobot_dolt.constants import DOLT_BRANCH_KEYWORD, DOLT_VERSIONED_URL_PREFIXES, DOLT_DEFAULT_BRANCH
+from nautobot_dolt.constants import (
+    DOLT_BRANCH_KEYWORD,
+    DOLT_VERSIONED_URL_PREFIXES,
+    DOLT_DEFAULT_BRANCH,
+)
 from nautobot_dolt.models import Branch
 
 
@@ -25,7 +29,9 @@ class DoltMiddleware:
             return False
 
         # query string param not found
-        return request.path.startswith(DOLT_VERSIONED_URL_PREFIXES) or request.path == "/"  # home page
+        return (
+            request.path.startswith(DOLT_VERSIONED_URL_PREFIXES) or request.path == "/"
+        )  # home page
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         branch = request.GET.get(DOLT_BRANCH_KEYWORD, None)

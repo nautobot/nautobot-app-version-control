@@ -39,7 +39,10 @@ class BranchView(generic.ObjectView):
             diff_factory = DiffModelFactory(dt)
             queryset = diff_factory.get_model().objects.filter(
                 Q(dolt_commit="WORKING")
-                | Q(change_type__in=("added", "after"), dolt_commit__in=commit_range[:-1])
+                | Q(
+                    change_type__in=("added", "after"),
+                    dolt_commit__in=commit_range[:-1],
+                )
                 | Q(change_type__in=("removed", "before"), dolt_commit__in=commit_range)
             )
 

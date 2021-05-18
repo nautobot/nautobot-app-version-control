@@ -10,7 +10,9 @@ from nautobot_dolt.models import Branch, Commit
 
 
 class BranchForm(forms.ModelForm, BootstrapMixin):
-    starting_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
+    starting_branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(), to_field_name="name", required=True
+    )
 
     class Meta:
         model = Branch
@@ -25,8 +27,12 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
 
 
 class MergeForm(forms.Form, BootstrapMixin):
-    dest_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
-    src_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
+    dest_branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(), to_field_name="name", required=True
+    )
+    src_branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(), to_field_name="name", required=True
+    )
 
     class Meta:
         fields = [

@@ -121,7 +121,9 @@ class Commit(DoltSystemTable):
 
     @property
     def parent_commits(self):
-        return CommitAncestor.objects.filter(commit_hash=self.commit_hash).values_list("parent_hash", flat=True)
+        return CommitAncestor.objects.filter(commit_hash=self.commit_hash).values_list(
+            "parent_hash", flat=True
+        )
 
     def save(self, *args, **kwargs):
         author = "nautobot <nautobot@ntc.com>"
