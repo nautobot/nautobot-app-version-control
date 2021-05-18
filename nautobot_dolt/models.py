@@ -117,7 +117,7 @@ class Commit(DoltSystemTable):
         return self.commit_hash
 
     def get_absolute_url(self):
-        return reverse("nautobot_dolt:commit", args=[self.commit_hash])
+        return reverse("plugins:nautobot_dolt:commit", args=[self.commit_hash])
 
     @property
     def parent_commits(self):

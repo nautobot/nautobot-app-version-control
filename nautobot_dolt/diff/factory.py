@@ -12,7 +12,6 @@ class DiffModelFactory:
 
     def get_model(self):
         try:
-            breakpoint()
             return apps.get_model("nautobot_dolt", self.model_name)
         except LookupError:
             return self.make_model()
@@ -34,7 +33,7 @@ class DiffModelFactory:
     def make_model(self):
         fields = {df.name: df for df in self._get_diffable_fields()}
         props = {
-            "__module__": "nautobot.nautobot_dolt.models",
+            "__module__": "nautobot_dolt.models",
             "_declared": timezone.now(),
             "Meta": self._model_meta(),
             "objects": RestrictedQuerySet.as_manager(),
@@ -45,7 +44,7 @@ class DiffModelFactory:
     def make_table_model(self):
         meta = self._table_model_meta(self.get_model())
         props = {
-            "__module__": "nautobot.nautobot_dolt.tables",
+            "__module__": "nautobot_dolt.tables",
             "_declared": timezone.now(),
             "Meta": meta,
         }
