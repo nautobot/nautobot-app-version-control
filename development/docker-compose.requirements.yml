@@ -1,0 +1,32 @@
+---
+version: "3.4"
+services:
+  dolt:
+    build:
+      context: "../"
+      dockerfile: "development/Dockerfile-dolt"
+    command: 
+      - dolt
+      - sql-server
+      - --config=/dolt-config.yaml
+    env_file:
+      - "dev.env"
+      - "creds.env"
+    volumes:
+      - "dolt_data:/var/lib/dolt/.dolt/noms"
+      - "./dolt-config.yaml:/dolt-config.yaml"
+    ports:
+      - "3306:3306"
+  redis:
+    image: "redis:6-alpine"
+    command:
+      - "sh"
+      - "-c"  # this is to evaluate the $REDIS_PASSWORD from the env
+      - "redis-server --appendonly yes --requirepass $$REDIS_PASSWORD"
+    env_file:
+      - "dev.env"
+      - "creds.env"
+    ports:
+      - "6379:6379"
+volumes:
+  dolt_data: {}
