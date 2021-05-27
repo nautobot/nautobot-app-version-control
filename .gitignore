@@ -1,11 +1,10 @@
 *.pyc
 *.swp
+.idea
 /site/
 /venv/
 /dist/
-/db/
 /*.sh
-!upgrade.sh
 local_requirements.txt
 fabfile.py
 gunicorn.py
@@ -13,8 +12,6 @@ invoke.yml
 nautobot.log
 nautobot.pid
 .DS_Store
-.idea
-.idea/*
 .coverage
 .vscode
 docker-compose.override.yml
