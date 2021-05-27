@@ -64,6 +64,16 @@ class Branch(DoltSystemTable):
     def get_absolute_url(self):
         return reverse("plugins:nautobot_dolt:branch", args=[self.name])
 
+    @staticmethod
+    def active_branch():
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT active_branch() FROM dual;")
+            return cursor.fetchone()[0]
+
+    @property
+    def active(self):
+        return self.name == self.active_branch()
+
     def checkout_branch(self):
         """
         Sets the database session to this branch

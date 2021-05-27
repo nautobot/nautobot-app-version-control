@@ -19,11 +19,11 @@ class DoltMiddleware:
         branch = request.GET.get(DOLT_BRANCH_KEYWORD, None)
 
         if branch:
-            # update the session cookie with the current branch
+            # update the session cookie with the active branch
             request.session[DOLT_BRANCH_KEYWORD] = branch
         elif self._is_vcs_route(request):
             # route is under version control, but no branch was specified,
-            # lookup the current branch in the session cookie.
+            # lookup the active branch in the session cookie.
             branch = request.session.get(DOLT_BRANCH_KEYWORD, DOLT_DEFAULT_BRANCH)
             # provide the `branch` query string param and redirect
             return redirect(f"{request.path}?{DOLT_BRANCH_KEYWORD}={branch}")
@@ -46,11 +46,13 @@ class DoltMiddleware:
         )
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        # lookup the current branch in the session cookie
+        # lookup the active branch in the session cookie
         branch = request.session.get(DOLT_BRANCH_KEYWORD, DOLT_DEFAULT_BRANCH)
-        # switch the database to use the current branch
+        # switch the database to use the active branch
         Branch.objects.get(pk=branch).checkout_branch()
-        # inject the "current branch" banner
-        messages.info(request, mark_safe(f"<h4>current branch: {branch}</h4>"))
+        # verify the active branch
+        active = Branch.active_branch()
+        # inject the "active branch" banner
+        messages.info(request, mark_safe(f"<h4>active branch: {active}</h4>"))
 
         return view_func(request, *view_args, **view_kwargs)

@@ -1,5 +1,4 @@
-from django.db import connection
-from django.db.models import Q, Count
+from django.db.models import Q
 from django.shortcuts import render, redirect
 from django.views import View
 
@@ -69,10 +68,7 @@ class BranchListView(generic.ObjectListView):
     filterset = filters.BranchFilterSet
     filterset_form = forms.BranchFilterForm
     table = tables.BranchTable
-    action_buttons = (
-        "add",
-        "merge",
-    )
+    action_buttons = ("add",)
     template_name = "nautobot_dolt/branch_list.html"
 
 

@@ -1,8 +1,6 @@
 import django_tables2 as tables
 from django_tables2 import A
 
-from nautobot.dcim.tables import RegionTable, ManufacturerTable
-from nautobot_dolt.constants import DOLT_BRANCH_KEYWORD
 from nautobot_dolt.models import Branch, Commit
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
@@ -16,6 +14,23 @@ __all__ = (
 # Branches
 #
 
+BRANCH_TABLE_BADGES = """
+<div>
+{% if record.active %}
+    <div class="btn btn-xs btn-success" title="active">
+        active
+    </div>
+{% else %}
+    <a href="/?branch={{ record.name }}" class="btn btn-xs btn-primary" title="checkout">
+        checkout
+    </a>
+{% endif %}
+    <a href="{% url 'plugins:nautobot_dolt:branch_merge' %}" class="btn btn-xs btn-warning" title="merge">
+        merge
+    </a>
+</div>
+"""
+
 
 class BranchTable(BaseTable):
     pk = ToggleColumn()
@@ -25,11 +40,7 @@ class BranchTable(BaseTable):
         Branch,
         pk_field="name",
         buttons=("checkout",),
-        prepend_template="""
-        <a href="/?branch={{ record.name }}" class="btn btn-primary btn-xs" title="Checkout Branch">
-            checkout
-        </a>
-        """,
+        prepend_template=BRANCH_TABLE_BADGES,
     )
 
     class Meta(BaseTable.Meta):
@@ -44,7 +55,7 @@ class BranchTable(BaseTable):
             "latest_commit_message",
             "actions",
         )
-        default_columns = fields
+        default_columns = ("active",) + fields
 
 
 #
