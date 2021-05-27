@@ -1,19 +1,14 @@
-import uuid
-
-from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, connection
 from django.urls import reverse
 
-from nautobot.core.models.generics import PrimaryModel
-from nautobot.extras.models import StatusModel
 from nautobot.utilities.querysets import RestrictedQuerySet
+
+from nautobot_dolt.querysets import CommitQuerySet
 
 __all__ = (
     "Branch",
     "Commit",
 )
-
-from nautobot_dolt.querysets import CommitQuerySet
 
 
 class DoltSystemTable(models.Model):
@@ -60,13 +55,13 @@ class Branch(DoltSystemTable):
 
     def __init__(self, *args, starting_branch=None, **kwargs):
         super().__init__(*args, **kwargs)
+        # self.user = user
         self.starting_branch = starting_branch
 
     def __str__(self):
         return self.name
 
     def get_absolute_url(self):
-        # return reverse("nautobot_dolt:branch", args=[self.name])
         return reverse("plugins:nautobot_dolt:branch", args=[self.name])
 
     def checkout_branch(self):
@@ -84,10 +79,19 @@ class Branch(DoltSystemTable):
         Commit(message=f"merged {merge_branch} into {self.name}").save()
 
     def save(self, *args, **kwargs):
-        # todo(andy): potential duplicate queries?
-        query = f"INSERT INTO dolt_branches  (name,hash) VALUES ('{self.name}',hashof('{self.starting_branch}'));"
         with connection.cursor() as cursor:
-            cursor.execute(query)
+            cursor.execute(
+                f"INSERT INTO dolt_branches (name,hash) VALUES ('{self.name}',hashof('{self.starting_branch}'));"
+            )
+        # BranchAuthor(branch=self.name, author=self.user).save()
+
+
+# class BranchAuthor(models.Model):
+#     """
+#     Branch Author
+#     """
+#     branch = models.OneToOneField(Branch, on_delete=models.CASCADE, primary_key=True)
+#     author = models.OneToOneField(User, on_delete=models.SET_NULL, null=True)
 
 
 #

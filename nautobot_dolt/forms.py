@@ -21,7 +21,12 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
             "starting_branch",
         ]
 
+    def __init__(self, *args, **kwargs):
+        # self.user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+
     def save(self, *args, **kwargs):
+        # self.instance.user = self.user
         self.instance.starting_branch = self.cleaned_data["starting_branch"]
         return super().save(*args, **kwargs)
 
