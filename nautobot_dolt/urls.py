@@ -12,7 +12,11 @@ urlpatterns = [
         views.BranchBulkDeleteView.as_view(),
         name="branch_bulk_delete",
     ),
-    path("branches/merge/", views.BranchMergeView.as_view(), name="branch_merge"),
+    path(
+        "branches/<str:src>/merge/",
+        views.BranchMergeFormView.as_view(),
+        name="branch_merge",
+    ),
     path("branches/<str:pk>/", views.BranchView.as_view(), name="branch"),
     path("branches/<str:pk>/edit/", views.BranchEditView.as_view(), name="branch_edit"),
     path(

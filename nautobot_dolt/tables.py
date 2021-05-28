@@ -25,7 +25,7 @@ BRANCH_TABLE_BADGES = """
         checkout
     </a>
 {% endif %}
-    <a href="{% url 'plugins:nautobot_dolt:branch_merge' %}" class="btn btn-xs btn-warning" title="merge">
+    <a href="{% url 'plugins:nautobot_dolt:branch_merge' src=record.pk %}" class="btn btn-xs btn-warning" title="merge">
         merge
     </a>
 </div>

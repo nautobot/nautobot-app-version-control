@@ -32,17 +32,17 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
 
 
 class MergeForm(forms.Form, BootstrapMixin):
-    dest_branch = forms.ModelChoiceField(
+    destination_branch = forms.ModelChoiceField(
         queryset=Branch.objects.all(), to_field_name="name", required=True
     )
-    src_branch = forms.ModelChoiceField(
+    source_branch = forms.ModelChoiceField(
         queryset=Branch.objects.all(), to_field_name="name", required=True
     )
 
     class Meta:
         fields = [
-            "dest_branch",
-            "src_branch",
+            "destination_branch",
+            "source_branch",
         ]
 
 

@@ -100,18 +100,55 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
 #
 
 
-class BranchMergeView(GetReturnURLMixin, View):
+class BranchMergeFormView(GetReturnURLMixin, View):
     queryset = Branch.objects.all()
     form = forms.MergeForm
     template_name = "nautobot_dolt/branch_merge.html"
 
     def get(self, request, *args, **kwargs):
+        initial = {
+            "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
+            "source_branch": Branch.objects.get(name=kwargs["src"]),
+        }
         return render(
             request,
             self.template_name,
             {
                 "obj_type": self.queryset.model._meta.verbose_name,
-                "form": self.form(initial=normalize_querydict(request.GET)),
+                "form": self.form(initial=initial),
+                "return_url": "/",
+            },
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = self.form(data=request.POST, files=request.FILES)
+        if not form.is_valid():
+            raise ValueError()
+        src = form.cleaned_data.get("source_branch")
+        dest = form.cleaned_data.get("destination_branch")
+        try:
+            Branch.objects.get(name=dest).merge(src)
+        except Exception as e:
+            breakpoint()
+            raise e
+        return redirect(f"/?{DOLT_BRANCH_KEYWORD}={dest}")
+
+
+class BranchMergePreView(GetReturnURLMixin, View):
+    queryset = Branch.objects.all()
+    form = forms.MergeForm
+    template_name = "nautobot_dolt/branch_merge.html"
+
+    def get(self, request, *args, **kwargs):
+        nd = normalize_querydict(request.GET)
+        breakpoint()
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "obj_type": self.queryset.model._meta.verbose_name,
+                "form": self.form(initial=nd),
                 "return_url": "/",
             },
         )
