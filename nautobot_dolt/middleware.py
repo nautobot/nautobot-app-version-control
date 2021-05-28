@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 
@@ -48,8 +49,11 @@ class DoltMiddleware:
     def process_view(self, request, view_func, view_args, view_kwargs):
         # lookup the active branch in the session cookie
         branch = request.session.get(DOLT_BRANCH_KEYWORD, DOLT_DEFAULT_BRANCH)
-        # switch the database to use the active branch
-        Branch.objects.get(pk=branch).checkout_branch()
+        try:
+            # switch the database to use the active branch
+            Branch.objects.get(pk=branch).checkout_branch()
+        except ObjectDoesNotExist:
+            messages.warning(request, mark_safe(f"<h4>branch not found: {branch}</h4>"))
         # verify the active branch
         active = Branch.active_branch()
         # inject the "active branch" banner

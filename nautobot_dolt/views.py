@@ -77,6 +77,26 @@ class BranchEditView(generic.ObjectEditView):
     model_form = forms.BranchForm
     template_name = "nautobot_dolt/branch_edit.html"
 
+    def get(self, request, *args, **kwargs):
+        initial = {
+            "starting_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
+        }
+        return render(
+            request,
+            self.template_name,
+            {
+                "obj_type": self.queryset.model._meta.verbose_name,
+                "form": self.model_form(initial=initial),
+            },
+        )
+
+    def post(self, request, *args, **kwargs):
+        form = self.model_form(data=request.POST, files=request.FILES)
+        if form.is_valid():
+            # todo: validate db success before updating session
+            request.session[DOLT_BRANCH_KEYWORD] = form.cleaned_data.get("name")
+        return super().post(request, *args, **kwargs)
+
 
 class BranchDeleteView(generic.ObjectDeleteView):
     queryset = Branch.objects.all()

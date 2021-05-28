@@ -10,6 +10,7 @@ from nautobot_dolt.models import Branch, Commit
 
 
 class BranchForm(forms.ModelForm, BootstrapMixin):
+    name = forms.SlugField()
     starting_branch = forms.ModelChoiceField(
         queryset=Branch.objects.all(), to_field_name="name", required=True
     )

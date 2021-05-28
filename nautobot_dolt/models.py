@@ -19,10 +19,6 @@ class DoltSystemTable(models.Model):
         abstract = True
         managed = False
 
-    @property
-    def present_in_database(self):
-        return True
-
     def validated_save(self):
         """
         Perform model validation during instance save.
@@ -64,6 +60,11 @@ class Branch(DoltSystemTable):
     def get_absolute_url(self):
         return reverse("plugins:nautobot_dolt:branch", args=[self.name])
 
+    @property
+    def present_in_database(self):
+        # determines `editing` flag in forms
+        return Branch.objects.filter(name=self.name).exists()
+
     @staticmethod
     def active_branch():
         with connection.cursor() as cursor:
@@ -93,7 +94,6 @@ class Branch(DoltSystemTable):
             cursor.execute(
                 f"INSERT INTO dolt_branches (name,hash) VALUES ('{self.name}',hashof('{self.starting_branch}'));"
             )
-        # BranchAuthor(branch=self.name, author=self.user).save()
 
 
 # class BranchAuthor(models.Model):
@@ -132,6 +132,11 @@ class Commit(DoltSystemTable):
 
     def get_absolute_url(self):
         return reverse("plugins:nautobot_dolt:commit", args=[self.commit_hash])
+
+    @property
+    def present_in_database(self):
+        # determines `editing` flag in forms
+        return Commit.objects.filter(commit_hash=self.commit_hash).exists()
 
     @property
     def parent_commits(self):
