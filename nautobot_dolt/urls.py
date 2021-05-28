@@ -17,6 +17,11 @@ urlpatterns = [
         views.BranchMergeFormView.as_view(),
         name="branch_merge",
     ),
+    path(
+        "branches/<str:src>/merge/<str:dest>",
+        views.BranchMergePreView.as_view(),
+        name="branch_merge_preview",
+    ),
     path("branches/<str:pk>/", views.BranchView.as_view(), name="branch"),
     path("branches/<str:pk>/edit/", views.BranchEditView.as_view(), name="branch_edit"),
     path(
