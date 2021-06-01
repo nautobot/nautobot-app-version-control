@@ -55,7 +55,14 @@ class BranchTable(BaseTable):
             "latest_commit_message",
             "actions",
         )
-        default_columns = ("active",) + fields
+        default_columns = (
+            "active" "pk",
+            "name",
+            "latest_committer",
+            "latest_committer_email",
+            "latest_commit_date",
+            "actions",
+        )
 
 
 #
