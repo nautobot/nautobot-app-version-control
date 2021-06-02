@@ -11,7 +11,8 @@ class NautobotDolt(PluginConfig):
     required_settings = []
     default_settings = {}
     middleware = [
-        "nautobot_dolt.middleware.DoltMiddleware",
+        "nautobot_dolt.middleware.DoltBranchMiddleware",
+        "nautobot_dolt.middleware.DoltAutoCommitMiddleware",
     ]
 
 

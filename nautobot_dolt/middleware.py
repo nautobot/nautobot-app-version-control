@@ -1,3 +1,5 @@
+import uuid
+
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
@@ -8,10 +10,11 @@ from nautobot_dolt.constants import (
     DOLT_VERSIONED_URL_PREFIXES,
     DOLT_DEFAULT_BRANCH,
 )
+from nautobot_dolt.context_managers import AutoDoltCommit
 from nautobot_dolt.models import Branch
 
 
-class DoltMiddleware:
+class DoltBranchMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -60,3 +63,19 @@ class DoltMiddleware:
         messages.info(request, mark_safe(f"<h4>active branch: {active}</h4>"))
 
         return view_func(request, *view_args, **view_kwargs)
+
+
+class DoltAutoCommitMiddleware(object):
+    """
+    adapted from nautobot.extras.middleware.ObjectChangeMiddleware
+    """
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        # Process the request with auto-dolt-commit enabled
+        with AutoDoltCommit(request):
+            response = self.get_response(request)
+
+        return response
