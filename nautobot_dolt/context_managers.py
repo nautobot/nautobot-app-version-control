@@ -60,7 +60,11 @@ class AutoDoltCommit(object):
         self.commit = True
 
     def _commit(self):
-        # todo: `DOLT_COMMIT()` with authenticated user.
         # todo: use ObjectChange to create commit message
-        # user = _get_user_if_authenticated(request, objectchange)
-        Commit(message="auto dolt commit").save()
+        Commit(message="auto dolt commit").save(author=self._get_commit_author())
+
+    def _get_commit_author(self):
+        if not self.request.user:
+            return None
+        u = self.request.user
+        return f"{u.username} <{u.email}>"

@@ -144,8 +144,10 @@ class Commit(DoltSystemTable):
             "parent_hash", flat=True
         )
 
-    def save(self, *args, **kwargs):
-        author = "nautobot <nautobot@ntc.com>"
+    def save(self, *args, author=None, **kwargs):
+        if not author:
+            author = "nautobot <nautobot@ntc.com>"
+
         with connection.cursor() as cursor:
             # todo(andy): remove '--allow-empty', check for contents
             cursor.execute(
