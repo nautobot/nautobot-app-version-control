@@ -64,7 +64,7 @@ class AutoDoltCommit(object):
         Commit(message="auto dolt commit").save(author=self._get_commit_author())
 
     def _get_commit_author(self):
-        if not self.request.user:
-            return None
-        u = self.request.user
-        return f"{u.username} <{u.email}>"
+        usr = self.request.user
+        if usr and usr.username and usr.email:
+            return f"{usr.username} <{usr.email}>"
+        return None
