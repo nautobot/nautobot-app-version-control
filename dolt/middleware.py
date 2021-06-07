@@ -5,13 +5,13 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 
-from nautobot_dolt.constants import (
+from dolt.constants import (
     DOLT_BRANCH_KEYWORD,
     DOLT_VERSIONED_URL_PREFIXES,
     DOLT_DEFAULT_BRANCH,
 )
-from nautobot_dolt.context_managers import AutoDoltCommit
-from nautobot_dolt.models import Branch
+from dolt.context_managers import AutoDoltCommit
+from dolt.models import Branch
 
 
 class DoltBranchMiddleware:

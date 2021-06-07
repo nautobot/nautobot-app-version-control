@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from django_tables2 import A
 
-from nautobot_dolt.models import Branch, Commit
+from dolt.models import Branch, Commit
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
 __all__ = (
@@ -25,7 +25,7 @@ BRANCH_TABLE_BADGES = """
         checkout
     </a>
 {% endif %}
-    <a href="{% url 'plugins:nautobot_dolt:branch_merge' src=record.pk %}" class="btn btn-xs btn-warning" title="merge">
+    <a href="{% url 'plugins:dolt:branch_merge' src=record.pk %}" class="btn btn-xs btn-warning" title="merge">
         merge
     </a>
 </div>
@@ -35,7 +35,7 @@ BRANCH_TABLE_BADGES = """
 class BranchTable(BaseTable):
     pk = ToggleColumn()
     name = tables.LinkColumn()
-    hash = tables.LinkColumn("plugins:nautobot_dolt:commit", args=[A("hash")])
+    hash = tables.LinkColumn("plugins:dolt:commit", args=[A("hash")])
     actions = ButtonsColumn(
         Branch,
         pk_field="name",

@@ -9,5 +9,5 @@ router.APIRootView = views.VCSRootView
 router.register("branches", views.BranchViewSet)
 router.register("commits", views.CommitViewSet)
 
-app_name = "nautobot_dolt-api"
+app_name = "dolt-api"
 urlpatterns = router.urls

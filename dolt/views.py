@@ -9,11 +9,11 @@ from nautobot.core.views import generic
 from nautobot.utilities.utils import normalize_querydict
 from nautobot.utilities.views import GetReturnURLMixin
 
-from nautobot_dolt import filters, forms, tables
-from nautobot_dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
-from nautobot_dolt.diff.factory import DiffModelFactory
-from nautobot_dolt.diff.util import diffable_content_types
-from nautobot_dolt.models import Branch, Commit
+from dolt import filters, forms, tables
+from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
+from dolt.diff.factory import DiffModelFactory
+from dolt.diff.util import diffable_content_types
+from dolt.models import Branch, Commit
 
 
 #
@@ -72,13 +72,13 @@ class BranchListView(generic.ObjectListView):
     filterset_form = forms.BranchFilterForm
     table = tables.BranchTable
     action_buttons = ("add",)
-    template_name = "nautobot_dolt/branch_list.html"
+    template_name = "dolt/branch_list.html"
 
 
 class BranchEditView(generic.ObjectEditView):
     queryset = Branch.objects.all()
     model_form = forms.BranchForm
-    template_name = "nautobot_dolt/branch_edit.html"
+    template_name = "dolt/branch_edit.html"
 
     def get(self, request, *args, **kwargs):
         initial = {
@@ -126,7 +126,7 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
 class BranchMergeFormView(GetReturnURLMixin, View):
     queryset = Branch.objects.all()
     form = forms.MergeForm
-    template_name = "nautobot_dolt/branch_merge.html"
+    template_name = "dolt/branch_merge.html"
 
     def get(self, request, *args, **kwargs):
         initial = {
@@ -151,7 +151,7 @@ class BranchMergeFormView(GetReturnURLMixin, View):
         # todo: don't use redirect
         return redirect(
             reverse(
-                "plugins:nautobot_dolt:branch_merge_preview",
+                "plugins:dolt:branch_merge_preview",
                 kwargs={"src": src, "dest": dest},
             )
         )
@@ -160,7 +160,7 @@ class BranchMergeFormView(GetReturnURLMixin, View):
 class BranchMergePreView(GetReturnURLMixin, View):
     queryset = Branch.objects.all()
     form = forms.MergePreviewForm
-    template_name = "nautobot_dolt/branch_merge_preview.html"
+    template_name = "dolt/branch_merge_preview.html"
 
     def get(self, request, *args, **kwargs):
         src = Branch.objects.get(name=kwargs["src"])
@@ -279,7 +279,7 @@ class CommitListView(generic.ObjectListView):
 class CommitEditView(generic.ObjectEditView):
     queryset = Commit.objects.all()
     model_form = forms.CommitForm
-    template_name = "nautobot_dolt/commit_edit.html"
+    template_name = "dolt/commit_edit.html"
 
 
 class CommitDeleteView(generic.ObjectDeleteView):

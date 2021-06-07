@@ -1,6 +1,6 @@
 from django.db import migrations, models
 
-from nautobot_dolt.diff.util import create_db_diff_views
+from dolt.diff.util import create_db_diff_views
 
 
 class Migration(migrations.Migration):

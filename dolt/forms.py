@@ -1,7 +1,7 @@
 from django import forms
 
 from nautobot.utilities.forms import BootstrapMixin
-from nautobot_dolt.models import Branch, Commit
+from dolt.models import Branch, Commit
 
 
 #

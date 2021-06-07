@@ -3,7 +3,7 @@ from django.urls import reverse
 
 from nautobot.utilities.querysets import RestrictedQuerySet
 
-from nautobot_dolt.querysets import CommitQuerySet
+from dolt.querysets import CommitQuerySet
 
 __all__ = (
     "Branch",
@@ -58,7 +58,7 @@ class Branch(DoltSystemTable):
         return self.name
 
     def get_absolute_url(self):
-        return reverse("plugins:nautobot_dolt:branch", args=[self.name])
+        return reverse("plugins:dolt:branch", args=[self.name])
 
     @property
     def present_in_database(self):
@@ -131,7 +131,7 @@ class Commit(DoltSystemTable):
         return self.commit_hash
 
     def get_absolute_url(self):
-        return reverse("plugins:nautobot_dolt:commit", args=[self.commit_hash])
+        return reverse("plugins:dolt:commit", args=[self.commit_hash])
 
     @property
     def present_in_database(self):

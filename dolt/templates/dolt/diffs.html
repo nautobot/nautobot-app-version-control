@@ -6,7 +6,7 @@
             <div class="col-md-10">
                 {% for obj_type in results %}
                     <h3 id="{{ obj_type.name|lower }}">{{ obj_type.name }}</h3>
-                    {% include 'nautobot_dolt/diff_panel.html' with table=obj_type.table %}
+                    {% include 'dolt/diff_panel.html' with table=obj_type.table %}
                     <div class="clearfix"></div>
                 {% endfor %}
             </div>
@@ -17,7 +17,7 @@
                     </div>
                     <div class="list-group">
                         {% for obj_type in results %}
-                            <a href="#{{ obj_type.name|lower }}" class="list-group-item">
+                            <a href="#{{ obj_type.name|lower }}" class="row list-group-item">
                                 {{ obj_type.name }}
                                 <span class="label label-success">{{ obj_type.added }}</span>
                                 <span class="label label-warning">{{ obj_type.modified }}</span>

@@ -1,6 +1,6 @@
 from django.db.models.signals import m2m_changed, pre_delete, post_save
 
-from nautobot_dolt.models import Commit
+from dolt.models import Commit
 
 
 class AutoDoltCommit(object):

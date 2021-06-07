@@ -1,6 +1,6 @@
 from django.urls import path
 
-from nautobot_dolt import views
+from dolt import views
 
 urlpatterns = [
     # Branches

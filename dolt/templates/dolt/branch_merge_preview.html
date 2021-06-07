@@ -42,7 +42,7 @@
     </div>
 </form>
 
-{% include 'nautobot_dolt/diffs.html' with results=results %}
+{% include 'dolt/diffs.html' with results=results %}
 
 {% if obj and settings.DOCS_ROOT %}
 {% include 'inc/modal.html' with name='docs' content=obj|get_docs %}

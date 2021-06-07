@@ -1,5 +1,5 @@
 from nautobot.core.api import ValidatedModelSerializer
-from nautobot_dolt.models import Branch, Commit
+from dolt.models import Branch, Commit
 
 
 class BranchSerializer(ValidatedModelSerializer):
