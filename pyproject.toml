@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "nautobot_dolt"
+name = "dolt"
 version = "0.1.0"
 description = ""
 authors = ["Andy Arthur <andy@dolthub.com>"]
