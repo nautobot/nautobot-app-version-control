@@ -56,11 +56,19 @@ class DoltBranchMiddleware:
             # switch the database to use the active branch
             Branch.objects.get(pk=branch).checkout_branch()
         except ObjectDoesNotExist:
-            messages.warning(request, mark_safe(f"<h4>branch not found: {branch}</h4>"))
+            messages.warning(
+                request,
+                mark_safe(
+                    f"""<h4 class="text-center">branch not found: {branch}</h4>"""
+                ),
+            )
         # verify the active branch
         active = Branch.active_branch()
         # inject the "active branch" banner
-        messages.info(request, mark_safe(f"<h4>active branch: {active}</h4>"))
+        messages.info(
+            request,
+            mark_safe(f"""<h4 class="text-center">active branch: {active}</h4>"""),
+        )
 
         return view_func(request, *view_args, **view_kwargs)
 
