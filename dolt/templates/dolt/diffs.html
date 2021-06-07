@@ -18,11 +18,13 @@
                     <div class="list-group">
                         {% for obj_type in results %}
                             <a href="#{{ obj_type.name|lower }}" class="row list-group-item">
-                                {{ obj_type.name }}
-                                <span class="label label-success">{{ obj_type.added }}</span>
-                                <span class="label label-warning">{{ obj_type.modified }}</span>
-                                <span class="label label-danger">{{ obj_type.removed }}</span>
-                                <span class="badge">{{ obj_type.table.page.paginator.count }}</span>
+                                <div class="col-md-8 align-middle">{{ obj_type.name }}</div>
+                                <div class="col-md-4">
+                                    <span class="label label-success">{{ obj_type.added }}</span>
+                                    <span class="label label-warning">{{ obj_type.modified }}</span>
+                                    <span class="label label-danger">{{ obj_type.removed }}</span>
+                                    <span class="badge">{{ obj_type.table.page.paginator.count }}</span>
+                                </div>
                             </a>
                         {% endfor %}
                     </div>
