@@ -22,9 +22,17 @@ class DoltBranchMiddleware:
     def __call__(self, request):
         return self.get_response(request)
 
+    @staticmethod
+    def _requested_branch(request):
+        if DOLT_BRANCH_KEYWORD in request.session:
+            return request.session.get(DOLT_BRANCH_KEYWORD)
+        if DOLT_BRANCH_KEYWORD in request.headers:
+            return request.headers.get(DOLT_BRANCH_KEYWORD)
+        return DOLT_DEFAULT_BRANCH
+
     def process_view(self, request, view_func, view_args, view_kwargs):
         # lookup the active branch in the session cookie
-        branch = request.session.get(DOLT_BRANCH_KEYWORD, DOLT_DEFAULT_BRANCH)
+        branch = self._requested_branch(request)
         try:
             # switch the database to use the active branch
             Branch.objects.get(pk=branch).checkout_branch()
