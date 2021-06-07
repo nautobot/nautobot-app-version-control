@@ -6,7 +6,6 @@ from django.utils.safestring import mark_safe
 from django.views import View
 
 from nautobot.core.views import generic
-from nautobot.utilities.utils import normalize_querydict
 from nautobot.utilities.views import GetReturnURLMixin
 
 from dolt import filters, forms, tables
@@ -73,6 +72,17 @@ class BranchListView(generic.ObjectListView):
     table = tables.BranchTable
     action_buttons = ("add",)
     template_name = "dolt/branch_list.html"
+
+
+class BranchCheckoutView(View):
+    queryset = Branch.objects.all()
+    model_form = forms.BranchForm
+    template_name = "dolt/branch_edit.html"
+
+    def get(self, request, *args, **kwargs):
+        # new branch will be checked out on redirect
+        request.session[DOLT_BRANCH_KEYWORD] = kwargs["pk"]
+        return redirect("/")
 
 
 class BranchEditView(generic.ObjectEditView):

@@ -23,6 +23,11 @@ urlpatterns = [
         name="branch_merge_preview",
     ),
     path("branches/<str:pk>/", views.BranchView.as_view(), name="branch"),
+    path(
+        "branches/<str:pk>/checkout/",
+        views.BranchCheckoutView.as_view(),
+        name="branch_checkout",
+    ),
     path("branches/<str:pk>/edit/", views.BranchEditView.as_view(), name="branch_edit"),
     path(
         "branches/<str:pk>/delete/",

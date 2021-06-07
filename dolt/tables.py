@@ -21,7 +21,7 @@ BRANCH_TABLE_BADGES = """
         Active
     </div>
 {% else %}
-    <a href="/?branch={{ record.name }}" class="btn btn-xs btn-primary" title="checkout">
+    <a href="{% url 'plugins:dolt:branch_checkout' pk=record.pk %}" class="btn btn-xs btn-primary" title="checkout">
         Checkout
     </a>
 {% endif %}
