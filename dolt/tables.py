@@ -18,15 +18,15 @@ BRANCH_TABLE_BADGES = """
 <div>
 {% if record.active %}
     <div class="btn btn-xs btn-success" title="active">
-        active
+        Active
     </div>
 {% else %}
     <a href="/?branch={{ record.name }}" class="btn btn-xs btn-primary" title="checkout">
-        checkout
+        Checkout
     </a>
 {% endif %}
     <a href="{% url 'plugins:dolt:branch_merge' src=record.pk %}" class="btn btn-xs btn-warning" title="merge">
-        merge
+        Merge
     </a>
 </div>
 """
