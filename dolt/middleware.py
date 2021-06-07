@@ -59,7 +59,7 @@ class DoltBranchMiddleware:
             messages.warning(
                 request,
                 mark_safe(
-                    f"""<h4 class="text-center">branch not found: {branch}</h4>"""
+                    f"""<div class="text-center">branch not found: {branch}</div>"""
                 ),
             )
         # verify the active branch
@@ -67,7 +67,7 @@ class DoltBranchMiddleware:
         # inject the "active branch" banner
         messages.info(
             request,
-            mark_safe(f"""<h4 class="text-center">active branch: {active}</h4>"""),
+            mark_safe(f"""<div class="text-center">active branch: {active}</div>"""),
         )
 
         return view_func(request, *view_args, **view_kwargs)
