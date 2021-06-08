@@ -1,4 +1,4 @@
-DOLT_BRANCH_KEYWORD = "branch"
+DOLT_BRANCH_KEYWORD = "dolt-branch"
 
 DOLT_DEFAULT_BRANCH = "master"
 
