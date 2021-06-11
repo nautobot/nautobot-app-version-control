@@ -237,17 +237,31 @@ class DiffViewTableFactory:
     def make_table_model(self):
         try:
             ModelViewTable = MODEL_VIEW_TABLES[str(self.ct)]
+
             return type(
                 self.table_model_name,
-                (ModelViewTable, DiffViewTable),
+                (ModelViewTable,),
                 {
                     "__module__": "dolt.tables",
                     "_declared": timezone.now(),
-                    "Meta": ModelViewTable._meta,
+                    "Meta": self._get_table_meta(ModelViewTable),
                 },
             )
         except KeyError as e:
             raise e
+
+    def _get_table_meta(self, table):
+        meta = table._meta
+        # add diff styling
+        meta.row_attrs = {
+            "class": lambda record: {
+                "added": "bg-success",
+                "removed": "bg-danger",
+                "before": "bg-warning",
+                "after": "bg-warning",
+            }[record.diff_type],
+        }
+        return meta
 
     @property
     def table_model_name(self):
@@ -256,7 +270,3 @@ class DiffViewTableFactory:
     @staticmethod
     def has_diff_table(content_type):
         return str(content_type) in MODEL_VIEW_TABLES
-
-
-class DiffViewTable(tables.Table):
-    pass

@@ -1,5 +1,6 @@
 from django.contrib import messages
-from django.db.models import Q
+from django.db import models
+from django.db.models import Q, F, Subquery, OuterRef, Value
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -50,8 +51,10 @@ class BranchView(generic.ObjectView):
             )
 
             # TODO: add diff annotation
-            queryset = content_type.model_class().objects.filter(
-                pk__in=list(diffs.values_list("to_id", flat=True))
+            queryset = (
+                content_type.model_class()
+                .objects.filter(pk__in=list(diffs.values_list("to_id", flat=True)))
+                .annotate(diff_type=Value("added", output_field=models.CharField()))
             )
             if not queryset.count():
                 continue
@@ -59,7 +62,7 @@ class BranchView(generic.ObjectView):
             results.append(
                 {
                     "name": f"{content_type.model_class()._meta.verbose_name.capitalize()} Diffs",
-                    "table": diff_table(queryset, orderable=False),
+                    "table": diff_table(queryset),
                     "added": diffs.filter(diff_type="added").count(),
                     "modified": diffs.filter(diff_type="before").count(),
                     "removed": diffs.filter(diff_type="removed").count(),
