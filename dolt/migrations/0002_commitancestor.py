@@ -6,21 +6,21 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('dolt', '0001_initial'),
+        ("dolt", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='CommitAncestor',
+            name="CommitAncestor",
             fields=[
-                ('commit_hash', models.TextField(primary_key=True, serialize=False)),
-                ('parent_hash', models.TextField()),
-                ('parent_index', models.IntegerField()),
+                ("commit_hash", models.TextField(primary_key=True, serialize=False)),
+                ("parent_hash", models.TextField()),
+                ("parent_index", models.IntegerField()),
             ],
             options={
-                'verbose_name_plural': 'commit_ancestors',
-                'db_table': 'dolt_commit_ancestors',
-                'managed': False,
+                "verbose_name_plural": "commit_ancestors",
+                "db_table": "dolt_commit_ancestors",
+                "managed": False,
             },
         ),
     ]

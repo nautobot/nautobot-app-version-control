@@ -1,6 +1,6 @@
 from django.db import connection
 
-from dolt.diff.factory import DiffModelFactory
+from dolt.diff.factory import OldDiffModelFactory
 
 
 def diffable_content_types():
@@ -9,22 +9,17 @@ def diffable_content_types():
     return ContentType.objects.filter(
         app_label__in=(
             "dcim",
-            "circuits",
-            "ipam",
-            "tenancy",
-            "virtualization",
+            # "circuits",
+            # "ipam",
+            # "tenancy",
+            # "virtualization",
         )
     )
-
-
-def create_diff_models():
-    for ct in diffable_content_types():
-        DiffModelFactory(ct).make_model()
 
 
 def create_db_diff_views(apps, schema_editor, **kwargs):
 
     with connection.cursor() as cursor:
         for ct in diffable_content_types():
-            view_def = DiffModelFactory(ct).db_view_definition()
+            view_def = OldDiffModelFactory(ct).db_view_definition()
             cursor.execute(view_def)

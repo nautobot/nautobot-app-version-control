@@ -1,12 +1,17 @@
+import copy
+
 from django.apps import apps
 from django.db import models
 from django.utils import timezone
+import django_tables2 as tables
 
 from nautobot.utilities.querysets import RestrictedQuerySet
 from nautobot.utilities.tables import BaseTable
 
+from dolt.diff.view_tables import MODEL_VIEW_TABLES
 
-class DiffModelFactory:
+
+class OldDiffModelFactory:
     def __init__(self, content_type):
         self.ct = content_type
 
@@ -139,3 +144,119 @@ class DiffModelFactory:
                  {self.db_diff_table_name }
             WHERE {self._src_model_pk} IS NOT NULL
         );"""
+
+
+class DiffModelFactory:
+    def __init__(self, content_type):
+        self.content_type = content_type
+
+    def get_model(self):
+        try:
+            return apps.get_model("dolt", self.model_name)
+        except LookupError:
+            return self.make_model()
+
+    def make_model(self):
+        props = {
+            "__module__": "dolt.models",
+            "_declared": timezone.now(),
+            "Meta": self._model_meta(),
+            "objects": RestrictedQuerySet.as_manager(),
+            **self._make_diff_fields(),
+        }
+        model = type(self.model_name, (models.Model,), props)
+        for f in model._meta.get_fields():
+            # back-link field references
+            f.model = model
+        return model
+
+    def _model_meta(self):
+        class Meta:
+            app_label = "dolt"
+            managed = False
+            db_table = self._dolt_diff_table_name
+            verbose_name = self.model_name
+
+        return Meta
+
+    @property
+    def model_name(self):
+        return f"diff_{self.content_type.model}"
+
+    @property
+    def _dolt_diff_table_name(self):
+        return (
+            f"dolt_commit_diff_{self.content_type.app_label}_{self.content_type.model}"
+        )
+
+    @property
+    def _model_fields(self):
+        return self.content_type.model_class()._meta.get_fields()
+
+    def _make_diff_fields(self):
+        diff_fields = [
+            models.SlugField(name="to_commit"),
+            models.DateTimeField(name="to_commit_date"),
+            models.SlugField(name="from_commit"),
+            models.DateTimeField(name="from_commit_date"),
+            models.SlugField(name="diff_type"),
+        ]
+
+        for field in self._model_fields:
+            if not field.concrete or field.is_relation:
+                continue
+            diff_fields.extend(self._diff_fields_from_field(field))
+        return {df.name: df for df in diff_fields}
+
+    def _diff_fields_from_field(self, field):
+        def clone_field(prefix):
+            field_type = type(field)
+            kwargs = {"name": f"{prefix}{field.name}"}
+            for opt in ("target_field",):
+                if opt in field.__dict__:
+                    kwargs[opt] = field.__dict__[opt]
+            try:
+                return field_type(**kwargs)
+            except TypeError as e:
+                breakpoint()
+                pass
+
+        return [clone_field(pre) for pre in ("to_", "from_")]
+
+
+class DiffViewTableFactory:
+    def __init__(self, content_type):
+        self.ct = content_type
+
+    def get_table_model(self):
+        try:
+            return apps.get_model("dolt", self.table_model_name)
+        except LookupError:
+            return self.make_table_model()
+
+    def make_table_model(self):
+        try:
+            ModelViewTable = MODEL_VIEW_TABLES[str(self.ct)]
+            return type(
+                self.table_model_name,
+                (ModelViewTable, DiffViewTable),
+                {
+                    "__module__": "dolt.tables",
+                    "_declared": timezone.now(),
+                    "Meta": ModelViewTable._meta,
+                },
+            )
+        except KeyError as e:
+            raise e
+
+    @property
+    def table_model_name(self):
+        return f"{str(self.ct)}_diff_table"
+
+    @staticmethod
+    def has_diff_table(content_type):
+        return str(content_type) in MODEL_VIEW_TABLES
+
+
+class DiffViewTable(tables.Table):
+    pass

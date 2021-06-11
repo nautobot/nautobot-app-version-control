@@ -10,7 +10,11 @@ from nautobot.utilities.views import GetReturnURLMixin
 
 from dolt import filters, forms, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
-from dolt.diff.factory import DiffModelFactory
+from dolt.diff.factory import (
+    OldDiffModelFactory,
+    DiffModelFactory,
+    DiffViewTableFactory,
+)
 from dolt.diff.util import diffable_content_types
 from dolt.models import Branch, Commit
 
@@ -31,34 +35,34 @@ class BranchView(generic.ObjectView):
                 date__gt=merge_base.date
             ).values_list("commit_hash", flat=True)
         )
-
         # todo(andy): hack to work around Dolt bug
         commit_range.append(merge_base.commit_hash)
 
         results = []
-        for dt in diffable_content_types():
-            diff_factory = DiffModelFactory(dt)
-            queryset = diff_factory.get_model().objects.filter(
-                Q(dolt_commit="WORKING")
-                | Q(
-                    change_type__in=("added", "after"),
-                    dolt_commit__in=commit_range[:-1],
-                )
-                | Q(change_type__in=("removed", "before"), dolt_commit__in=commit_range)
+        for content_type in diffable_content_types():
+            if not DiffViewTableFactory.has_diff_table(content_type):
+                continue
+            diff_table = DiffViewTableFactory(content_type).get_table_model()
+
+            diff_model = DiffModelFactory(content_type).get_model()
+            diffs = diff_model.objects.filter(
+                to_commit=commit_range[0], from_commit=commit_range[-1]
             )
 
-            # todo: factor out a common method
+            # TODO: add diff annotation
+            queryset = content_type.model_class().objects.filter(
+                pk__in=list(diffs.values_list("to_id", flat=True))
+            )
             if not queryset.count():
                 continue
 
-            table = diff_factory.make_table_model()
             results.append(
                 {
-                    "name": f"{dt.model_class()._meta.verbose_name.capitalize()} Diffs",
-                    "table": table(queryset, orderable=False),
-                    "added": queryset.filter(change_type="added").count(),
-                    "modified": queryset.filter(change_type="before").count(),
-                    "removed": queryset.filter(change_type="removed").count(),
+                    "name": f"{content_type.model_class()._meta.verbose_name.capitalize()} Diffs",
+                    "table": diff_table(queryset, orderable=False),
+                    "added": diffs.filter(diff_type="added").count(),
+                    "modified": diffs.filter(diff_type="before").count(),
+                    "removed": diffs.filter(diff_type="removed").count(),
                 }
             )
 
@@ -216,7 +220,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
 
         results = []
         for dt in diffable_content_types():
-            diff_factory = DiffModelFactory(dt)
+            diff_factory = OldDiffModelFactory(dt)
             queryset = diff_factory.get_model().objects.filter(
                 Q(dolt_commit="WORKING")
                 | Q(
@@ -254,7 +258,7 @@ class CommitView(generic.ObjectView):
     def get_extra_context(self, request, instance):
         results = []
         for dt in diffable_content_types():
-            diff_factory = DiffModelFactory(dt)
+            diff_factory = OldDiffModelFactory(dt)
             queryset = diff_factory.get_model().objects.filter(
                 Q(change_type="added", dolt_commit=instance.commit_hash)
                 | Q(change_type="removed", dolt_commit__in=instance.parent_commits)
