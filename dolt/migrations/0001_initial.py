@@ -1,7 +1,5 @@
 from django.db import migrations, models
 
-from dolt.diff.util import create_db_diff_views
-
 
 class Migration(migrations.Migration):
 
@@ -40,9 +38,5 @@ class Migration(migrations.Migration):
                 "db_table": "dolt_log",
                 "managed": False,
             },
-        ),
-        migrations.RunPython(
-            create_db_diff_views,
-            migrations.RunPython.noop,
         ),
     ]

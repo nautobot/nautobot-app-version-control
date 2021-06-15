@@ -1,6 +1,9 @@
+from contextlib import contextmanager
+
+from django.db import connection, transaction
 from django.db.models.signals import m2m_changed, pre_delete, post_save
 
-from dolt.models import Commit
+from dolt.models import Commit, Branch
 
 
 class AutoDoltCommit(object):
@@ -68,3 +71,20 @@ class AutoDoltCommit(object):
         if usr and usr.username and usr.email:
             return f"{usr.username} <{usr.email}>"
         return None
+
+
+@contextmanager
+def query_at_commit(commit):
+    try:
+        with transaction.atomic():
+            active_branch = Branch.active_branch()
+            with connection.cursor() as cursor:
+                cursor.execute(f"SET @@nautobot_head = '{commit}';")
+
+            yield
+
+            with connection.cursor() as cursor:
+                cursor.execute(f"SET @@nautobot_head = hashof('{active_branch}');")
+
+    except Exception as e:
+        raise e

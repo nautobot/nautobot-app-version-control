@@ -11,12 +11,14 @@ from nautobot.utilities.views import GetReturnURLMixin
 
 from dolt import filters, forms, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
+from dolt.context_managers import query_at_commit
 from dolt.diff.factory import (
     OldDiffModelFactory,
     DiffModelFactory,
     DiffViewTableFactory,
 )
-from dolt.diff.util import diffable_content_types
+from dolt.diff.factory import diffable_content_types
+from dolt.diff.view_tables import content_type_has_diff_view_table
 from dolt.models import Branch, Commit
 
 
@@ -36,35 +38,56 @@ class BranchView(generic.ObjectView):
                 date__gt=merge_base.date
             ).values_list("commit_hash", flat=True)
         )
+
         # todo(andy): hack to work around Dolt bug
         commit_range.append(merge_base.commit_hash)
 
         results = []
         for content_type in diffable_content_types():
-            if not DiffViewTableFactory.has_diff_table(content_type):
+            if not content_type_has_diff_view_table(content_type):
+                # todo(andy): support all content_types
                 continue
-            diff_table = DiffViewTableFactory(content_type).get_table_model()
 
-            diff_model = DiffModelFactory(content_type).get_model()
-            diffs = diff_model.objects.filter(
-                to_commit=commit_range[0], from_commit=commit_range[-1]
+            factory = DiffModelFactory(content_type)
+            diffs = factory.get_model().objects.filter(
+                from_commit=commit_range[-1], to_commit=commit_range[0]
             )
-
-            # TODO: add diff annotation
-            queryset = (
+            to_queryset = list(
                 content_type.model_class()
-                .objects.filter(pk__in=list(diffs.values_list("to_id", flat=True)))
-                .annotate(diff_type=Value("added", output_field=models.CharField()))
+                .objects.filter(pk__in=diffs.values_list("to_id", flat=True))
+                .annotate(
+                    diff_type=Subquery(
+                        diffs.filter(to_id=OuterRef("id")).values("diff_type"),
+                        output_field=models.CharField(),
+                    )
+                )
             )
-            if not queryset.count():
+            with query_at_commit(commit_range[-1]):
+                # must materialize list inside `query_at_commit()` content manager
+                from_queryset = list(
+                    content_type.model_class()
+                    .objects.filter(pk__in=diffs.values_list("from_id", flat=True))
+                    .annotate(
+                        diff_type=Subquery(
+                            diffs.filter(from_id=OuterRef("id")).values("diff_type"),
+                            output_field=models.CharField(),
+                        )
+                    )
+                )
+
+            diff_rows = sorted(
+                to_queryset + from_queryset, key=lambda d: d.pk
+            )  # sad panda
+            if not len(diff_rows):
                 continue
 
+            diff_view_table = DiffViewTableFactory(content_type).get_table_model()
             results.append(
                 {
                     "name": f"{content_type.model_class()._meta.verbose_name.capitalize()} Diffs",
-                    "table": diff_table(queryset),
+                    "table": diff_view_table(diff_rows),
                     "added": diffs.filter(diff_type="added").count(),
-                    "modified": diffs.filter(diff_type="before").count(),
+                    "modified": diffs.filter(diff_type="modified").count(),
                     "removed": diffs.filter(diff_type="removed").count(),
                 }
             )

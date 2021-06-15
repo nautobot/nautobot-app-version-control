@@ -1,14 +1,27 @@
 import copy
 
 from django.apps import apps
+from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from django.utils import timezone
-import django_tables2 as tables
 
 from nautobot.utilities.querysets import RestrictedQuerySet
 from nautobot.utilities.tables import BaseTable
 
 from dolt.diff.view_tables import MODEL_VIEW_TABLES
+
+
+def diffable_content_types():
+
+    return ContentType.objects.filter(
+        app_label__in=(
+            "dcim",
+            # "circuits",
+            "ipam",
+            # "tenancy",
+            # "virtualization",
+        )
+    )
 
 
 class OldDiffModelFactory:
@@ -174,7 +187,7 @@ class DiffModelFactory:
         class Meta:
             app_label = "dolt"
             managed = False
-            db_table = self._dolt_diff_table_name
+            db_table = self.diff_table_name
             verbose_name = self.model_name
 
         return Meta
@@ -184,9 +197,10 @@ class DiffModelFactory:
         return f"diff_{self.content_type.model}"
 
     @property
-    def _dolt_diff_table_name(self):
+    def diff_table_name(self):
         return (
             f"dolt_commit_diff_{self.content_type.app_label}_{self.content_type.model}"
+            # f"dolt_diff_{self.content_type.app_label}_{self.content_type.model}"
         )
 
     @property
@@ -212,7 +226,8 @@ class DiffModelFactory:
         def clone_field(prefix):
             field_type = type(field)
             kwargs = {"name": f"{prefix}{field.name}"}
-            for opt in ("target_field",):
+
+            for opt in ("primary_key", "target_field", "base_field"):
                 if opt in field.__dict__:
                     kwargs[opt] = field.__dict__[opt]
             try:
@@ -236,7 +251,7 @@ class DiffViewTableFactory:
 
     def make_table_model(self):
         try:
-            ModelViewTable = MODEL_VIEW_TABLES[str(self.ct)]
+            ModelViewTable = MODEL_VIEW_TABLES[self.ct.app_label][self.ct.model]
 
             return type(
                 self.table_model_name,
@@ -251,22 +266,18 @@ class DiffViewTableFactory:
             raise e
 
     def _get_table_meta(self, table):
-        meta = table._meta
+        meta = copy.deepcopy(table._meta)
         # add diff styling
         meta.row_attrs = {
             "class": lambda record: {
                 "added": "bg-success",
                 "removed": "bg-danger",
-                "before": "bg-warning",
-                "after": "bg-warning",
+                "modified": "bg-warning",
+                # None: None,
             }[record.diff_type],
         }
         return meta
 
     @property
     def table_model_name(self):
-        return f"{str(self.ct)}_diff_table"
-
-    @staticmethod
-    def has_diff_table(content_type):
-        return str(content_type) in MODEL_VIEW_TABLES
+        return f"diff_{str(self.ct.app_label)}_{str(self.ct.model)}"
