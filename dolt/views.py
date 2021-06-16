@@ -186,7 +186,7 @@ class CommitView(generic.ObjectView):
 
     def get_extra_context(self, request, instance):
         if not len(instance.parent_commits):
-            return {}  # init commit
+            return {}  # init commit has no parents
         parent = Commit.objects.get(commit_hash=instance.parent_commits[0])
         return {"results": diffs.two_dot_diffs(from_commit=parent, to_commit=instance)}
 
@@ -196,8 +196,16 @@ class CommitListView(generic.ObjectListView):
     filterset = filters.CommitFilterSet
     filterset_form = forms.CommitFilterForm
     table = tables.CommitTable
+    template_name = "dolt/commit_list.html"
     action_buttons = ("add",)
 
+    def alter_queryset(self, request):
+        # only list commits on the current branch since the merge-base
+        merge_base = Commit.objects.merge_base(DOLT_DEFAULT_BRANCH, Branch.active_branch())
+        return self.queryset.filter(date__gt=merge_base.date)
+
+    def get_extra_context(self, request, instance):
+        return {"branch": Branch.active_branch()}
 
 class CommitEditView(generic.ObjectEditView):
     queryset = Commit.objects.all()
