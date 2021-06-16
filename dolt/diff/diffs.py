@@ -50,7 +50,8 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                 diff_type=Subquery(
                     diffs.filter(to_id=OuterRef("id")).values("diff_type"),
                     output_field=models.CharField(),
-                )
+                ),
+                diff_root=Value("to", output_field=models.CharField()),
             )
         )
         with query_at_commit(from_commit):
@@ -62,7 +63,8 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                     diff_type=Subquery(
                         diffs.filter(from_id=OuterRef("id")).values("diff_type"),
                         output_field=models.CharField(),
-                    )
+                    ),
+                    diff_root=Value("from", output_field=models.CharField()),
                 )
             )
 
