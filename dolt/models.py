@@ -75,6 +75,14 @@ class Branch(DoltSystemTable):
     def active(self):
         return self.name == self.active_branch()
 
+    def head_commit_hash(self):
+        """
+        Returns the latest commit for this branch
+        """
+        with connection.cursor() as cursor:
+            cursor.execute(f"""SELECT hashof('{self.name}') FROM dual;""")
+            return cursor.fetchone()[0]
+
     def checkout_branch(self):
         """
         Sets the database session to this branch

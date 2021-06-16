@@ -39,4 +39,17 @@ class Migration(migrations.Migration):
                 "managed": False,
             },
         ),
+        migrations.CreateModel(
+            name="CommitAncestor",
+            fields=[
+                ("commit_hash", models.TextField(primary_key=True, serialize=False)),
+                ("parent_hash", models.TextField()),
+                ("parent_index", models.IntegerField()),
+            ],
+            options={
+                "verbose_name_plural": "commit_ancestors",
+                "db_table": "dolt_commit_ancestors",
+                "managed": False,
+            },
+        ),
     ]

@@ -5,6 +5,13 @@ from nautobot.tenancy import tables as tenancy_tables
 from nautobot.virtualization import tables as virtualization_tables
 
 
+def content_type_has_diff_view_table(ct):
+    return (
+        ct.app_label in MODEL_VIEW_TABLES
+        and ct.model in MODEL_VIEW_TABLES[ct.app_label]
+    )
+
+
 MODEL_VIEW_TABLES = {
     "dcim": {
         # "baseinterface": devices.BaseInterfaceTable,
@@ -85,10 +92,3 @@ MODEL_VIEW_TABLES = {
         "vminterface": virtualization_tables.VMInterfaceTable,
     },
 }
-
-
-def content_type_has_diff_view_table(ct):
-    return (
-        ct.app_label in MODEL_VIEW_TABLES
-        and ct.model in MODEL_VIEW_TABLES[ct.app_label]
-    )

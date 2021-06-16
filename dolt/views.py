@@ -12,13 +12,8 @@ from nautobot.utilities.views import GetReturnURLMixin
 from dolt import filters, forms, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
 from dolt.context_managers import query_at_commit
-from dolt.diff.factory import (
-    OldDiffModelFactory,
-    DiffModelFactory,
-    DiffViewTableFactory,
-)
-from dolt.diff.factory import diffable_content_types
-from dolt.diff.view_tables import content_type_has_diff_view_table
+from dolt.diff import diffs
+from dolt.diff.diffs import content_type_has_diff_view_table
 from dolt.models import Branch, Commit
 
 
@@ -32,67 +27,8 @@ class BranchView(generic.ObjectView):
 
     def get_extra_context(self, request, instance):
         merge_base = Commit.objects.merge_base(DOLT_DEFAULT_BRANCH, instance.name)
-        commit_range = list(
-            Commit.objects.filter(
-                # todo(andy) selecting by date-range may break for non-linear histories
-                date__gt=merge_base.date
-            ).values_list("commit_hash", flat=True)
-        )
-
-        # todo(andy): hack to work around Dolt bug
-        commit_range.append(merge_base.commit_hash)
-
-        results = []
-        for content_type in diffable_content_types():
-            if not content_type_has_diff_view_table(content_type):
-                # todo(andy): support all content_types
-                continue
-
-            factory = DiffModelFactory(content_type)
-            diffs = factory.get_model().objects.filter(
-                from_commit=commit_range[-1], to_commit=commit_range[0]
-            )
-            to_queryset = list(
-                content_type.model_class()
-                .objects.filter(pk__in=diffs.values_list("to_id", flat=True))
-                .annotate(
-                    diff_type=Subquery(
-                        diffs.filter(to_id=OuterRef("id")).values("diff_type"),
-                        output_field=models.CharField(),
-                    )
-                )
-            )
-            with query_at_commit(commit_range[-1]):
-                # must materialize list inside `query_at_commit()` content manager
-                from_queryset = list(
-                    content_type.model_class()
-                    .objects.filter(pk__in=diffs.values_list("from_id", flat=True))
-                    .annotate(
-                        diff_type=Subquery(
-                            diffs.filter(from_id=OuterRef("id")).values("diff_type"),
-                            output_field=models.CharField(),
-                        )
-                    )
-                )
-
-            diff_rows = sorted(
-                to_queryset + from_queryset, key=lambda d: d.pk
-            )  # sad panda
-            if not len(diff_rows):
-                continue
-
-            diff_view_table = DiffViewTableFactory(content_type).get_table_model()
-            results.append(
-                {
-                    "name": f"{content_type.model_class()._meta.verbose_name.capitalize()} Diffs",
-                    "table": diff_view_table(diff_rows),
-                    "added": diffs.filter(diff_type="added").count(),
-                    "modified": diffs.filter(diff_type="modified").count(),
-                    "removed": diffs.filter(diff_type="removed").count(),
-                }
-            )
-
-        return {"results": results}
+        head = instance.head_commit_hash()
+        return {"results": diffs.two_dot_diffs(from_commit=merge_base, to_commit=head)}
 
 
 class BranchListView(generic.ObjectListView):
@@ -229,48 +165,15 @@ class BranchMergePreView(GetReturnURLMixin, View):
 
         msg = f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"
         messages.info(request, mark_safe(msg))
-        return redirect(f"/?{DOLT_BRANCH_KEYWORD}={dest}")
+        return redirect(f"/")
 
     def get_extra_context(self, request, instance):
         # todo: need two-dot diff, not three-dot
-        merge_base = Commit.objects.merge_base(DOLT_DEFAULT_BRANCH, instance.name)
-        commit_range = list(
-            Commit.objects.filter(
-                # todo(andy) selecting by date-range may break for non-linear histories
-                date__gt=merge_base.date
-            ).values_list("commit_hash", flat=True)
-        )
-
-        # todo(andy): hack to work around Dolt bug
-        commit_range.append(merge_base.commit_hash)
-
-        results = []
-        for dt in diffable_content_types():
-            diff_factory = OldDiffModelFactory(dt)
-            queryset = diff_factory.get_model().objects.filter(
-                Q(dolt_commit="WORKING")
-                | Q(
-                    change_type__in=("added", "after"),
-                    dolt_commit__in=commit_range[:-1],
-                )
-                | Q(change_type__in=("removed", "before"), dolt_commit__in=commit_range)
-            )
-
-            # todo: factor out a common method
-            if not queryset.count():
-                continue
-
-            table = diff_factory.make_table_model()
-            results.append(
-                {
-                    "name": f"{dt.model_class()._meta.verbose_name.capitalize()} Diffs",
-                    "table": table(queryset, orderable=False),
-                    "added": queryset.filter(change_type="added").count(),
-                    "modified": queryset.filter(change_type="before").count(),
-                    "removed": queryset.filter(change_type="removed").count(),
-                }
-            )
-        return {"results": results}
+        dest_head = Branch.objects.get(name=DOLT_DEFAULT_BRANCH).head_commit_hash()
+        source_head = instance.head_commit_hash()
+        return {
+            "results": diffs.two_dot_diffs(from_commit=dest_head, to_commit=source_head)
+        }
 
 
 #
@@ -282,30 +185,10 @@ class CommitView(generic.ObjectView):
     queryset = Commit.objects.all()
 
     def get_extra_context(self, request, instance):
-        results = []
-        for dt in diffable_content_types():
-            diff_factory = OldDiffModelFactory(dt)
-            queryset = diff_factory.get_model().objects.filter(
-                Q(change_type="added", dolt_commit=instance.commit_hash)
-                | Q(change_type="removed", dolt_commit__in=instance.parent_commits)
-                | Q(change_type="before", dolt_commit__in=instance.parent_commits)
-                | Q(change_type="after", dolt_commit=instance.commit_hash)
-            )
-            if not queryset.count():
-                continue
-
-            table = diff_factory.make_table_model()
-            results.append(
-                {
-                    "name": f"{dt.model_class()._meta.verbose_name.capitalize()} Diffs",
-                    "table": table(queryset, orderable=False),
-                    "added": queryset.filter(change_type="added").count(),
-                    "modified": queryset.filter(change_type="before").count(),
-                    "removed": queryset.filter(change_type="removed").count(),
-                }
-            )
-
-        return {"results": results}
+        if not len(instance.parent_commits):
+            return {}  # init commit
+        parent = Commit.objects.get(commit_hash=instance.parent_commits[0])
+        return {"results": diffs.two_dot_diffs(from_commit=parent, to_commit=instance)}
 
 
 class CommitListView(generic.ObjectListView):
