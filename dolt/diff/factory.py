@@ -97,7 +97,7 @@ class DiffModelFactory:
         return [clone_field(pre) for pre in ("to_", "from_")]
 
 
-class DiffViewTableFactory:
+class DiffListViewFactory:
     def __init__(self, content_type):
         self.ct = content_type
 
@@ -115,7 +115,7 @@ class DiffViewTableFactory:
                 self.table_model_name,
                 (
                     ModelViewTable,
-                    DiffViewTableBase,
+                    DiffListViewBase,
                 ),
                 {
                     "__module__": "dolt.tables",
@@ -145,7 +145,7 @@ class DiffViewTableFactory:
         return f"diff_{str(self.ct.app_label)}_{str(self.ct.model)}"
 
 
-class DiffViewTableBase(tables.Table):
+class DiffListViewBase(tables.Table):
     diff_type = tables.Column()
 
     def render_diff_type(self, value, record):

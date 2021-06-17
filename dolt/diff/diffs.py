@@ -11,7 +11,7 @@ from nautobot.virtualization import tables as virtualization_tables
 from nautobot.utilities.querysets import RestrictedQuerySet
 from nautobot.utilities.tables import BaseTable
 
-from dolt.diff.factory import DiffModelFactory, DiffViewTableFactory
+from dolt.diff.factory import DiffModelFactory, DiffListViewFactory
 from dolt.diff.model_view_map import content_type_has_diff_view_table
 from dolt.context_managers import query_at_commit
 
@@ -72,7 +72,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
         if not len(diff_rows):
             continue
 
-        diff_view_table = DiffViewTableFactory(content_type).get_table_model()
+        diff_view_table = DiffListViewFactory(content_type).get_table_model()
         diff_results.append(
             {
                 "name": f"{factory.source_model_verbose_name} Diffs",
