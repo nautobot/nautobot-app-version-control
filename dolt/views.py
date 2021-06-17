@@ -77,10 +77,6 @@ class BranchEditView(generic.ObjectEditView):
         return super().post(request, *args, **kwargs)
 
 
-class BranchDeleteView(generic.ObjectDeleteView):
-    queryset = Branch.objects.all()
-
-
 class BranchBulkEditView(generic.BulkEditView):
     queryset = Branch.objects.all()
     filterset = filters.BranchFilterSet
@@ -90,8 +86,8 @@ class BranchBulkEditView(generic.BulkEditView):
 
 class BranchBulkDeleteView(generic.BulkDeleteView):
     queryset = Branch.objects.all()
-    filterset = filters.BranchFilterSet
     table = tables.BranchTable
+    form = forms.BranchBulkDeleteForm
 
 
 #
@@ -201,11 +197,14 @@ class CommitListView(generic.ObjectListView):
 
     def alter_queryset(self, request):
         # only list commits on the current branch since the merge-base
-        merge_base = Commit.objects.merge_base(DOLT_DEFAULT_BRANCH, Branch.active_branch())
+        merge_base = Commit.objects.merge_base(
+            DOLT_DEFAULT_BRANCH, Branch.active_branch()
+        )
         return self.queryset.filter(date__gt=merge_base.date)
 
     def get_extra_context(self, request, instance):
         return {"branch": Branch.active_branch()}
+
 
 class CommitEditView(generic.ObjectEditView):
     queryset = Commit.objects.all()

@@ -1,6 +1,7 @@
 from django import forms
 
-from nautobot.utilities.forms import BootstrapMixin
+from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
+
 from dolt.models import Branch, Commit
 
 
@@ -67,6 +68,24 @@ class MergePreviewForm(forms.Form, BootstrapMixin):
 
 
 class BranchBulkEditForm(forms.Form, BootstrapMixin):
+    class Meta:
+        model = Branch
+        fields = [
+            "name",
+        ]
+
+
+class BranchBulkDeleteForm(ConfirmationForm):
+    pk = forms.ModelMultipleChoiceField(
+        queryset=Branch.objects.all(), widget=forms.MultipleHiddenInput
+    )
+
+    def clean_pk(self):
+        data = self.cleaned_data["pk"]
+        if Branch.active_branch() in [str(b) for b in data]:
+            raise forms.ValidationError("The Active Branch can't be deleted")
+        return data
+
     class Meta:
         model = Branch
         fields = [

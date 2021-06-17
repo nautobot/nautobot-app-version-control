@@ -29,11 +29,6 @@ urlpatterns = [
         name="branch_checkout",
     ),
     path("branches/<str:pk>/edit/", views.BranchEditView.as_view(), name="branch_edit"),
-    path(
-        "branches/<str:pk>/delete/",
-        views.BranchDeleteView.as_view(),
-        name="branch_delete",
-    ),
     # Commits
     path("commits/", views.CommitListView.as_view(), name="commit_list"),
     path("commits/add/", views.CommitEditView.as_view(), name="commit_add"),
