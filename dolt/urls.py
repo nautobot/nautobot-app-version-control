@@ -39,4 +39,9 @@ urlpatterns = [
         views.CommitDeleteView.as_view(),
         name="commit_delete",
     ),
+    path(
+        "diff/<str:from_commit>/<str:to_commit>/<str:app_label>/<str:model>/<str:pk>/",
+        views.DiffDetailView.as_view(),
+        name="diff_detail",
+    ),
 ]

@@ -3,6 +3,7 @@ import copy
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 import django_tables2 as tables
@@ -58,7 +59,6 @@ class DiffModelFactory:
     def diff_table_name(self):
         return (
             f"dolt_commit_diff_{self.content_type.app_label}_{self.content_type.model}"
-            # f"dolt_diff_{self.content_type.app_label}_{self.content_type.model}"
         )
 
     @property
@@ -121,6 +121,7 @@ class DiffListViewFactory:
                     "__module__": "dolt.tables",
                     "_declared": timezone.now(),
                     "Meta": self._get_table_meta(ModelViewTable),
+                    "content_type": self.ct,
                 },
             )
         except KeyError as e:
@@ -159,8 +160,26 @@ class DiffListViewBase(tables.Table):
                 "from": "before",
                 "to": "after",
             }[record.diff_root]
+        return format_html(
+            f"""<a href="{ self.diff_detail_link(record) }">
+                <span class="label { label_class }">
+                    { value }
+                </span>
+            </a>"""
+        )
 
-        return format_html(f"""<span class="label { label_class }">{ value }</span>""")
+    def diff_detail_link(self, record):
+        ct = ContentType.objects.get_for_model(self.Meta.model)
+        return reverse(
+            "plugins:dolt:diff_detail",
+            kwargs={
+                "app_label": ct.app_label,
+                "model": ct.model,
+                "from_commit": record.from_commit,
+                "to_commit": record.to_commit,
+                "pk": record.pk,
+            },
+        )
 
     class Meta:
         abstract = True

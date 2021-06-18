@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% load buttons %}
+{% load custom_links %}
+{% load helpers %}
+{% load static %}
+{% load tz %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-7">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <strong>{{ verbose_name }}</strong>
+            </div>
+            <table class="table table-hover panel-body attr-table">
+                {% if diff_obj %}
+                    <tr>
+                        <td><strong>Field</strong></td>
+                        <td><strong>Before</strong></td>
+                        <td><strong>After</strong></td>
+                    </tr>
+                    {% for row in diff_obj %}
+                        <tr>
+                        {% for field in row %}
+                            <td>{{ field }}</td>
+                        {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% else %}
+                    <h3 class="text-muted text-center">No diffs found</h3>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

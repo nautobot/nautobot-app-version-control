@@ -1,13 +1,17 @@
 from django.contrib import messages
 from django.db import models
 from django.db.models import Q, F, Subquery, OuterRef, Value
+from django.contrib.contenttypes.models import ContentType
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views import View
 
 from nautobot.core.views import generic
-from nautobot.utilities.views import GetReturnURLMixin
+from nautobot.dcim.models.sites import Site
+from nautobot.utilities.permissions import get_permission_for_model
+from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequiredMixin
+from nautobot.utilities.utils import serialize_object
 
 from dolt import filters, forms, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
@@ -214,3 +218,63 @@ class CommitEditView(generic.ObjectEditView):
 
 class CommitDeleteView(generic.ObjectDeleteView):
     queryset = Commit.objects.all()
+
+
+#
+# Diff Detail
+#
+
+
+# todo: re-add permissions
+# class DiffDetailView(ObjectPermissionRequiredMixin, View):
+class DiffDetailView(View):
+    template_name = "dolt/diff_detail.html"
+
+    def get_required_permission(self):
+        return get_permission_for_model(Site, "view")
+
+    def get(self, request, *args, **kwargs):
+        self.model = self.get_model(kwargs)
+        return render(
+            request,
+            self.template_name,
+            {
+                "verbose_name": self.display_name(kwargs),
+                "diff_obj": self.diff_obj(kwargs),
+            },
+        )
+
+    def diff_obj(self, kwargs):
+        pk = kwargs["pk"]
+        from_commit = kwargs["from_commit"]
+        to_commit = kwargs["to_commit"]
+        qs = self.model.objects.all()
+
+        with query_at_commit(from_commit):
+            from_obj = {}
+            if qs.filter(pk=pk).exists():
+                from_obj = serialize_object(qs.get(pk=pk))
+        with query_at_commit(to_commit):
+            to_obj = {}
+            if qs.filter(pk=pk).exists():
+                to_obj = serialize_object(qs.get(pk=pk))
+
+        diff_obj = []
+        for field in self.model.csv_headers:
+            if field in from_obj or field in to_obj:
+                diff_obj.append(
+                    [
+                        field,
+                        from_obj.get(field, ""),
+                        to_obj.get(field, ""),
+                    ]
+                )
+        return diff_obj
+
+    def get_model(self, kwargs):
+        return ContentType.objects.get(
+            app_label=kwargs["app_label"], model=kwargs["model"]
+        ).model_class()
+
+    def display_name(self, kwargs):
+        return self.get_model(kwargs)._meta.verbose_name.capitalize()

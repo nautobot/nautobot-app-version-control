@@ -47,11 +47,19 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             content_type.model_class()
             .objects.filter(pk__in=diffs.values_list("to_id", flat=True))
             .annotate(
+                diff_root=Value("to", output_field=models.CharField()),
                 diff_type=Subquery(
                     diffs.filter(to_id=OuterRef("id")).values("diff_type"),
                     output_field=models.CharField(),
                 ),
-                diff_root=Value("to", output_field=models.CharField()),
+                from_commit=Subquery(
+                    diffs.filter(to_id=OuterRef("id")).values("from_commit"),
+                    output_field=models.CharField(),
+                ),
+                to_commit=Subquery(
+                    diffs.filter(to_id=OuterRef("id")).values("to_commit"),
+                    output_field=models.CharField(),
+                ),
             )
         )
         with query_at_commit(from_commit):
@@ -60,11 +68,19 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                 content_type.model_class()
                 .objects.filter(pk__in=diffs.values_list("from_id", flat=True))
                 .annotate(
+                    diff_root=Value("from", output_field=models.CharField()),
                     diff_type=Subquery(
                         diffs.filter(from_id=OuterRef("id")).values("diff_type"),
                         output_field=models.CharField(),
                     ),
-                    diff_root=Value("from", output_field=models.CharField()),
+                    from_commit=Subquery(
+                        diffs.filter(from_id=OuterRef("id")).values("from_commit"),
+                        output_field=models.CharField(),
+                    ),
+                    to_commit=Subquery(
+                        diffs.filter(from_id=OuterRef("id")).values("to_commit"),
+                        output_field=models.CharField(),
+                    ),
                 )
             )
 
