@@ -1,7 +1,10 @@
+import json
+
 from django.contrib import messages
 from django.db import models
 from django.db.models import Q, F, Subquery, OuterRef, Value
 from django.contrib.contenttypes.models import ContentType
+from django.core.serializers import serialize
 from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -9,9 +12,9 @@ from django.views import View
 
 from nautobot.core.views import generic
 from nautobot.dcim.models.sites import Site
+from nautobot.extras.utils import is_taggable
 from nautobot.utilities.permissions import get_permission_for_model
 from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequiredMixin
-from nautobot.utilities.utils import serialize_object
 
 from dolt import filters, forms, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
@@ -250,25 +253,41 @@ class DiffDetailView(View):
         to_commit = kwargs["to_commit"]
         qs = self.model.objects.all()
 
+        added, removed = False, False
         with query_at_commit(from_commit):
-            from_obj = {}
             if qs.filter(pk=pk).exists():
-                from_obj = serialize_object(qs.get(pk=pk))
+                before_obj = serialize_object(qs.get(pk=pk))
+            else:
+                before_obj, added = {}, True
         with query_at_commit(to_commit):
-            to_obj = {}
             if qs.filter(pk=pk).exists():
-                to_obj = serialize_object(qs.get(pk=pk))
+                after_obj = serialize_object(qs.get(pk=pk))
+            else:
+                after_obj, removed = {}, True
 
         diff_obj = []
         for field in self.model.csv_headers:
-            if field in from_obj or field in to_obj:
-                diff_obj.append(
-                    [
-                        field,
-                        from_obj.get(field, ""),
-                        to_obj.get(field, ""),
-                    ]
-                )
+            if field in before_obj or field in after_obj:
+                before_val = before_obj.get(field, "")
+                after_val = after_obj.get(field, "")
+
+                before_style, after_style = "", ""
+                if removed:
+                    before_style = "bg-danger"
+                elif added:
+                    after_style = "bg-success"
+                elif before_val != after_val:
+                    before_style = "bg-danger"
+                    after_style = "bg-success"
+
+                diff_obj.append({
+                    "name": field,
+                    "before_val": before_val,
+                    "before_style": before_style,
+                    "after_val": after_val,
+                    "after_style": after_style,
+                })
+
         return diff_obj
 
     def get_model(self, kwargs):
@@ -278,3 +297,39 @@ class DiffDetailView(View):
 
     def display_name(self, kwargs):
         return self.get_model(kwargs)._meta.verbose_name.capitalize()
+
+def serialize_object(obj, extra=None, exclude=None):
+    """
+    Return a generic JSON representation of an object using Django's built-in serializer. (This is used for things like
+    change logging, not the REST API.) Optionally include a dictionary to supplement the object data. A list of keys
+    can be provided to exclude them from the returned dictionary. Private fields (prefaced with an underscore) are
+    implicitly excluded.
+    """
+    breakpoint()
+    json_str = serialize("json", [obj])
+    data = json.loads(json_str)[0]["fields"]
+
+    # Include custom_field_data as "custom_fields"
+    if hasattr(obj, "_custom_field_data"):
+        data["custom_fields"] = data.pop("_custom_field_data")
+
+    # Include any tags. Check for tags cached on the instance; fall back to using the manager.
+    if is_taggable(obj):
+        tags = getattr(obj, "_tags", []) or obj.tags.all()
+        data["tags"] = [tag.name for tag in tags]
+
+    # Append any extra data
+    if extra is not None:
+        data.update(extra)
+
+    # Copy keys to list to avoid 'dictionary changed size during iteration' exception
+    for key in list(data):
+        # Private fields shouldn't be logged in the object change
+        if isinstance(key, str) and key.startswith("_"):
+            data.pop(key)
+
+        # Explicitly excluded keys
+        if isinstance(exclude, (list, tuple)) and key in exclude:
+            data.pop(key)
+
+    return data
