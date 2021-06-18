@@ -250,25 +250,41 @@ class DiffDetailView(View):
         to_commit = kwargs["to_commit"]
         qs = self.model.objects.all()
 
+        added, removed = False, False
         with query_at_commit(from_commit):
-            from_obj = {}
             if qs.filter(pk=pk).exists():
-                from_obj = serialize_object(qs.get(pk=pk))
+                before_obj = serialize_object(qs.get(pk=pk))
+            else:
+                before_obj, added = {}, True
         with query_at_commit(to_commit):
-            to_obj = {}
             if qs.filter(pk=pk).exists():
-                to_obj = serialize_object(qs.get(pk=pk))
+                after_obj = serialize_object(qs.get(pk=pk))
+            else:
+                after_obj, removed = {}, True
 
         diff_obj = []
         for field in self.model.csv_headers:
-            if field in from_obj or field in to_obj:
-                diff_obj.append(
-                    [
-                        field,
-                        from_obj.get(field, ""),
-                        to_obj.get(field, ""),
-                    ]
-                )
+            if field in before_obj or field in after_obj:
+                before_val = before_obj.get(field, "")
+                after_val = after_obj.get(field, "")
+
+                before_style, after_style = "", ""
+                if removed:
+                    before_style = "bg-danger"
+                elif added:
+                    after_style = "bg-success"
+                elif before_val != after_val:
+                    before_style = "bg-danger"
+                    after_style = "bg-success"
+
+                diff_obj.append({
+                    "name": field,
+                    "before_val": before_val,
+                    "before_style": before_style,
+                    "after_val": after_val,
+                    "after_style": after_style,
+                })
+
         return diff_obj
 
     def get_model(self, kwargs):

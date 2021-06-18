@@ -24,9 +24,15 @@
                     </tr>
                     {% for row in diff_obj %}
                         <tr>
-                        {% for field in row %}
-                            <td>{{ field }}</td>
-                        {% endfor %}
+                            <td>
+                                {{ row.name }}
+                            </td>
+                            <td class="{{ row.before_style }}">
+                                {{ row.before_val }}
+                            </td>
+                            <td class="{{ row.after_style }}">
+                                {{ row.after_val }}
+                            </td>
                         </tr>
                     {% endfor %}
                 {% else %}
