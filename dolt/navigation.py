@@ -19,13 +19,5 @@ menu_items = (
     PluginMenuItem(
         link="plugins:dolt:commit_list",
         link_text="Commits",
-        buttons=(
-            PluginMenuButton(
-                "plugins:dolt:commit_add",
-                "Create Commit",
-                "mdi mdi-plus-thick",
-                ButtonColorChoices.GREEN,
-            ),
-        ),
     ),
 )

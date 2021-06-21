@@ -200,7 +200,7 @@ class CommitListView(generic.ObjectListView):
     filterset_form = forms.CommitFilterForm
     table = tables.CommitTable
     template_name = "dolt/commit_list.html"
-    action_buttons = ("add",)
+    action_buttons = None
 
     def alter_queryset(self, request):
         if Branch.active_branch() != DOLT_DEFAULT_BRANCH:
