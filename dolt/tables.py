@@ -71,7 +71,7 @@ class BranchTable(BaseTable):
 
 
 class CommitTable(BaseTable):
-    commit_hash = tables.LinkColumn()
+    message = tables.LinkColumn()
 
     class Meta(BaseTable.Meta):
         model = Commit

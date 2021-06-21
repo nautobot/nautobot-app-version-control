@@ -11,7 +11,7 @@
         <div class="col-sm-8 col-md-9">
             <ol class="breadcrumb">
                 <li><a href="{% url 'plugins:dolt:commit_list' %}">Commits</a></li>
-                <li>{{ object }}</li>
+                <li>{{ object.message }}</li>
             </ol>
         </div>
         <div class="col-sm-4 col-md-3">
@@ -30,7 +30,7 @@
     <div class="pull-right noprint">
         {% plugin_buttons object %}
     </div>
-    <h1>{% block title %}#{{ object }}{% endblock %}</h1>
+    <h1>{% block title %}{{ object.message }}{% endblock %}</h1>
     {% include 'inc/created_updated.html' %}
     <div class="pull-right noprint">
         {% custom_links object %}

@@ -282,13 +282,15 @@ class DiffDetailView(View):
                     before_style = "bg-danger"
                     after_style = "bg-success"
 
-                diff_obj.append({
-                    "name": field,
-                    "before_val": before_val,
-                    "before_style": before_style,
-                    "after_val": after_val,
-                    "after_style": after_style,
-                })
+                diff_obj.append(
+                    {
+                        "name": field,
+                        "before_val": before_val,
+                        "before_style": before_style,
+                        "after_val": after_val,
+                        "after_style": after_style,
+                    }
+                )
 
         return diff_obj
 
@@ -299,6 +301,7 @@ class DiffDetailView(View):
 
     def display_name(self, kwargs):
         return self.get_model(kwargs)._meta.verbose_name.capitalize()
+
 
 def serialize_object(obj, extra=None, exclude=None):
     """
