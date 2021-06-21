@@ -76,10 +76,10 @@ class CommitTable(BaseTable):
     class Meta(BaseTable.Meta):
         model = Commit
         fields = (
-            "commit_hash",
+            "message",
+            "date",
             "committer",
             "email",
-            "date",
-            "message",
+            "commit_hash",
         )
         default_columns = fields

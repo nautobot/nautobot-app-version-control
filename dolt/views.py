@@ -203,11 +203,13 @@ class CommitListView(generic.ObjectListView):
     action_buttons = ("add",)
 
     def alter_queryset(self, request):
-        # only list commits on the current branch since the merge-base
-        merge_base = Commit.objects.merge_base(
-            DOLT_DEFAULT_BRANCH, Branch.active_branch()
-        )
-        return self.queryset.filter(date__gt=merge_base.date)
+        if Branch.active_branch() != DOLT_DEFAULT_BRANCH:
+            # only list commits on the current branch since the merge-base
+            merge_base = Commit.objects.merge_base(
+                DOLT_DEFAULT_BRANCH, Branch.active_branch()
+            )
+            self.queryset = self.queryset.filter(date__gt=merge_base.date)
+        return self.queryset
 
     def get_extra_context(self, request, instance):
         return {"branch": Branch.active_branch()}
