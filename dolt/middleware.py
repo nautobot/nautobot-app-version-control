@@ -43,12 +43,13 @@ class DoltBranchMiddleware:
                     f"""<div class="text-center">branch not found: {branch}</div>"""
                 ),
             )
-        # inject the "active branch" banner
-        active = Branch.active_branch()
-        messages.info(
-            request,
-            mark_safe(f"""<div class="text-center">Active Branch: {active}</div>"""),
-        )
+        if request.user.is_authenticated:
+            # inject the "active branch" banner
+            active = Branch.active_branch()
+            messages.info(
+                request,
+                mark_safe(f"""<div class="text-center">Active Branch: {active}</div>"""),
+            )
 
         return view_func(request, *view_args, **view_kwargs)
 
