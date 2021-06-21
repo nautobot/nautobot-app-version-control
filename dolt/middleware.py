@@ -48,7 +48,9 @@ class DoltBranchMiddleware:
             active = Branch.active_branch()
             messages.info(
                 request,
-                mark_safe(f"""<div class="text-center">Active Branch: {active}</div>"""),
+                mark_safe(
+                    f"""<div class="text-center">Active Branch: {active}</div>"""
+                ),
             )
 
         return view_func(request, *view_args, **view_kwargs)

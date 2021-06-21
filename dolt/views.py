@@ -175,7 +175,10 @@ class BranchMergePreView(GetReturnURLMixin, View):
         dest_head = Branch.objects.get(name=DOLT_DEFAULT_BRANCH).head_commit_hash()
         source_head = instance.head_commit_hash()
         return {
-            "results": diffs.two_dot_diffs(from_commit=dest_head, to_commit=source_head)
+            "results": diffs.two_dot_diffs(
+                from_commit=dest_head, to_commit=source_head
+            ),
+            "back_btn_url": reverse("plugins:dolt:branch_merge", args=[instance.name]),
         }
 
 
