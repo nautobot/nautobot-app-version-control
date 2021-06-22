@@ -150,23 +150,37 @@ class DiffListViewBase(tables.Table):
     diff_type = tables.Column()
 
     def render_diff_type(self, value, record):
-        label_class = {
-            "from": "label-danger",
-            "to": "label-success",
-        }[record.diff_root]
+        href = self.diff_detail_link(record)
+        if record.diff_type == "added":
+            return format_html(
+                f"""<a href="{ href }">
+                    <span class="label label-success">added</span>
+                </a>"""
+            )
+        if record.diff_type == "removed":
+            return format_html(
+                f"""<a href="{ href }">
+                    <span class="label label-danger">removed</span>
+                </a>"""
+            )
 
-        if record.diff_type == "modified":
-            value = {
-                "from": "before",
-                "to": "after",
-            }[record.diff_root]
-        return format_html(
-            f"""<a href="{ self.diff_detail_link(record) }">
-                <span class="label { label_class }">
-                    { value }
-                </span>
-            </a>"""
-        )
+        # diff_type == "modified"
+        if record.diff_root == "to":
+            return format_html(
+                f"""<a href="{ href }">
+                    <span class="label label-primary">changed</span>
+                    </br>
+                    <span class="label label-success">after</span>
+                </a>"""
+            )
+        if record.diff_root == "from":
+            return format_html(
+                f"""<a href="{ href }">
+                    <span class="label label-primary">changed</span>
+                    </br>
+                    <span class="label label-danger">before</span>
+                </a>"""
+            )
 
     def diff_detail_link(self, record):
         ct = ContentType.objects.get_for_model(self.Meta.model)
