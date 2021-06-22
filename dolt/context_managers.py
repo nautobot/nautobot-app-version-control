@@ -1,7 +1,11 @@
+from datetime import datetime, timedelta
 from contextlib import contextmanager
+import pytz
 
 from django.db import connection, transaction
 from django.db.models.signals import m2m_changed, pre_delete, post_save
+
+from nautobot.extras.models.change_logging import ObjectChange
 
 from dolt.models import Commit, Branch
 
@@ -14,19 +18,13 @@ class AutoDoltCommit(object):
     def __init__(self, request):
         self.request = request
         self.commit = False
-        # self.id = uuid.uuid4()
+        self.changes = []
 
     def __enter__(self):
         # Connect our receivers to the post_save and post_delete signals.
-        post_save.connect(
-            self._handle_changed_object, dispatch_uid="auto_dolt_commit_changed_object"
-        )
-        m2m_changed.connect(
-            self._handle_changed_object, dispatch_uid="auto_dolt_commit_changed_object"
-        )
-        pre_delete.connect(
-            self._handle_deleted_object, dispatch_uid="auto_dolt_commit_deleted_object"
-        )
+        post_save.connect(self._handle_update, dispatch_uid="dolt_commit_update")
+        m2m_changed.connect(self._handle_update, dispatch_uid="dolt_commit_update")
+        pre_delete.connect(self._handle_delete, dispatch_uid="dolt_commit_delete")
 
     def __exit__(self, type, value, traceback):
         if self.commit:
@@ -34,29 +32,23 @@ class AutoDoltCommit(object):
 
         # Disconnect change logging signals. This is necessary to avoid recording any errant
         # changes during test cleanup.
-        post_save.disconnect(
-            self._handle_changed_object, dispatch_uid="auto_dolt_commit_changed_object"
-        )
-        m2m_changed.disconnect(
-            self._handle_changed_object, dispatch_uid="auto_dolt_commit_changed_object"
-        )
-        pre_delete.disconnect(
-            self._handle_deleted_object, dispatch_uid="auto_dolt_commit_deleted_object"
-        )
+        post_save.disconnect(self._handle_update, dispatch_uid="dolt_commit_update")
+        m2m_changed.disconnect(self._handle_update, dispatch_uid="dolt_commit_update")
+        pre_delete.disconnect(self._handle_delete, dispatch_uid="dolt_commit_delete")
 
-    def _handle_changed_object(self, sender, instance, **kwargs):
+    def _handle_update(self, sender, instance, **kwargs):
         """
         Fires when an object is created or updated.
         """
-        # Queue the object for processing once the request completes
-        # todo: cleanup conditions
+        if type(instance) == ObjectChange:
+            self.changes.append(instance)
         if "created" in kwargs:
             self.commit = True
         elif kwargs.get("action") in ["post_add", "post_remove"] and kwargs["pk_set"]:
             # m2m_changed with objects added or removed
             self.commit = True
 
-    def _handle_deleted_object(self, sender, instance, **kwargs):
+    def _handle_delete(self, sender, instance, **kwargs):
         """
         Fires when an object is deleted.
         """
@@ -64,7 +56,15 @@ class AutoDoltCommit(object):
 
     def _commit(self):
         # todo: use ObjectChange to create commit message
-        Commit(message="auto dolt commit").save(author=self._get_commit_author())
+        Commit(message=self._get_commit_message()).save(
+            author=self._get_commit_author()
+        )
+
+    def _get_commit_message(self):
+        if not self.changes:
+            return "auto dolt commit"
+        self.changes = sorted(self.changes, key=lambda obj: obj.time)
+        return "; ".join([str(c) for c in self.changes])
 
     def _get_commit_author(self):
         usr = self.request.user

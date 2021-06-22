@@ -56,7 +56,6 @@ class BranchTable(BaseTable):
             "actions",
         )
         default_columns = (
-            "active" "pk",
             "name",
             "latest_committer",
             "latest_committer_email",
@@ -71,12 +70,12 @@ class BranchTable(BaseTable):
 
 
 class CommitTable(BaseTable):
-    message = tables.LinkColumn()
+    short_message = tables.LinkColumn()
 
     class Meta(BaseTable.Meta):
         model = Commit
         fields = (
-            "message",
+            "short_message",
             "date",
             "committer",
             "email",

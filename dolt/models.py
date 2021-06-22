@@ -142,6 +142,10 @@ class Commit(DoltSystemTable):
         return reverse("plugins:dolt:commit", args=[self.commit_hash])
 
     @property
+    def short_message(self):
+        return self.message.split(";")[0]
+
+    @property
     def present_in_database(self):
         # determines `editing` flag in forms
         return Commit.objects.filter(commit_hash=self.commit_hash).exists()
