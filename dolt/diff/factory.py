@@ -130,20 +130,26 @@ class DiffListViewFactory:
     def _get_table_meta(self, table):
         meta = copy.deepcopy(table._meta)
         # add diff styling
-        meta.row_attrs = {
-            "class": lambda record: {
-                "added": "bg-success",
-                "removed": "bg-danger",
-                "modified": "bg-warning",
-                # None: None,
-            }[record.diff_type],
-        }
+        meta.row_attrs = {"class": row_class_for_record}
         meta.sequence = ("diff_type", "...")
         return meta
 
     @property
     def table_model_name(self):
         return f"diff_{str(self.ct.app_label)}_{str(self.ct.model)}"
+
+
+def row_class_for_record(record):
+    if record.diff_type == "added":
+        return "bg-success"
+    if record.diff_type == "removed":
+        return "bg-danger"
+
+    # diff_type == "modified"
+    if record.diff_root == "to":
+        return "bg-warning"
+    if record.diff_root == "from":
+        return "bg-warning"
 
 
 class DiffListViewBase(tables.Table):
