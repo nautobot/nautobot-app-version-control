@@ -14,6 +14,7 @@ from nautobot.utilities.tables import BaseTable
 from dolt.diff.factory import DiffModelFactory, DiffListViewFactory
 from dolt.diff.model_view_map import content_type_has_diff_view_table
 from dolt.context_managers import query_at_commit
+from dolt.functions import JSONObject
 
 
 def diffable_content_types():
@@ -47,18 +48,16 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             content_type.model_class()
             .objects.filter(pk__in=diffs.values_list("to_id", flat=True))
             .annotate(
-                diff_root=Value("to", output_field=models.CharField()),
-                diff_type=Subquery(
-                    diffs.filter(to_id=OuterRef("id")).values("diff_type"),
-                    output_field=models.CharField(),
-                ),
-                from_commit=Subquery(
-                    diffs.filter(to_id=OuterRef("id")).values("from_commit"),
-                    output_field=models.CharField(),
-                ),
-                to_commit=Subquery(
-                    diffs.filter(to_id=OuterRef("id")).values("to_commit"),
-                    output_field=models.CharField(),
+                diff=Subquery(
+                    diffs.annotate(
+                        obj=JSONObject(
+                            root=Value("to", output_field=models.CharField()),
+                            **diff_annotation_query_fields(diffs.model),
+                        )
+                    )
+                    .filter(to_id=OuterRef("id"))
+                    .values("obj"),
+                    output_field=models.JSONField(),
                 ),
             )
         )
@@ -68,18 +67,16 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                 content_type.model_class()
                 .objects.filter(pk__in=diffs.values_list("from_id", flat=True))
                 .annotate(
-                    diff_root=Value("from", output_field=models.CharField()),
-                    diff_type=Subquery(
-                        diffs.filter(from_id=OuterRef("id")).values("diff_type"),
-                        output_field=models.CharField(),
-                    ),
-                    from_commit=Subquery(
-                        diffs.filter(from_id=OuterRef("id")).values("from_commit"),
-                        output_field=models.CharField(),
-                    ),
-                    to_commit=Subquery(
-                        diffs.filter(from_id=OuterRef("id")).values("to_commit"),
-                        output_field=models.CharField(),
+                    diff=Subquery(
+                        diffs.annotate(
+                            obj=JSONObject(
+                                root=Value("to", output_field=models.CharField()),
+                                **diff_annotation_query_fields(diffs.model),
+                            )
+                        )
+                        .filter(from_id=OuterRef("id"))
+                        .values("obj"),
+                        output_field=models.JSONField(),
                     ),
                 )
             )
@@ -99,3 +96,9 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             }
         )
     return diff_results
+
+
+def diff_annotation_query_fields(model):
+    # skip `__` names
+    names = [f.name for f in model._meta.get_fields() if "__" not in f.name]
+    return {name: F(name) for name in names}

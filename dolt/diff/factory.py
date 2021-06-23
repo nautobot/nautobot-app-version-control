@@ -6,7 +6,9 @@ from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
+
 import django_tables2 as tables
+from django_tables2.utils import call_with_appropriate
 
 from nautobot.utilities.querysets import RestrictedQuerySet
 from nautobot.utilities.tables import BaseTable
@@ -91,7 +93,6 @@ class DiffModelFactory:
             try:
                 return field_type(**kwargs)
             except TypeError as e:
-                breakpoint()
                 pass
 
         return [clone_field(pre) for pre in ("to_", "from_")]
@@ -131,7 +132,7 @@ class DiffListViewFactory:
         meta = copy.deepcopy(table._meta)
         # add diff styling
         meta.row_attrs = {"class": row_class_for_record}
-        meta.sequence = ("diff_type", "...")
+        meta.sequence = ("diff", "...")
         return meta
 
     @property
@@ -140,30 +141,48 @@ class DiffListViewFactory:
 
 
 def row_class_for_record(record):
-    if record.diff_type == "added":
+    if record.diff["diff_type"] == "added":
         return "bg-success"
-    if record.diff_type == "removed":
+    if record.diff["diff_type"] == "removed":
         return "bg-danger"
 
     # diff_type == "modified"
-    if record.diff_root == "to":
+    if record.diff["root"] == "to":
         return "bg-warning"
-    if record.diff_root == "from":
+    if record.diff["root"] == "from":
         return "bg-warning"
 
 
 class DiffListViewBase(tables.Table):
-    diff_type = tables.Column()
+    diff = tables.Column(verbose_name="Diff Type")
 
-    def render_diff_type(self, value, record):
-        href = self.diff_detail_link(record)
-        if record.diff_type == "added":
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for col in self.columns:
+            if col.name == "diff":
+                continue
+            col.render = wrap_render_func(col.render)
+
+    def render_diff(self, value, record):
+        ct = ContentType.objects.get_for_model(self.Meta.model)
+        href = reverse(
+            "plugins:dolt:diff_detail",
+            kwargs={
+                "app_label": ct.app_label,
+                "model": ct.model,
+                "from_commit": record.diff["from_commit"],
+                "to_commit": record.diff["to_commit"],
+                "pk": record.pk,
+            },
+        )
+
+        if record.diff["diff_type"] == "added":
             return format_html(
                 f"""<a href="{ href }">
                     <span class="label label-success">added</span>
                 </a>"""
             )
-        if record.diff_type == "removed":
+        if record.diff["diff_type"] == "removed":
             return format_html(
                 f"""<a href="{ href }">
                     <span class="label label-danger">removed</span>
@@ -171,7 +190,7 @@ class DiffListViewBase(tables.Table):
             )
 
         # diff_type == "modified"
-        if record.diff_root == "to":
+        if record.diff["root"] == "to":
             return format_html(
                 f"""<a href="{ href }">
                     <span class="label label-primary">changed</span>
@@ -179,7 +198,7 @@ class DiffListViewBase(tables.Table):
                     <span class="label label-success">after</span>
                 </a>"""
             )
-        if record.diff_root == "from":
+        if record.diff["root"] == "from":
             return format_html(
                 f"""<a href="{ href }">
                     <span class="label label-primary">changed</span>
@@ -188,18 +207,40 @@ class DiffListViewBase(tables.Table):
                 </a>"""
             )
 
-    def diff_detail_link(self, record):
-        ct = ContentType.objects.get_for_model(self.Meta.model)
-        return reverse(
-            "plugins:dolt:diff_detail",
-            kwargs={
-                "app_label": ct.app_label,
-                "model": ct.model,
-                "from_commit": record.from_commit,
-                "to_commit": record.to_commit,
-                "pk": record.pk,
-            },
-        )
-
     class Meta:
         abstract = True
+
+
+def wrap_render_func(fn):
+    """
+    Wraps an existing cell rendering function with diff styling
+    """
+
+    def meta_render(value, record, column, bound_column, bound_row, table):
+        # the previous render function may take any of the
+        # following args, so provide them all
+        kwargs = {
+            "value": value,
+            "record": record,
+            "column": column,
+            "bound_column": bound_column,
+            "bound_row": bound_row,
+            "table": table,
+        }
+        val = call_with_appropriate(fn, kwargs)
+
+        if bound_column.name.lower() not in record.diff:
+            return val
+
+        style = {
+            "to": "bg-success text-success",
+            "from": "bg-danger text-danger",
+        }[record.diff["root"]]
+
+        return format_html(
+            f"""<span class="{style}">
+                <b>{val}</b>
+            </span>"""
+        )
+
+    return meta_render
