@@ -80,6 +80,10 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                     ),
                 )
             )
+            # todo: convert to filter clause
+            from_queryset = [
+                r for r in from_queryset if r.diff["diff_type"] == "removed"
+            ]
 
         diff_rows = sorted(to_queryset + from_queryset, key=lambda d: d.pk)
         if not len(diff_rows):

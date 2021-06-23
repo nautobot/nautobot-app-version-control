@@ -313,7 +313,6 @@ def serialize_object(obj, extra=None, exclude=None):
     can be provided to exclude them from the returned dictionary. Private fields (prefaced with an underscore) are
     implicitly excluded.
     """
-    breakpoint()
     json_str = serialize("json", [obj])
     data = json.loads(json_str)[0]["fields"]
 

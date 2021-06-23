@@ -87,9 +87,12 @@ class DiffModelFactory:
             field_type = type(field)
             kwargs = {"name": f"{prefix}{field.name}"}
 
-            for opt in ("primary_key", "target_field", "base_field"):
-                if opt in field.__dict__:
-                    kwargs[opt] = field.__dict__[opt]
+            # copy these kwargs if they exist
+            optional = ("primary_key", "target_field", "base_field")
+            for kw in optional:
+                if kw in field.__dict__:
+                    kwargs[kw] = field.__dict__[kw]
+
             try:
                 return field_type(**kwargs)
             except TypeError as e:
@@ -131,7 +134,7 @@ class DiffListViewFactory:
     def _get_table_meta(self, table):
         meta = copy.deepcopy(table._meta)
         # add diff styling
-        meta.row_attrs = {"class": row_class_for_record}
+        meta.row_attrs = {"class": row_attrs_for_record}
         meta.sequence = ("diff", "...")
         return meta
 
@@ -140,7 +143,7 @@ class DiffListViewFactory:
         return f"diff_{str(self.ct.app_label)}_{str(self.ct.model)}"
 
 
-def row_class_for_record(record):
+def row_attrs_for_record(record):
     if record.diff["diff_type"] == "added":
         return "bg-success"
     if record.diff["diff_type"] == "removed":
@@ -160,7 +163,7 @@ class DiffListViewBase(tables.Table):
         super().__init__(*args, **kwargs)
         for col in self.columns:
             if col.name == "diff":
-                continue
+                continue  # uses `render_diff()`
             col.render = wrap_render_func(col.render)
 
     def render_diff(self, value, record):
@@ -182,28 +185,16 @@ class DiffListViewBase(tables.Table):
                     <span class="label label-success">added</span>
                 </a>"""
             )
-        if record.diff["diff_type"] == "removed":
+        elif record.diff["diff_type"] == "removed":
             return format_html(
                 f"""<a href="{ href }">
                     <span class="label label-danger">removed</span>
                 </a>"""
             )
-
-        # diff_type == "modified"
-        if record.diff["root"] == "to":
+        else:  # diff_type == "modified"
             return format_html(
                 f"""<a href="{ href }">
                     <span class="label label-primary">changed</span>
-                    </br>
-                    <span class="label label-success">after</span>
-                </a>"""
-            )
-        if record.diff["root"] == "from":
-            return format_html(
-                f"""<a href="{ href }">
-                    <span class="label label-primary">changed</span>
-                    </br>
-                    <span class="label label-danger">before</span>
                 </a>"""
             )
 
@@ -216,7 +207,7 @@ def wrap_render_func(fn):
     Wraps an existing cell rendering function with diff styling
     """
 
-    def meta_render(value, record, column, bound_column, bound_row, table):
+    def render_before_after_diff(value, record, column, bound_column, bound_row, table):
         # the previous render function may take any of the
         # following args, so provide them all
         kwargs = {
@@ -227,20 +218,38 @@ def wrap_render_func(fn):
             "bound_row": bound_row,
             "table": table,
         }
-        val = call_with_appropriate(fn, kwargs)
+        # render using the existing function
+        cell = call_with_appropriate(fn, kwargs)
 
-        if bound_column.name.lower() not in record.diff:
-            return val
+        if record.diff["diff_type"] != "modified":
+            # only render before/after diff styling
+            # for 'modified' rows
+            return cell
 
-        style = {
-            "to": "bg-success text-success",
-            "from": "bg-danger text-danger",
-        }[record.diff["root"]]
+        before_name = f"from_{bound_column.name}"
+        if before_name not in record.diff:
+            # can't render diff styling
+            return cell
 
+        # re-render the cell value with its before value
+        kwargs["value"] = record.diff[before_name]
+        before_cell = call_with_appropriate(fn, kwargs)
+
+        if before_cell == cell:
+            # no change
+            return cell
+
+        before_cell = before_cell if before_cell else " — "
         return format_html(
-            f"""<span class="{style}">
-                <b>{val}</b>
-            </span>"""
+            f"""<div>
+            <span class="bg-success text-success">
+                <b>{cell}</b>
+            </span>
+            </br>
+            <span class="bg-danger text-danger">
+                <b>{before_cell}</b>
+            </span>
+        </div>"""
         )
 
-    return meta_render
+    return render_before_after_diff
