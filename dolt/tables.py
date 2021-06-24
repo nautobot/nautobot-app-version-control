@@ -70,7 +70,7 @@ class BranchTable(BaseTable):
 
 
 class CommitTable(BaseTable):
-    short_message = tables.LinkColumn()
+    short_message = tables.LinkColumn(verbose_name="Commit Message")
 
     class Meta(BaseTable.Meta):
         model = Commit
