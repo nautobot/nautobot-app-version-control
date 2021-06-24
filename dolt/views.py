@@ -214,8 +214,8 @@ class CommitListView(generic.ObjectListView):
             self.queryset = self.queryset.filter(date__gt=merge_base.date)
         return self.queryset
 
-    def get_extra_context(self, request, instance):
-        return {"branch": Branch.active_branch()}
+    def extra_context(self):
+        return {"active_branch": Branch.active_branch()}
 
 
 class CommitEditView(generic.ObjectEditView):
