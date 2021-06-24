@@ -1,6 +1,8 @@
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection
 from django.urls import reverse
 
+from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
 from dolt.querysets import CommitQuerySet
@@ -75,6 +77,27 @@ class Branch(DoltSystemTable):
     def active(self):
         return self.name == self.active_branch()
 
+    @property
+    def created_by(self):
+        m = self._branch_meta()
+        return m.author if m else None
+
+    @property
+    def created_at(self):
+        m = self._branch_meta()
+        return m.created if m else None
+
+    @property
+    def source_branch(self):
+        m = self._branch_meta()
+        return m.source_branch if m else None
+
+    def _branch_meta(self):
+        try:
+            return BranchMeta.objects.get(branch=self.name)
+        except ObjectDoesNotExist:
+            return None
+
     def head_commit_hash(self):
         """
         Returns the latest commit for this branch
@@ -104,12 +127,14 @@ class Branch(DoltSystemTable):
             )
 
 
-# class BranchAuthor(models.Model):
-#     """
-#     Branch Author
-#     """
-#     branch = models.OneToOneField(Branch, on_delete=models.CASCADE, primary_key=True)
-#     author = models.OneToOneField(User, on_delete=models.SET_NULL, null=True)
+class BranchMeta(models.Model):
+    branch = models.TextField(primary_key=True)
+    source_branch = models.TextField()
+    author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
+    created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    class Meta:
+        db_table = "plugin_dolt_branchmeta"
 
 
 #
