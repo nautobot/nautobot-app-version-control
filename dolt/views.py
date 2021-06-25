@@ -243,8 +243,20 @@ class CommitDeleteView(generic.ObjectDeleteView):
 
 
 #
-# Diff Detail
+# Diffs
 #
+
+
+class ActiveBranchDiffs(View):
+    def get(self, *args, **kwargs):
+        return redirect(
+            reverse(
+                "plugins:dolt:branch",
+                kwargs={
+                    "pk": Branch.active_branch(),
+                },
+            )
+        )
 
 
 # todo: re-add permissions

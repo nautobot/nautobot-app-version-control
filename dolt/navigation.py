@@ -18,6 +18,10 @@ menu_items = (
     ),
     PluginMenuItem(
         link="plugins:dolt:commit_list",
-        link_text="Commits",
+        link_text="Commits (Active Branch)",
+    ),
+    PluginMenuItem(
+        link="plugins:dolt:active_branch_diffs",
+        link_text="Diffs (Active Branch)",
     ),
 )

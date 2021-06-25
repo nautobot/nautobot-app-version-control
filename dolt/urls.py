@@ -44,4 +44,6 @@ urlpatterns = [
         views.DiffDetailView.as_view(),
         name="diff_detail",
     ),
+    # Diffs
+    path("diffs/", views.ActiveBranchDiffs.as_view(), name="active_branch_diffs"),
 ]
