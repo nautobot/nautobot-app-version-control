@@ -167,6 +167,9 @@ class DiffListViewBase(tables.Table):
             col.render = wrap_render_func(col.render)
 
     def render_diff(self, value, record):
+        """
+        Custom rendering for the the `Diff Type` columns
+        """
         ct = ContentType.objects.get_for_model(self.Meta.model)
         href = reverse(
             "plugins:dolt:diff_detail",
@@ -192,11 +195,33 @@ class DiffListViewBase(tables.Table):
                 </a>"""
             )
         else:  # diff_type == "modified"
+            cnt = self.count_diffs(record.diff)
             return format_html(
                 f"""<a href="{ href }">
-                    <span class="label label-primary">changed</span>
+                    <span class="label label-primary">changed ({ cnt })</span>
                 </a>"""
             )
+
+    @staticmethod
+    def count_diffs(diff):
+        skip_fields = (
+            "root",
+            "diff_type",
+            "to_commit",
+            "to_commit_date",
+            "from_commit",
+            "from_commit_date",
+        )
+        cnt = 0
+        for k, v in diff.items():
+            if k in skip_fields:
+                continue
+            if k.startswith("to_"):
+                # compare to and from values
+                from_key = f"from_{k[3:]}"
+                if v != diff[from_key]:
+                    cnt += 1
+        return cnt
 
     class Meta:
         abstract = True
@@ -242,12 +267,12 @@ def wrap_render_func(fn):
         before_cell = before_cell if before_cell else " — "
         return format_html(
             f"""<div>
-            <span class="bg-success text-success">
-                <b>{cell}</b>
-            </span>
-            </br>
             <span class="bg-danger text-danger">
                 <b>{before_cell}</b>
+            </span>
+            </br>
+            <span class="bg-success text-success">
+                <b>{cell}</b>
             </span>
         </div>"""
         )
