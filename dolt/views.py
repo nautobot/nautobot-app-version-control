@@ -33,8 +33,8 @@ class BranchView(generic.ObjectView):
     queryset = Branch.objects.all()
 
     def get_extra_context(self, request, instance):
-        merge_base = Commit.objects.merge_base(DOLT_DEFAULT_BRANCH, instance.name)
-        head = instance.head_commit_hash()
+        merge_base = Commit.merge_base(DOLT_DEFAULT_BRANCH, instance.name).commit_hash
+        head = instance.hash
         return {"results": diffs.two_dot_diffs(from_commit=merge_base, to_commit=head)}
 
 
@@ -222,9 +222,7 @@ class CommitListView(generic.ObjectListView):
     def alter_queryset(self, request):
         if Branch.active_branch() != DOLT_DEFAULT_BRANCH:
             # only list commits on the current branch since the merge-base
-            merge_base = Commit.objects.merge_base(
-                DOLT_DEFAULT_BRANCH, Branch.active_branch()
-            )
+            merge_base = Commit.merge_base(DOLT_DEFAULT_BRANCH, Branch.active_branch())
             self.queryset = self.queryset.filter(date__gt=merge_base.date)
         return self.queryset
 

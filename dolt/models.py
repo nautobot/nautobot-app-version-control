@@ -5,8 +5,6 @@ from django.urls import reverse
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
-from dolt.querysets import CommitQuerySet
-
 __all__ = (
     "Branch",
     "Commit",
@@ -40,6 +38,7 @@ class Branch(DoltSystemTable):
     """
 
     name = models.TextField(primary_key=True)
+    # TODO: expose working hash in Dolt?
     hash = models.TextField()
     latest_committer = models.TextField()
     latest_committer_email = models.TextField()
@@ -153,8 +152,6 @@ class Commit(DoltSystemTable):
     date = models.DateTimeField()
     message = models.TextField()
 
-    objects = CommitQuerySet.as_manager()
-
     class Meta:
         managed = False
         db_table = "dolt_log"
@@ -165,6 +162,11 @@ class Commit(DoltSystemTable):
 
     def get_absolute_url(self):
         return reverse("plugins:dolt:commit", args=[self.commit_hash])
+
+    @staticmethod
+    def merge_base(left, right):
+        q = "SELECT * FROM dolt_log WHERE commit_hash = DOLT_MERGE_BASE(%s, %s)"
+        return Commit.objects.raw(q, [left, right])[0]
 
     @property
     def short_message(self):
