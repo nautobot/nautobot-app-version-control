@@ -11,8 +11,8 @@ from nautobot.virtualization import tables as virtualization_tables
 from nautobot.utilities.querysets import RestrictedQuerySet
 from nautobot.utilities.tables import BaseTable
 
-from dolt.diff.factory import DiffModelFactory, DiffListViewFactory
-from dolt.diff.model_view_map import content_type_has_diff_view_table
+from dolt.dynamic.diff_factory import DiffModelFactory, DiffListViewFactory
+from dolt.dynamic.model_view_map import content_type_has_diff_view_table
 from dolt.context_managers import query_at_commit
 from dolt.functions import JSONObject
 
@@ -37,7 +37,6 @@ def two_dot_diffs(from_commit=None, to_commit=None):
     diff_results = []
     for content_type in diffable_content_types():
         if not content_type_has_diff_view_table(content_type):
-            # todo(andy): fallback to generic diff view
             continue
 
         factory = DiffModelFactory(content_type)
@@ -62,15 +61,17 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             )
         )
         with query_at_commit(from_commit):
-            # must materialize list inside `query_at_commit()` content manager
+            # must materialize list inside `query_at_commit()` context manager
             from_queryset = list(
                 content_type.model_class()
-                .objects.filter(pk__in=diffs.values_list("from_id", flat=True))
-                .annotate(
+                # todo: we actually only use `to_id` and `from_id`
+                .objects.filter(
+                    pk__in=diffs.values_list("from_id", flat=True)
+                ).annotate(
                     diff=Subquery(
                         diffs.annotate(
                             obj=JSONObject(
-                                root=Value("to", output_field=models.CharField()),
+                                root=Value("from", output_field=models.CharField()),
                                 **diff_annotation_query_fields(diffs.model),
                             )
                         )

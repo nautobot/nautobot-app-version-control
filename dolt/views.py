@@ -19,8 +19,8 @@ from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequired
 from dolt import filters, forms, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
 from dolt.context_managers import query_at_commit
-from dolt.diff import diffs
-from dolt.diff.diffs import content_type_has_diff_view_table
+from dolt.dynamic import diffs
+from dolt.dynamic.diffs import content_type_has_diff_view_table
 from dolt.models import Branch, BranchMeta, Commit
 
 
@@ -185,7 +185,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
         return redirect(f"/")
 
     def get_extra_context(self, request, instance):
-        # todo: need two-dot diff, not three-dot
+        # todo: need two-dot dynamic, not three-dot
         dest_head = Branch.objects.get(name=DOLT_DEFAULT_BRANCH).head_commit_hash()
         source_head = instance.head_commit_hash()
         return {

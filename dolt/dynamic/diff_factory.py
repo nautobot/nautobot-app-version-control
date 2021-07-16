@@ -13,7 +13,7 @@ from django_tables2.utils import call_with_appropriate
 from nautobot.utilities.querysets import RestrictedQuerySet
 from nautobot.utilities.tables import BaseTable
 
-from dolt.diff.model_view_map import MODEL_VIEW_TABLES
+from dolt.dynamic.model_view_map import MODEL_VIEW_TABLES
 
 
 class DiffModelFactory:
@@ -92,11 +92,7 @@ class DiffModelFactory:
             for kw in optional:
                 if kw in field.__dict__:
                     kwargs[kw] = field.__dict__[kw]
-
-            try:
-                return field_type(**kwargs)
-            except TypeError as e:
-                pass
+            return field_type(**kwargs)
 
         return [clone_field(pre) for pre in ("to_", "from_")]
 
@@ -159,12 +155,15 @@ def row_attrs_for_record(record):
 class DiffListViewBase(tables.Table):
     diff = tables.Column(verbose_name="Diff Type")
 
+    class Meta:
+        abstract = True
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for col in self.columns:
             if col.name == "diff":
                 continue  # uses `render_diff()`
-            col.render = wrap_render_func(col.render)
+            col.render = self.wrap_render_func(col.render)
 
     def render_diff(self, value, record):
         """
@@ -223,58 +222,57 @@ class DiffListViewBase(tables.Table):
                     cnt += 1
         return cnt
 
-    class Meta:
-        abstract = True
+    @staticmethod
+    def wrap_render_func(fn):
+        """
+        Wraps an existing cell rendering function with diff styling
+        """
 
+        def render_before_after_diff(
+            value, record, column, bound_column, bound_row, table
+        ):
+            # the previous render function may take any of the
+            # following args, so provide them all
+            kwargs = {
+                "value": value,
+                "record": record,
+                "column": column,
+                "bound_column": bound_column,
+                "bound_row": bound_row,
+                "table": table,
+            }
+            # render using the existing function
+            cell = call_with_appropriate(fn, kwargs)
 
-def wrap_render_func(fn):
-    """
-    Wraps an existing cell rendering function with diff styling
-    """
+            if record.diff["diff_type"] != "modified":
+                # only render before/after diff styling
+                # for 'modified' rows
+                return cell
 
-    def render_before_after_diff(value, record, column, bound_column, bound_row, table):
-        # the previous render function may take any of the
-        # following args, so provide them all
-        kwargs = {
-            "value": value,
-            "record": record,
-            "column": column,
-            "bound_column": bound_column,
-            "bound_row": bound_row,
-            "table": table,
-        }
-        # render using the existing function
-        cell = call_with_appropriate(fn, kwargs)
+            before_name = f"from_{bound_column.name}"
+            if before_name not in record.diff:
+                # can't render diff styling
+                return cell
 
-        if record.diff["diff_type"] != "modified":
-            # only render before/after diff styling
-            # for 'modified' rows
-            return cell
+            # re-render the cell value with its before value
+            kwargs["value"] = record.diff[before_name]
+            before_cell = call_with_appropriate(fn, kwargs)
 
-        before_name = f"from_{bound_column.name}"
-        if before_name not in record.diff:
-            # can't render diff styling
-            return cell
+            if before_cell == cell:
+                # no change
+                return cell
 
-        # re-render the cell value with its before value
-        kwargs["value"] = record.diff[before_name]
-        before_cell = call_with_appropriate(fn, kwargs)
+            before_cell = before_cell if before_cell else " — "
+            return format_html(
+                f"""<div>
+                <span class="bg-danger text-danger">
+                    <b>{before_cell}</b>
+                </span>
+                </br>
+                <span class="bg-success text-success">
+                    <b>{cell}</b>
+                </span>
+            </div>"""
+            )
 
-        if before_cell == cell:
-            # no change
-            return cell
-
-        before_cell = before_cell if before_cell else " — "
-        return format_html(
-            f"""<div>
-            <span class="bg-danger text-danger">
-                <b>{before_cell}</b>
-            </span>
-            </br>
-            <span class="bg-success text-success">
-                <b>{cell}</b>
-            </span>
-        </div>"""
-        )
-
-    return render_before_after_diff
+        return render_before_after_diff

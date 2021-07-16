@@ -230,3 +230,25 @@ class CommitAncestor(DoltSystemTable):
     def save(self, *args, **kwargs):
         # todo(andy): throw exception?
         pass
+
+
+#
+# Conflicts
+#
+
+
+class Conflicts(DoltSystemTable):
+    """
+    Conflicts
+    """
+
+    table = models.TextField(primary_key=True)
+    num_conflicts = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = "dolt_conflicts"
+        verbose_name_plural = "conflicts"
+
+    def __str__(self):
+        return f"{self.table} ({self.num_conflicts})"
