@@ -113,7 +113,7 @@ class Branch(DoltSystemTable):
             cursor.execute(f"""SELECT dolt_checkout('{self.name}') FROM dual;""")
 
     def merge(self, merge_branch):
-        # todo: check for exstance
+        # todo: check for existence
         self.checkout_branch()
         with connection.cursor() as cursor:
             cursor.execute(f"""SELECT dolt_merge('{merge_branch}') FROM dual;""")

@@ -157,6 +157,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
 
     def get(self, request, *args, **kwargs):
         src = Branch.objects.get(name=kwargs["src"])
+        dest = Branch.objects.get(name=kwargs["dest"])
         # render a disabled form with previously submitted data
         initial = {
             "source_branch": src,
@@ -168,7 +169,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
             {
                 "obj_type": self.queryset.model._meta.verbose_name,
                 "form": self.form(initial=initial),
-                **self.get_extra_context(request, src),
+                **self.get_extra_context(request, src, dest),
             },
         )
 
@@ -184,15 +185,14 @@ class BranchMergePreView(GetReturnURLMixin, View):
         messages.info(request, mark_safe(msg))
         return redirect(f"/")
 
-    def get_extra_context(self, request, instance):
-        # todo: need two-dot dynamic, not three-dot
-        dest_head = Branch.objects.get(name=DOLT_DEFAULT_BRANCH).head_commit_hash()
-        source_head = instance.head_commit_hash()
+    def get_extra_context(self, request, src, dest):
+        dest_head = Branch.objects.get(name=dest).head_commit_hash()
+        source_head = src.head_commit_hash()
         return {
             "results": diffs.two_dot_diffs(
                 from_commit=dest_head, to_commit=source_head
             ),
-            "back_btn_url": reverse("plugins:dolt:branch_merge", args=[instance.name]),
+            "back_btn_url": reverse("plugins:dolt:branch_merge", args=[src.name]),
         }
 
 
