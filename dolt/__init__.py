@@ -1,5 +1,29 @@
 from nautobot.extras.plugins import PluginConfig
 
+
+class NautobotDolt(PluginConfig):
+    name = "dolt"
+    verbose_name = "Nautobot Dolt"
+    description = "Nautobot + Dolt"
+    version = "0.1"
+    author = "Andy Arthur"
+    author_email = "andy@dolthub.com"
+    required_settings = []
+    default_settings = {
+        # TODO: are these respected?
+        "DATABASE_ROUTERS": [
+            # 'dolt.routers.AuthPermissionsRouter',
+            "dolt.routers.ModelVersionRouter",
+        ],
+        "SESSION_ENGINE": "django.contrib.sessions.backends.signed_cookies",
+        "CACHEOPS_ENABLED": False,
+    }
+    middleware = [
+        "dolt.middleware.DoltBranchMiddleware",
+        "dolt.middleware.DoltAutoCommitMiddleware",
+    ]
+
+
 # Registry of Content Types of models that should be under version control.
 # Top-level dict keys are app_labels. If the top-level dict value is `True`,
 # then all models under that app_label are whitelisted.The top-level value
@@ -88,21 +112,6 @@ def is_versioned_model(model):
             return whitelist[app_label][model]
 
     raise ValueError("invalid model version whitelist")
-
-
-class NautobotDolt(PluginConfig):
-    name = "dolt"
-    verbose_name = "Nautobot Dolt"
-    description = "Nautobot + Dolt"
-    version = "0.1"
-    author = "Andy Arthur"
-    author_email = "andy@dolthub.com"
-    required_settings = []
-    default_settings = {}
-    middleware = [
-        "dolt.middleware.DoltBranchMiddleware",
-        "dolt.middleware.DoltAutoCommitMiddleware",
-    ]
 
 
 config = NautobotDolt
