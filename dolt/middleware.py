@@ -16,6 +16,14 @@ from dolt.versioning import query_on_branch
 from dolt.models import Branch, Commit
 
 
+def branch_from_request(request):
+    if DOLT_BRANCH_KEYWORD in request.session:
+        return request.session.get(DOLT_BRANCH_KEYWORD)
+    if DOLT_BRANCH_KEYWORD in request.headers:
+        return request.headers.get(DOLT_BRANCH_KEYWORD)
+    return DOLT_DEFAULT_BRANCH
+
+
 class DoltBranchMiddleware:
     # DOLT_BRANCH_KEYWORD = "branch"
 
@@ -25,17 +33,9 @@ class DoltBranchMiddleware:
     def __call__(self, request):
         return self.get_response(request)
 
-    @staticmethod
-    def _requested_branch(request):
-        if DOLT_BRANCH_KEYWORD in request.session:
-            return request.session.get(DOLT_BRANCH_KEYWORD)
-        if DOLT_BRANCH_KEYWORD in request.headers:
-            return request.headers.get(DOLT_BRANCH_KEYWORD)
-        return DOLT_DEFAULT_BRANCH
-
     def process_view(self, request, view_func, view_args, view_kwargs):
         # lookup the active branch in the session cookie
-        requested = self._requested_branch(request)
+        requested = branch_from_request(request)
         try:
             branch = Branch.objects.get(pk=requested)
         except ObjectDoesNotExist:
@@ -71,17 +71,20 @@ class DoltAutoCommitMiddleware(object):
 
     def __call__(self, request):
         # Process the request with auto-dolt-commit enabled
-        with AutoDoltCommit(request):
+        branch = branch_from_request(request)
+        with AutoDoltCommit(request, branch):
             return self.get_response(request)
 
 
 class AutoDoltCommit(object):
     """
     adapted from `nautobot.extras.context_managers`
+    TODO: only auto-commit for versioned models
     """
 
-    def __init__(self, request):
+    def __init__(self, request, branch):
         self.request = request
+        self.branch = branch
         self.commit = False
         self.changes = []
 
@@ -120,9 +123,9 @@ class AutoDoltCommit(object):
         self.commit = True
 
     def _commit(self):
-        # todo: use ObjectChange to create commit message
         Commit(message=self._get_commit_message()).save(
-            author=self._get_commit_author()
+            branch=self.branch,
+            author=self.request.user,
         )
 
     def _get_commit_message(self):
@@ -130,9 +133,3 @@ class AutoDoltCommit(object):
             return "auto dolt commit"
         self.changes = sorted(self.changes, key=lambda obj: obj.time)
         return "; ".join([str(c) for c in self.changes])
-
-    def _get_commit_author(self):
-        usr = self.request.user
-        if usr and usr.username and usr.email:
-            return f"{usr.username} <{usr.email}>"
-        return None

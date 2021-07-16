@@ -37,8 +37,11 @@ def query_at_commit(commit):
         raise e
 
 
+def revision_db_name(branch):
+    return f"{DB_NAME}/{branch}"
+
+
 def db_from_revision(branch):
     db = deepcopy(settings.DATABASES["default"])
-    # set versioned database
-    db["NAME"] = f"{DB_NAME}/{branch}"
+    db["NAME"] = revision_db_name(branch)
     return db

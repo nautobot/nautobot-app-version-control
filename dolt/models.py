@@ -1,12 +1,12 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models, connection
+from django.db import models, connection, connections
 from django.urls import reverse
 
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
 from dolt.versioning import query_on_branch
-from dolt.querysets import CommitQuerySet
+
 
 __all__ = (
     "Branch",
@@ -100,12 +100,10 @@ class Branch(DoltSystemTable):
         except ObjectDoesNotExist:
             return None
 
-    def merge(self, merge_branch):
-        # todo: check for existence
-        self.checkout_branch()
+    def merge(self, merge_branch, user):
         with connection.cursor() as cursor:
+            cursor.execute(f"""SELECT dolt_checkout("{self.name}");""")
             cursor.execute(f"""SELECT dolt_merge('{merge_branch}') FROM dual;""")
-        Commit(message=f"merged {merge_branch} into {self.name}").save()
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
@@ -172,26 +170,33 @@ class Commit(DoltSystemTable):
             "parent_hash", flat=True
         )
 
-    def save(self, *args, author=None, **kwargs):
+    @staticmethod
+    def _author_from_user(usr):
+        if usr and usr.username and usr.email:
+            return f"{usr.username} <{usr.email}>"
+        return None
+
+    def save(self, *args, branch=None, author=None, **kwargs):
+        author = self._author_from_user(author)
         if not author:
             author = "nautobot <nautobot@ntc.com>"
+        if not branch:
+            raise ValueError("must specify branch to create commit")
 
+        # TODO: empty commits are sometimes created
         with connection.cursor() as cursor:
-            # todo(andy): remove '--allow-empty', check for contents
-            # TODO: zach says no (branch param + specific connection)
+            cursor.execute(f"""SELECT dolt_checkout("{branch}");""")
             cursor.execute(
                 f"""
             SELECT dolt_commit(
                 '--all', 
-                '--force',
                 '--allow-empty',
                 '--message', '{self.message}',
                 '--author', '{author}')
-            FROM dual
-            ;"""
+            FROM dual;"""
             )
             commit_hash = cursor.fetchone()[0]
-
+        # TODO: is this necessary?
         commit = Commit.objects.get(pk=commit_hash)
         self.commit_hash = commit.commit_hash
         self.committer = commit.committer

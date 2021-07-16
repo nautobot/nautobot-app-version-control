@@ -32,7 +32,7 @@ from dolt.models import Branch, BranchMeta, Commit
 class BranchView(generic.ObjectView):
     queryset = Branch.objects.all()
 
-    def get_extra_context(self, request, instance):
+    def get_extra_context(self, req, instance):
         merge_base = Commit.merge_base(DOLT_DEFAULT_BRANCH, instance.name).commit_hash
         head = instance.hash
         return {"results": diffs.two_dot_diffs(from_commit=merge_base, to_commit=head)}
@@ -52,9 +52,9 @@ class BranchCheckoutView(View):
     model_form = forms.BranchForm
     template_name = "dolt/branch_edit.html"
 
-    def get(self, request, *args, **kwargs):
+    def get(self, req, *args, **kwargs):
         # new branch will be checked out on redirect
-        request.session[DOLT_BRANCH_KEYWORD] = kwargs["pk"]
+        change_branches(sess=req.session, branch=kwargs["pk"])
         return redirect("/")
 
 
@@ -63,12 +63,12 @@ class BranchEditView(generic.ObjectEditView):
     model_form = forms.BranchForm
     template_name = "dolt/branch_edit.html"
 
-    def get(self, request, *args, **kwargs):
+    def get(self, req, *args, **kwargs):
         initial = {
             "starting_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
         }
         return render(
-            request,
+            req,
             self.template_name,
             {
                 "obj_type": self.queryset.model._meta.verbose_name,
@@ -76,12 +76,12 @@ class BranchEditView(generic.ObjectEditView):
             },
         )
 
-    def post(self, request, *args, **kwargs):
-        form = self.model_form(data=request.POST, files=request.FILES)
-        response = super().post(request, *args, **kwargs)
+    def post(self, req, *args, **kwargs):
+        form = self.model_form(data=req.POST, files=req.FILES)
+        response = super().post(req, *args, **kwargs)
         if self._is_success_response(response):
-            request.session[DOLT_BRANCH_KEYWORD] = form.data.get("name")
-            self._create_branch_meta(form, request.user)
+            change_branches(sess=req.session, branch=form.data.get("name"))
+            self._create_branch_meta(form, req.user)
         return response
 
     def _is_success_response(self, response):
@@ -121,13 +121,13 @@ class BranchMergeFormView(GetReturnURLMixin, View):
     form = forms.MergeForm
     template_name = "dolt/branch_merge.html"
 
-    def get(self, request, *args, **kwargs):
+    def get(self, req, *args, **kwargs):
         initial = {
             "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
             "source_branch": Branch.objects.get(name=kwargs["src"]),
         }
         return render(
-            request,
+            req,
             self.template_name,
             {
                 "obj_type": self.queryset.model._meta.verbose_name,
@@ -135,8 +135,8 @@ class BranchMergeFormView(GetReturnURLMixin, View):
             },
         )
 
-    def post(self, request, *args, **kwargs):
-        form = self.form(data=request.POST, files=request.FILES)
+    def post(self, req, *args, **kwargs):
+        form = self.form(data=req.POST, files=req.FILES)
         if not form.is_valid():
             raise ValueError(form.errors)
         src = form.cleaned_data.get("source_branch")
@@ -155,7 +155,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
     form = forms.MergePreviewForm
     template_name = "dolt/branch_merge_preview.html"
 
-    def get(self, request, *args, **kwargs):
+    def get(self, req, *args, **kwargs):
         src = Branch.objects.get(name=kwargs["src"])
         dest = Branch.objects.get(name=kwargs["dest"])
         # render a disabled form with previously submitted data
@@ -163,29 +163,30 @@ class BranchMergePreView(GetReturnURLMixin, View):
             "source_branch": src,
             "destination_branch": Branch.objects.get(name=kwargs["dest"]),
         }
+        change_branches()
         return render(
-            request,
+            req,
             self.template_name,
             {
                 "obj_type": self.queryset.model._meta.verbose_name,
                 "form": self.form(initial=initial),
-                **self.get_extra_context(request, src, dest),
+                **self.get_extra_context(req, src, dest),
             },
         )
 
-    def post(self, request, *args, **kwargs):
+    def post(self, req, *args, **kwargs):
         src = kwargs["src"]
         dest = kwargs["dest"]
         try:
-            Branch.objects.get(name=dest).merge(src)
+            Branch.objects.get(name=dest).merge(src, req.user)
         except Exception as e:
             raise e
 
         msg = f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"
-        messages.info(request, mark_safe(msg))
+        messages.info(req, mark_safe(msg))
         return redirect(f"/")
 
-    def get_extra_context(self, request, src, dest):
+    def get_extra_context(self, req, src, dest):
         dest_head = Branch.objects.get(name=dest).hash
         source_head = src.hash
         return {
@@ -204,7 +205,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
 class CommitView(generic.ObjectView):
     queryset = Commit.objects.all()
 
-    def get_extra_context(self, request, instance):
+    def get_extra_context(self, req, instance):
         if not len(instance.parent_commits):
             return {}  # init commit has no parents
         parent = Commit.objects.get(commit_hash=instance.parent_commits[0])
@@ -219,7 +220,7 @@ class CommitListView(generic.ObjectListView):
     template_name = "dolt/commit_list.html"
     action_buttons = None
 
-    def alter_queryset(self, request):
+    def alter_queryset(self, req):
         if Branch.active_branch() != DOLT_DEFAULT_BRANCH:
             # only list commits on the current branch since the merge-base
             merge_base = Commit.merge_base(DOLT_DEFAULT_BRANCH, Branch.active_branch())
@@ -257,18 +258,16 @@ class ActiveBranchDiffs(View):
         )
 
 
-# todo: re-add permissions
-# class DiffDetailView(ObjectPermissionRequiredMixin, View):
 class DiffDetailView(View):
     template_name = "dolt/diff_detail.html"
 
     def get_required_permission(self):
         return get_permission_for_model(Site, "view")
 
-    def get(self, request, *args, **kwargs):
+    def get(self, req, *args, **kwargs):
         self.model = self.get_model(kwargs)
         return render(
-            request,
+            req,
             self.template_name,
             {
                 "verbose_name": self.display_name(kwargs),
@@ -364,3 +363,9 @@ def serialize_object(obj, extra=None, exclude=None):
             data.pop(key)
 
     return data
+
+
+def change_branches(sess=None, branch=None):
+    if sess is None or branch is None:
+        raise ValueError("invalid args to change_branches()")
+    sess[DOLT_BRANCH_KEYWORD] = branch

@@ -6,20 +6,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('dolt', '0002_branchmeta'),
+        ("dolt", "0002_branchmeta"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Conflicts',
+            name="Conflicts",
             fields=[
-                ('table', models.TextField(primary_key=True, serialize=False)),
-                ('num_conflicts', models.IntegerField()),
+                ("table", models.TextField(primary_key=True, serialize=False)),
+                ("num_conflicts", models.IntegerField()),
             ],
             options={
-                'verbose_name_plural': 'conflicts',
-                'db_table': 'dolt_conflicts',
-                'managed': False,
+                "verbose_name_plural": "conflicts",
+                "db_table": "dolt_conflicts",
+                "managed": False,
             },
         ),
     ]

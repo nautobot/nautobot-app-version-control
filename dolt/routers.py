@@ -41,7 +41,6 @@ class ModelVersionRouter(DynamicDbRouter):
         Directs read queries to the versioned db for versioned models.
         Makes no db suggestion for non-versioned models.
         """
-
         if self._is_versioned_model(model):
             return super().db_for_read(model)
         return None
