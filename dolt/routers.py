@@ -1,10 +1,10 @@
-from django.conf import settings
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sessions.backends.db import SessionStore
 from django.db import connections
 
 from dynamic_db_router.router import DynamicDbRouter, THREAD_LOCAL
 
+from . import is_versioned_model
 from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH
 
 
@@ -31,7 +31,6 @@ class ModelVersionRouter(DynamicDbRouter):
     TODO
     """
 
-    whitelist = settings.MODEL_VERSION_WHITELIST
     # TODO: get from settings?
     static_dbs = ("auth_db", "default")
     primary_branch_db = "nautobot/master"
@@ -41,7 +40,7 @@ class ModelVersionRouter(DynamicDbRouter):
         Directs read queries to the versioned db for versioned models.
         Makes no db suggestion for non-versioned models.
         """
-        if self._is_versioned_model(model):
+        if is_versioned_model(model):
             return super().db_for_read(model)
         return None
 
@@ -50,7 +49,7 @@ class ModelVersionRouter(DynamicDbRouter):
         Directs read queries to the versioned db for versioned models.
         Prevents writes of non-versioned models to non-primary branches.
         """
-        if self._is_versioned_model(model):
+        if is_versioned_model(model):
             return super().db_for_write(model)
         if self._versioned_db_requested():
             raise ValueError("cannot write non-version model on non-primary branch")
@@ -72,39 +71,3 @@ class ModelVersionRouter(DynamicDbRouter):
         if override_db_name == self.primary_branch_db:
             return False
         return True
-
-    def _is_versioned_model(self, model):
-        """
-        Determines whether a model's content type is on the whitelist.
-        The whilelist has the following layout:
-            MODEL_VERSION_WHITELIST = {
-                "dcim": True,
-                "circuits": True,
-                ...
-                "extras": {
-                    "computedfield": True,
-                    "configcontext": True,
-                    ...
-                }
-            },
-        The top-level dict keys are app_labels. If the top-level dict value
-        is `True`, then all models under that app_label are whitelisted.
-        The top-level value may also be a nest dict containing a subset of
-        whitelisted models within the app_label.
-        """
-        lbl = model._meta.app_label
-        mdl = model.__name__.lower()
-
-        if lbl not in self.whitelist:
-            return False
-        if isinstance(self.whitelist[lbl], bool):
-            return self.whitelist[lbl]
-
-        # subset specified
-        if isinstance(self.whitelist[lbl], dict):
-            if mdl not in self.whitelist[lbl]:
-                return False
-            if isinstance(self.whitelist[lbl][mdl], bool):
-                return self.whitelist[lbl][mdl]
-
-        raise ValueError("invalid model version whitelist")
