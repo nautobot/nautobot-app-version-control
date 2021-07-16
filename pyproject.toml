@@ -8,6 +8,7 @@ license = "LICENSE.txt"
 [tool.poetry.dependencies]
 python = "^3.6"
 nautobot = "^1.0.1"
+django-dynamic-db-router = "^0.3.0"
 
 [tool.poetry.dev-dependencies]
 

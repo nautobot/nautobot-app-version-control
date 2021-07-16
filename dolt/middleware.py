@@ -1,16 +1,19 @@
-import uuid
-
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.signals import m2m_changed, post_save, pre_delete
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
+
+from dynamic_db_router import in_database
+
+from nautobot.extras.models.change_logging import ObjectChange
 
 from dolt.constants import (
     DOLT_BRANCH_KEYWORD,
     DOLT_DEFAULT_BRANCH,
 )
-from dolt.context_managers import AutoDoltCommit
-from dolt.models import Branch
+from dolt.versioning import query_on_branch
+from dolt.models import Branch, Commit
 
 
 class DoltBranchMiddleware:
@@ -32,28 +35,30 @@ class DoltBranchMiddleware:
 
     def process_view(self, request, view_func, view_args, view_kwargs):
         # lookup the active branch in the session cookie
-        branch = self._requested_branch(request)
+        requested = self._requested_branch(request)
         try:
-            # switch the database to use the active branch
-            Branch.objects.get(pk=branch).checkout_branch()
+            branch = Branch.objects.get(pk=requested)
         except ObjectDoesNotExist:
             messages.warning(
                 request,
                 mark_safe(
-                    f"""<div class="text-center">branch not found: {branch}</div>"""
+                    f"""<div class="text-center">branch not found: {requested}</div>"""
                 ),
             )
+            request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
+            branch = Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
+
         if request.user.is_authenticated:
             # inject the "active branch" banner
-            active = Branch.active_branch()
             messages.info(
                 request,
                 mark_safe(
-                    f"""<div class="text-center">Active Branch: {active}</div>"""
+                    f"""<div class="text-center">Active Branch: {branch}</div>"""
                 ),
             )
 
-        return view_func(request, *view_args, **view_kwargs)
+        with query_on_branch(branch):
+            return view_func(request, *view_args, **view_kwargs)
 
 
 class DoltAutoCommitMiddleware(object):
@@ -67,6 +72,67 @@ class DoltAutoCommitMiddleware(object):
     def __call__(self, request):
         # Process the request with auto-dolt-commit enabled
         with AutoDoltCommit(request):
-            response = self.get_response(request)
+            return self.get_response(request)
 
-        return response
+
+class AutoDoltCommit(object):
+    """
+    adapted from `nautobot.extras.context_managers`
+    """
+
+    def __init__(self, request):
+        self.request = request
+        self.commit = False
+        self.changes = []
+
+    def __enter__(self):
+        # Connect our receivers to the post_save and post_delete signals.
+        post_save.connect(self._handle_update, dispatch_uid="dolt_commit_update")
+        m2m_changed.connect(self._handle_update, dispatch_uid="dolt_commit_update")
+        pre_delete.connect(self._handle_delete, dispatch_uid="dolt_commit_delete")
+
+    def __exit__(self, type, value, traceback):
+        if self.commit:
+            self._commit()
+
+        # Disconnect change logging signals. This is necessary to avoid recording any errant
+        # changes during test cleanup.
+        post_save.disconnect(self._handle_update, dispatch_uid="dolt_commit_update")
+        m2m_changed.disconnect(self._handle_update, dispatch_uid="dolt_commit_update")
+        pre_delete.disconnect(self._handle_delete, dispatch_uid="dolt_commit_delete")
+
+    def _handle_update(self, sender, instance, **kwargs):
+        """
+        Fires when an object is created or updated.
+        """
+        if type(instance) == ObjectChange:
+            self.changes.append(instance)
+        if "created" in kwargs:
+            self.commit = True
+        elif kwargs.get("action") in ["post_add", "post_remove"] and kwargs["pk_set"]:
+            # m2m_changed with objects added or removed
+            self.commit = True
+
+    def _handle_delete(self, sender, instance, **kwargs):
+        """
+        Fires when an object is deleted.
+        """
+        self.commit = True
+
+    def _commit(self):
+        # todo: use ObjectChange to create commit message
+        Commit(message=self._get_commit_message()).save(
+            author=self._get_commit_author()
+        )
+
+    def _get_commit_message(self):
+        if not self.changes:
+            return "auto dolt commit"
+        self.changes = sorted(self.changes, key=lambda obj: obj.time)
+        return "; ".join([str(c) for c in self.changes])
+
+    def _get_commit_author(self):
+        usr = self.request.user
+        if usr and usr.username and usr.email:
+            return f"{usr.username} <{usr.email}>"
+        return None

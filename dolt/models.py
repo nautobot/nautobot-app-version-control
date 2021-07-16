@@ -5,6 +5,9 @@ from django.urls import reverse
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
+from dolt.versioning import query_on_branch
+from dolt.querysets import CommitQuerySet
+
 __all__ = (
     "Branch",
     "Commit",
@@ -68,9 +71,9 @@ class Branch(DoltSystemTable):
 
     @staticmethod
     def active_branch():
-        with connection.cursor() as cursor:
-            cursor.execute("SELECT active_branch() FROM dual;")
-            return cursor.fetchone()[0]
+        # query must have a primary key in result schema
+        q = "SELECT name FROM dolt_branches WHERE name = active_branch();"
+        return Branch.objects.raw(q)[0].name
 
     @property
     def active(self):
@@ -97,21 +100,6 @@ class Branch(DoltSystemTable):
         except ObjectDoesNotExist:
             return None
 
-    def head_commit_hash(self):
-        """
-        Returns the latest commit for this branch
-        """
-        with connection.cursor() as cursor:
-            cursor.execute(f"""SELECT hashof('{self.name}') FROM dual;""")
-            return cursor.fetchone()[0]
-
-    def checkout_branch(self):
-        """
-        Sets the database session to this branch
-        """
-        with connection.cursor() as cursor:
-            cursor.execute(f"""SELECT dolt_checkout('{self.name}') FROM dual;""")
-
     def merge(self, merge_branch):
         # todo: check for existence
         self.checkout_branch()
@@ -121,6 +109,7 @@ class Branch(DoltSystemTable):
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
+            # TODO: ok to use `connection` (for now) because `dolt_branches` is global
             cursor.execute(
                 f"INSERT INTO dolt_branches (name,hash) VALUES ('{self.name}',hashof('{self.starting_branch}'));"
             )
@@ -189,6 +178,7 @@ class Commit(DoltSystemTable):
 
         with connection.cursor() as cursor:
             # todo(andy): remove '--allow-empty', check for contents
+            # TODO: zach says no (branch param + specific connection)
             cursor.execute(
                 f"""
             SELECT dolt_commit(

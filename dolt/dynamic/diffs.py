@@ -13,7 +13,7 @@ from nautobot.utilities.tables import BaseTable
 
 from dolt.dynamic.diff_factory import DiffModelFactory, DiffListViewFactory
 from dolt.dynamic.model_view_map import content_type_has_diff_view_table
-from dolt.context_managers import query_at_commit
+from dolt.versioning import query_at_commit
 from dolt.functions import JSONObject
 
 

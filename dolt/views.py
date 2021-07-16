@@ -18,7 +18,7 @@ from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequired
 
 from dolt import filters, forms, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
-from dolt.context_managers import query_at_commit
+from dolt.versioning import query_at_commit, query_on_branch
 from dolt.dynamic import diffs
 from dolt.dynamic.diffs import content_type_has_diff_view_table
 from dolt.models import Branch, BranchMeta, Commit
@@ -89,13 +89,13 @@ class BranchEditView(generic.ObjectEditView):
 
     def _create_branch_meta(self, form, user):
         branch = Branch.objects.get(name=form.data.get("name"))
-        # branch meta needs to live on the branch it describes
-        branch.checkout_branch()
-        BranchMeta(
-            branch=branch.name,
-            source_branch=form.data.get("starting_branch"),
-            author=user,
-        ).save()
+        with query_on_branch(branch):
+            # branch meta needs to live on the branch it describes
+            BranchMeta(
+                branch=branch.name,
+                source_branch=form.data.get("starting_branch"),
+                author=user,
+            ).save()
 
 
 class BranchBulkEditView(generic.BulkEditView):
@@ -186,8 +186,8 @@ class BranchMergePreView(GetReturnURLMixin, View):
         return redirect(f"/")
 
     def get_extra_context(self, request, src, dest):
-        dest_head = Branch.objects.get(name=dest).head_commit_hash()
-        source_head = src.head_commit_hash()
+        dest_head = Branch.objects.get(name=dest).hash
+        source_head = src.hash
         return {
             "results": diffs.two_dot_diffs(
                 from_commit=dest_head, to_commit=source_head

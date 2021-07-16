@@ -199,6 +199,17 @@ cryptography = "*"
 django-appconf = "*"
 
 [[package]]
+name = "django-dynamic-db-router"
+version = "0.3.0"
+description = "Simply route complex django queries to multiple databases."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+django = ">=1.7"
+
+[[package]]
 name = "django-filter"
 version = "2.4.0"
 description = "Django-filter is a reusable Django application for allowing users to filter querysets dynamically."
@@ -1005,7 +1016,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=1.2.3)", "pytest-flake8", "pyt
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6"
-content-hash = "cf31766a4aeaf99887ff5dac8ef51f5a52a9cc666c538544fd56a21aaba2085a"
+content-hash = "c20ccdc3d2af3fff1d4adbb37e03615af1783a51eefa6b03441c14558ef9f710"
 
 [metadata.files]
 aniso8601 = [
@@ -1132,6 +1143,10 @@ django-cors-headers = [
 django-cryptography = [
     {file = "django-cryptography-1.0.tar.gz", hash = "sha256:13de5cf8f1250744c104b9e24774d03aa6d8488959dd40cdc016934043652445"},
     {file = "django_cryptography-1.0-py3-none-any.whl", hash = "sha256:0a99980b1cee7cc5e52f9b20b322620fea7cc124d770273e7bd285b20fd9d222"},
+]
+django-dynamic-db-router = [
+    {file = "django-dynamic-db-router-0.3.0.tar.gz", hash = "sha256:0a12c0414d7413c74a6371df6481d7eb5358d214543e9f9cb43633bcce3825d1"},
+    {file = "django_dynamic_db_router-0.3.0-py2.py3-none-any.whl", hash = "sha256:34ee1a7eb107de3c79d4521418fbc92e098697ac4cf4a904fc26d75a59663c6f"},
 ]
 django-filter = [
     {file = "django-filter-2.4.0.tar.gz", hash = "sha256:84e9d5bb93f237e451db814ed422a3a625751cbc9968b484ecc74964a8696b06"},
