@@ -1,8 +1,10 @@
 from django import forms
+from django.db.models import ProtectedError
 
 from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
 
 from dolt.models import Branch, Commit
+from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
 #
@@ -81,10 +83,16 @@ class BranchBulkDeleteForm(ConfirmationForm):
     )
 
     def clean_pk(self):
-        data = self.cleaned_data["pk"]
-        if Branch.active_branch() in [str(b) for b in data]:
-            raise forms.ValidationError("The Active Branch can't be deleted")
-        return data
+        # TODO: log error messages
+        deletes = [str(b) for b in self.cleaned_data["pk"]]
+        active = Branch.active_branch()
+        if active in deletes:
+            raise forms.ValidationError(f"Cannot delete active branch: {active}")
+        if DOLT_DEFAULT_BRANCH in deletes:
+            raise forms.ValidationError(
+                f"Cannot delete primary branch: {DOLT_DEFAULT_BRANCH}"
+            )
+        return self.cleaned_data["pk"]
 
     class Meta:
         model = Branch

@@ -1,9 +1,11 @@
 import json
 
+from django.forms import ValidationError
 from django.contrib import messages
 from django.db import models
 from django.db.models import Q, F, Subquery, OuterRef, Value
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ValidationError
 from django.core.serializers import serialize
 from django.shortcuts import render, redirect
 from django.urls import reverse
@@ -21,6 +23,7 @@ from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
 from dolt.versioning import query_at_commit, query_on_branch
 from dolt.dynamic import diffs
 from dolt.dynamic.diffs import content_type_has_diff_view_table
+from dolt.middleware import branch_from_request
 from dolt.models import Branch, BranchMeta, Commit
 
 
@@ -163,7 +166,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
             "source_branch": src,
             "destination_branch": Branch.objects.get(name=kwargs["dest"]),
         }
-        change_branches()
+        change_branches(sess=req.session, branch=kwargs["dest"])
         return render(
             req,
             self.template_name,
