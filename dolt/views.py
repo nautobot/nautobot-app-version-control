@@ -2,7 +2,7 @@ import json
 
 from django.forms import ValidationError
 from django.contrib import messages
-from django.db import models
+from django.db import models, connections
 from django.db.models import Q, F, Subquery, OuterRef, Value
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
@@ -25,6 +25,7 @@ from dolt.dynamic import diffs
 from dolt.dynamic.diffs import content_type_has_diff_view_table
 from dolt.middleware import branch_from_request
 from dolt.models import Branch, BranchMeta, Commit
+from dolt.versioning import revision_db_name
 
 
 #

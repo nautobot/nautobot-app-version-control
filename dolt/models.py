@@ -102,7 +102,7 @@ class Branch(DoltSystemTable):
 
     def merge(self, merge_branch, user):
         with connection.cursor() as cursor:
-            cursor.execute(f"""SELECT dolt_checkout("{self.name}");""")
+            cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
             cursor.execute(f"""SELECT dolt_merge('{merge_branch}') FROM dual;""")
 
     def save(self, *args, **kwargs):
@@ -185,7 +185,7 @@ class Commit(DoltSystemTable):
 
         # TODO: empty commits are sometimes created
         with connection.cursor() as cursor:
-            cursor.execute(f"""SELECT dolt_checkout("{branch}");""")
+            cursor.execute(f"""SELECT dolt_checkout("{branch}") FROM dual;""")
             cursor.execute(
                 f"""
             SELECT dolt_commit(

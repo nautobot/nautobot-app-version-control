@@ -36,28 +36,27 @@ class DoltBranchMiddleware:
     def process_view(self, request, view_func, view_args, view_kwargs):
         # lookup the active branch in the session cookie
         requested = branch_from_request(request)
-        try:
-            branch = Branch.objects.get(pk=requested)
-        except ObjectDoesNotExist:
-            messages.warning(
-                request,
-                mark_safe(
-                    f"""<div class="text-center">branch not found: {requested}</div>"""
-                ),
-            )
-            request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
-            branch = Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
-
-        if request.user.is_authenticated:
-            # inject the "active branch" banner
-            messages.info(
-                request,
-                mark_safe(
-                    f"""<div class="text-center">Active Branch: {branch}</div>"""
-                ),
-            )
-
+        with query_on_branch(DOLT_DEFAULT_BRANCH):
+            try:
+                branch = Branch.objects.get(pk=requested)
+            except ObjectDoesNotExist:
+                messages.warning(
+                    request,
+                    mark_safe(
+                        f"""<div class="text-center">branch not found: {requested}</div>"""
+                    ),
+                )
+                request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
+                branch = Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
         with query_on_branch(branch):
+            if request.user.is_authenticated:
+                # inject the "active branch" banner
+                msg = f"""
+                    <div class="text-center">
+                        Active Branch: {Branch.active_branch()}
+                    </div>
+                """
+                messages.info(request, mark_safe(msg))
             return view_func(request, *view_args, **view_kwargs)
 
 
@@ -79,7 +78,6 @@ class DoltAutoCommitMiddleware(object):
 class AutoDoltCommit(object):
     """
     adapted from `nautobot.extras.context_managers`
-    TODO: only auto-commit for versioned models
     """
 
     def __init__(self, request, branch):
