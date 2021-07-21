@@ -156,8 +156,9 @@ class Commit(DoltSystemTable):
 
     @staticmethod
     def merge_base(left, right):
-        q = "SELECT * FROM dolt_log WHERE commit_hash = DOLT_MERGE_BASE(%s, %s)"
-        return Commit.objects.raw(q, [left, right])[0]
+        with connection.cursor() as c:
+            c.execute(f"SELECT DOLT_MERGE_BASE('{left}', '{right}') FROM dual;")
+            return c.fetchone()[0]
 
     @property
     def short_message(self):
