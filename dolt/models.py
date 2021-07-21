@@ -5,8 +5,6 @@ from django.urls import reverse
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
-from dolt.versioning import query_on_branch
-
 
 __all__ = (
     "Branch",
@@ -55,7 +53,6 @@ class Branch(DoltSystemTable):
 
     def __init__(self, *args, starting_branch=None, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.user = user
         self.starting_branch = starting_branch
 
     def __str__(self):
@@ -101,13 +98,20 @@ class Branch(DoltSystemTable):
             return None
 
     def merge(self, merge_branch, user):
+        author = author_from_user(user)
         with connection.cursor() as cursor:
             cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
-            cursor.execute(f"""SELECT dolt_merge('{merge_branch}') FROM dual;""")
+            cursor.execute(f"""SELECT dolt_merge("{merge_branch}") FROM dual;""")
+            cursor.execute(
+                f"""SELECT dolt_commit(
+                '--all', 
+                '--allow-empty',
+                '--message', 'merged {merge_branch} into {self.name}',
+                '--author', '{author}') FROM dual;"""
+            )
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
-            # TODO: ok to use `connection` (for now) because `dolt_branches` is global
             cursor.execute(
                 f"INSERT INTO dolt_branches (name,hash) VALUES ('{self.name}',hashof('{self.starting_branch}'));"
             )
@@ -170,16 +174,8 @@ class Commit(DoltSystemTable):
             "parent_hash", flat=True
         )
 
-    @staticmethod
-    def _author_from_user(usr):
-        if usr and usr.username and usr.email:
-            return f"{usr.username} <{usr.email}>"
-        return None
-
     def save(self, *args, branch=None, author=None, **kwargs):
-        author = self._author_from_user(author)
-        if not author:
-            author = "nautobot <nautobot@ntc.com>"
+        author = author_from_user(author)
         if not branch:
             raise ValueError("must specify branch to create commit")
 
@@ -247,3 +243,10 @@ class Conflicts(DoltSystemTable):
 
     def __str__(self):
         return f"{self.table} ({self.num_conflicts})"
+
+
+def author_from_user(usr):
+    if usr and usr.username and usr.email:
+        return f"{usr.username} <{usr.email}>"
+    # default to generic user
+    return "nautobot <nautobot@ntc.com>"

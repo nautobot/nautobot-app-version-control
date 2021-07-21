@@ -25,8 +25,6 @@ def branch_from_request(request):
 
 
 class DoltBranchMiddleware:
-    # DOLT_BRANCH_KEYWORD = "branch"
-
     def __init__(self, get_response):
         self.get_response = get_response
 
@@ -34,21 +32,7 @@ class DoltBranchMiddleware:
         return self.get_response(request)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        # lookup the active branch in the session cookie
-        requested = branch_from_request(request)
-        with query_on_branch(DOLT_DEFAULT_BRANCH):
-            try:
-                branch = Branch.objects.get(pk=requested)
-            except ObjectDoesNotExist:
-                messages.warning(
-                    request,
-                    mark_safe(
-                        f"""<div class="text-center">branch not found: {requested}</div>"""
-                    ),
-                )
-                request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
-                branch = Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
-        with query_on_branch(branch):
+        with query_on_branch(self.get_branch(request)):
             if request.user.is_authenticated:
                 # inject the "active branch" banner
                 msg = f"""
@@ -58,6 +42,21 @@ class DoltBranchMiddleware:
                 """
                 messages.info(request, mark_safe(msg))
             return view_func(request, *view_args, **view_kwargs)
+
+    def get_branch(self, request):
+        # lookup the active branch in the session cookie
+        requested = branch_from_request(request)
+        try:
+            return Branch.objects.get(pk=requested)
+        except ObjectDoesNotExist:
+            messages.warning(
+                request,
+                mark_safe(
+                    f"""<div class="text-center">branch not found: {requested}</div>"""
+                ),
+            )
+            request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
+            return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
 
 
 class DoltAutoCommitMiddleware(object):

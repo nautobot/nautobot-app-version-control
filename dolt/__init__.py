@@ -12,8 +12,7 @@ class NautobotDolt(PluginConfig):
     default_settings = {
         # TODO: are these respected?
         "DATABASE_ROUTERS": [
-            # 'dolt.routers.AuthPermissionsRouter',
-            "dolt.routers.ModelVersionRouter",
+            "dolt.routers.GlobalStateRouter",
         ],
         "SESSION_ENGINE": "django.contrib.sessions.backends.signed_cookies",
         "CACHEOPS_ENABLED": False,

@@ -5,17 +5,19 @@ from django.conf import settings
 from django.db import connection, transaction
 from django.db.models.signals import m2m_changed, pre_delete, post_save
 
-from dynamic_db_router.router import in_database
-
 from nautobot.extras.models.change_logging import ObjectChange
 
-from dolt.constants import DB_NAME
+from dolt.constants import DB_NAME, DOLT_BRANCH_KEYWORD
+from dolt.models import Branch
 
 
 @contextmanager
 def query_on_branch(branch):
-    with in_database(db_from_revision(branch), read=True, write=True):
+    with connection.cursor() as cursor:
+        prev = Branch.active_branch()
+        cursor.execute(f"""SELECT dolt_checkout("{branch}") FROM dual;""")
         yield
+        cursor.execute(f"""SELECT dolt_checkout("{prev}") FROM dual;""")
 
 
 @contextmanager
@@ -37,11 +39,7 @@ def query_at_commit(commit):
         raise e
 
 
-def revision_db_name(branch):
-    return f"{DB_NAME}/{branch}"
-
-
-def db_from_revision(branch):
-    db = deepcopy(settings.DATABASES["default"])
-    db["NAME"] = revision_db_name(branch)
-    return db
+def change_branches(sess=None, branch=None):
+    if sess is None or branch is None:
+        raise ValueError("invalid args to change_branches()")
+    sess[DOLT_BRANCH_KEYWORD] = branch

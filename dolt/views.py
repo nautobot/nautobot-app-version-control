@@ -20,12 +20,11 @@ from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequired
 
 from dolt import filters, forms, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
-from dolt.versioning import query_at_commit, query_on_branch
+from dolt.versioning import query_at_commit, query_on_branch, change_branches
 from dolt.dynamic import diffs
 from dolt.dynamic.diffs import content_type_has_diff_view_table
 from dolt.middleware import branch_from_request
 from dolt.models import Branch, BranchMeta, Commit
-from dolt.versioning import revision_db_name
 
 
 #
@@ -85,7 +84,8 @@ class BranchEditView(generic.ObjectEditView):
         response = super().post(req, *args, **kwargs)
         if self._is_success_response(response):
             change_branches(sess=req.session, branch=form.data.get("name"))
-            self._create_branch_meta(form, req.user)
+            # TODO: turn back on
+            # self._create_branch_meta(form, req.user)
         return response
 
     def _is_success_response(self, response):
@@ -127,6 +127,7 @@ class BranchMergeFormView(GetReturnURLMixin, View):
 
     def get(self, req, *args, **kwargs):
         initial = {
+            # TODO: use branch meta source branch
             "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
             "source_branch": Branch.objects.get(name=kwargs["src"]),
         }
@@ -167,7 +168,6 @@ class BranchMergePreView(GetReturnURLMixin, View):
             "source_branch": src,
             "destination_branch": Branch.objects.get(name=kwargs["dest"]),
         }
-        change_branches(sess=req.session, branch=kwargs["dest"])
         return render(
             req,
             self.template_name,
@@ -185,9 +185,9 @@ class BranchMergePreView(GetReturnURLMixin, View):
             Branch.objects.get(name=dest).merge(src, req.user)
         except Exception as e:
             raise e
-
         msg = f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"
         messages.info(req, mark_safe(msg))
+        change_branches(sess=req.session, branch=dest)
         return redirect(f"/")
 
     def get_extra_context(self, req, src, dest):
@@ -367,9 +367,3 @@ def serialize_object(obj, extra=None, exclude=None):
             data.pop(key)
 
     return data
-
-
-def change_branches(sess=None, branch=None):
-    if sess is None or branch is None:
-        raise ValueError("invalid args to change_branches()")
-    sess[DOLT_BRANCH_KEYWORD] = branch
