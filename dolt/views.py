@@ -18,11 +18,10 @@ from nautobot.extras.utils import is_taggable
 from nautobot.utilities.permissions import get_permission_for_model
 from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequiredMixin
 
-from dolt import filters, forms, tables
+from dolt import filters, forms, tables, diffs
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
 from dolt.versioning import query_at_commit, query_on_branch, change_branches
-from dolt.dynamic import diffs
-from dolt.dynamic.diffs import content_type_has_diff_view_table
+from dolt.diffs import content_type_has_diff_view_table
 from dolt.middleware import branch_from_request
 from dolt.models import Branch, BranchMeta, Commit
 
