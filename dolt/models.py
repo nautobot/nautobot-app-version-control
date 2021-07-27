@@ -102,13 +102,20 @@ class Branch(DoltSystemTable):
         with connection.cursor() as cursor:
             cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
             cursor.execute(f"""SELECT dolt_merge("{merge_branch}") FROM dual;""")
-            cursor.execute(
-                f"""SELECT dolt_commit(
-                '--all', 
-                '--allow-empty',
-                '--message', 'merged {merge_branch} into {self.name}',
-                '--author', '{author}') FROM dual;"""
-            )
+            # TODO: `dolt_merge()` is changing to boolean value
+            msg = cursor.fetchone()[0]
+
+        if "Updating" in msg:
+            # only commit merged data on success
+            with connection.cursor() as cursor:
+                msg = f"""merged "{merge_branch}" into "{self.name}"."""
+                cursor.execute(
+                    f"""SELECT dolt_commit(
+                    '--all', 
+                    '--allow-empty',
+                    '--message', '{msg}',
+                    '--author', '{author}') FROM dual;"""
+                )
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:

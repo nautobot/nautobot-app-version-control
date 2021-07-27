@@ -1,5 +1,6 @@
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import connection
 from django.db.models.signals import m2m_changed, post_save, pre_delete
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
@@ -32,16 +33,23 @@ class DoltBranchMiddleware:
         return self.get_response(request)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
-        with query_on_branch(self.get_branch(request)):
-            if request.user.is_authenticated:
-                # inject the "active branch" banner
-                msg = f"""
-                    <div class="text-center">
-                        Active Branch: {Branch.active_branch()}
-                    </div>
-                """
-                messages.info(request, mark_safe(msg))
-            return view_func(request, *view_args, **view_kwargs)
+        branch = self.get_branch(request)
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute(f"""SELECT dolt_checkout("{branch}") FROM dual;""")
+        except Exception as e:
+            msg = f"could not checkout branch {branch}: {str(e)}"
+            messages.error(request, mark_safe(msg))
+
+        if request.user.is_authenticated:
+            # inject the "active branch" banner
+            msg = f"""
+                <div class="text-center">
+                    Active Branch: {Branch.active_branch()}
+                </div>
+            """
+            messages.info(request, mark_safe(msg))
+        return view_func(request, *view_args, **view_kwargs)
 
     def get_branch(self, request):
         # lookup the active branch in the session cookie

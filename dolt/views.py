@@ -84,22 +84,21 @@ class BranchEditView(generic.ObjectEditView):
         response = super().post(req, *args, **kwargs)
         if self._is_success_response(response):
             change_branches(sess=req.session, branch=form.data.get("name"))
-            # TODO: turn back on
-            # self._create_branch_meta(form, req.user)
         return response
 
     def _is_success_response(self, response):
         return (response.status_code // 100) in (2, 3)
 
-    def _create_branch_meta(self, form, user):
-        branch = Branch.objects.get(name=form.data.get("name"))
-        with query_on_branch(branch):
-            # branch meta needs to live on the branch it describes
-            BranchMeta(
-                branch=branch.name,
-                source_branch=form.data.get("starting_branch"),
-                author=user,
-            ).save()
+    # TODO: create branch meta on branch creation
+    # def _create_branch_meta(self, form, user):
+    #     branch = Branch.objects.get(name=form.data.get("name"))
+    #     with query_on_branch(branch):
+    #         # branch meta needs to live on the branch it describes
+    #         BranchMeta(
+    #             branch=branch.name,
+    #             source_branch=form.data.get("starting_branch"),
+    #             author=user,
+    #         ).save()
 
 
 class BranchBulkEditView(generic.BulkEditView):
@@ -184,11 +183,13 @@ class BranchMergePreView(GetReturnURLMixin, View):
         try:
             Branch.objects.get(name=dest).merge(src, req.user)
         except Exception as e:
-            raise e
-        msg = f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"
-        messages.info(req, mark_safe(msg))
-        change_branches(sess=req.session, branch=dest)
-        return redirect(f"/")
+            messages.error(req, mark_safe(f"error during merge: {str(e)}"))
+            return redirect(req.path)
+        else:
+            msg = f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"
+            messages.info(req, mark_safe(msg))
+            change_branches(sess=req.session, branch=dest)
+            return redirect(f"/")
 
     def get_extra_context(self, req, src, dest):
         dest_head = Branch.objects.get(name=dest).hash
