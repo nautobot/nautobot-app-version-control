@@ -180,7 +180,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
         src = kwargs["src"]
         dest = kwargs["dest"]
         try:
-            Branch.objects.get(name=dest).merge(src, req.user)
+            Branch.objects.get(name=dest).merge(src, user=req.user)
         except Exception as e:
             messages.error(req, mark_safe(f"error during merge: {str(e)}"))
             return redirect(req.path)

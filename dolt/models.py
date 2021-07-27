@@ -97,7 +97,10 @@ class Branch(DoltSystemTable):
         except ObjectDoesNotExist:
             return None
 
-    def merge(self, merge_branch, user):
+    def head(self):
+        return Commit.objects.get(commit_hash=self.hash)
+
+    def merge(self, merge_branch, user=None):
         author = author_from_user(user)
         with connection.cursor() as cursor:
             cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
