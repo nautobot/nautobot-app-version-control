@@ -66,6 +66,7 @@ def get_merge_candidate(src, dest):
 
 
 def make_merge_candidate(src, dest):
+    breakpoint()
     name = _merge_candidate_name(src, dest)
     Branch(name=name, starting_branch=dest).save()
     with connection.cursor() as cursor:
