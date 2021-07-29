@@ -47,6 +47,8 @@
     </div>
 </form>
 
+{% include 'dolt/conflicts.html' with conflicts=conflicts %}
+
 {% include 'dolt/diffs.html' with results=results %}
 
 {% if obj and settings.DOCS_ROOT %}

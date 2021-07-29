@@ -1,0 +1,15 @@
+{% load django_tables2 %}
+
+<div class="conflicts" >
+    {% if conflicts %}
+
+    {% if conflicts.summary %}
+        <div class="row">
+            <div class="col-md-12">
+                {% include 'dolt/conflicts_summary.html' with table=conflicts.summary.table %}
+            </div>
+        </div>
+    {% endif %}
+
+    {% endif %}
+</div>

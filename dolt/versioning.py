@@ -14,7 +14,7 @@ from dolt.models import Branch
 @contextmanager
 def query_on_branch(branch):
     with connection.cursor() as cursor:
-        prev = Branch.active_branch()
+        prev = str(Branch.active_branch())
         cursor.execute(f"""SELECT dolt_checkout("{branch}") FROM dual;""")
         yield
         cursor.execute(f"""SELECT dolt_checkout("{prev}") FROM dual;""")

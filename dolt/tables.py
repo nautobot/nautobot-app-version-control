@@ -1,11 +1,12 @@
 import django_tables2 as tables
 from django_tables2 import A
 
-from dolt.models import Branch, Commit
+from dolt.models import Branch, Conflicts, Commit
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
 __all__ = (
     "BranchTable",
+    "ConflictsTable",
     "CommitTable",
 )
 
@@ -79,5 +80,20 @@ class CommitTable(BaseTable):
             "committer",
             "email",
             "commit_hash",
+        )
+        default_columns = fields
+
+
+#
+# Conflicts
+#
+
+
+class ConflictsTable(BaseTable):
+    class Meta(BaseTable.Meta):
+        model = Conflicts
+        fields = (
+            "table",
+            "num_conflicts",
         )
         default_columns = fields

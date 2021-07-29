@@ -1,4 +1,8 @@
-from dolt.models import Branch, Conflicts, Commit
+from django.db import connection
+
+from dolt.models import Branch, Conflicts, Commit, author_from_user
+from dolt.tables import ConflictsTable
+from dolt.versioning import query_on_branch
 
 
 def get_conflicts_for_merge(src, dest):
@@ -12,7 +16,13 @@ def get_conflicts_for_merge(src, dest):
     """
     mc = get_or_make_merge_candidate(src, dest)
     with query_on_branch(mc):
-        return {c.table: c.num_conflicts for c in Conflicts.objects.all()}
+        if not Conflicts.objects.count():
+            return {}
+        return {
+            "summary": {
+                "table": ConflictsTable(Conflicts.objects.all()),
+            },
+        }
 
 
 def merge_candidate_exists(src, dest):
@@ -26,7 +36,7 @@ def merge_candidate_exists(src, dest):
 
 def merge_candidate_is_fresh(mc, src, dest):
     """
-    A merge candidate (MC) is considered "fresh" is the
+    A merge candidate (MC) is considered "fresh" if the
     source and destination branches used to create the
     MC are unchanged since the MC was created.
     """
@@ -46,8 +56,21 @@ def get_merge_candidate(src, dest):
 
 def make_merge_candidate(src, dest):
     name = _merge_candidate_name(src, dest)
-    mc = Branch(name=name, starting_branch=dest).save().merge(src)
-    return mc
+    Branch(name=name, starting_branch=dest).save()
+    with connection.cursor() as cursor:
+        cursor.execute("SET @@dolt_force_transaction_commit = 1;")
+        cursor.execute(f"""SELECT dolt_checkout("{name}") FROM dual;""")
+        cursor.execute(f"""SELECT dolt_merge("{src}") FROM dual;""")
+        msg = f"""creating merge candidate with src: "{src}" and dest: "{dest}"."""
+        cursor.execute(
+            f"""SELECT dolt_commit(
+                    '--force',
+                    '--all', 
+                    '--allow-empty',
+                    '--message', '{msg}',
+                    '--author', '{author_from_user(None)}') FROM dual;"""
+        )
+    return Branch.objects.get(name=name)
 
 
 def get_or_make_merge_candidate(src, dest):
@@ -58,4 +81,4 @@ def get_or_make_merge_candidate(src, dest):
 
 
 def _merge_candidate_name(src, dest):
-    return f"--merge-candidate--{src}-{dest}--"
+    return f"xxx-merge-candidate--{src}--{dest}"

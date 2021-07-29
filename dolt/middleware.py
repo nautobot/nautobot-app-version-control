@@ -5,8 +5,6 @@ from django.db.models.signals import m2m_changed, post_save, pre_delete
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 
-from dynamic_db_router import in_database
-
 from nautobot.extras.models.change_logging import ObjectChange
 
 from dolt.constants import (

@@ -18,7 +18,7 @@ from nautobot.extras.utils import is_taggable
 from nautobot.utilities.permissions import get_permission_for_model
 from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequiredMixin
 
-from dolt import filters, forms, tables, diffs
+from dolt import diffs, filters, forms, merge, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
 from dolt.versioning import query_at_commit, query_on_branch, change_branches
 from dolt.diffs import content_type_has_diff_view_table
@@ -191,12 +191,13 @@ class BranchMergePreView(GetReturnURLMixin, View):
             return redirect(f"/")
 
     def get_extra_context(self, req, src, dest):
-        dest_head = Branch.objects.get(name=dest).hash
+        merge_base = Commit.merge_base(src, dest)
         source_head = src.hash
         return {
             "results": diffs.two_dot_diffs(
-                from_commit=dest_head, to_commit=source_head
+                from_commit=merge_base, to_commit=source_head
             ),
+            "conflicts": merge.get_conflicts_for_merge(src, dest),
             "back_btn_url": reverse("plugins:dolt:branch_merge", args=[src.name]),
         }
 

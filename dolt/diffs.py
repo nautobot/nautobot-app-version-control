@@ -22,10 +22,10 @@ def diffable_content_types():
     return ContentType.objects.filter(
         app_label__in=(
             "dcim",
-            # "circuits",
+            "circuits",
             "ipam",
-            # "tenancy",
-            # "virtualization",
+            "tenancy",
+            "virtualization",
         )
     )
 
