@@ -74,7 +74,9 @@ def docker_compose(context, command, **kwargs):
     }
     compose_command = f'docker-compose --project-name {context.nautobot_dolt.project_name} --project-directory "{context.nautobot_dolt.compose_dir}"'
     for compose_file in context.nautobot_dolt.compose_files:
-        compose_file_path = os.path.join(context.nautobot_dolt.compose_dir, compose_file)
+        compose_file_path = os.path.join(
+            context.nautobot_dolt.compose_dir, compose_file
+        )
         compose_command += f' -f "{compose_file_path}"'
     compose_command += f" {command}"
     print(f'Running docker-compose command "{command}"')
@@ -330,7 +332,9 @@ def unittest(context, keepdb=False, label="nautobot_dolt", failfast=False, buffe
 @task
 def unittest_coverage(context):
     """Report on code test coverage as measured by 'invoke unittest'."""
-    command = "coverage report --skip-covered --include 'nautobot_dolt/*' --omit *migrations*"
+    command = (
+        "coverage report --skip-covered --include 'nautobot_dolt/*' --omit *migrations*"
+    )
 
     run_command(context, command)
 
