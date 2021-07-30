@@ -73,18 +73,6 @@ DATABASES = {
     },
 }
 
-PLUGINS = [
-    "dolt",
-]
-
-SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
-
-CACHEOPS_ENABLED = False
-
-DATABASE_ROUTERS = [
-    "dolt.routers.GlobalStateRouter",
-]
-
 
 # Redis variables
 REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
@@ -169,7 +157,7 @@ BANNER_LOGIN = os.environ.get("BANNER_LOGIN", "")
 CACHEOPS_DEFAULTS = {"timeout": 900}
 
 # Set to False to disable caching with cacheops. (Default: True)
-CACHEOPS_ENABLED = True
+CACHEOPS_ENABLED = False
 
 # Maximum number of days to retain logged changes. Set to 0 to retain changes indefinitely. (Default: 90)
 CHANGELOG_RETENTION = int(os.environ.get("CHANGELOG_RETENTION", 90))
@@ -266,6 +254,14 @@ NAPALM_ARGS = {}
 # Determine how many objects to display per page within a list. (Default: 50)
 PAGINATE_COUNT = int(os.environ.get("PAGINATE_COUNT", 50))
 
+# Enable installed plugins. Add the name of each plugin to the list.
+PLUGINS = [
+    "dolt",
+]
+
+DATABASE_ROUTERS = [
+    "dolt.routers.GlobalStateRouter",
+]
 
 # Plugins configuration settings. These settings are used by various plugins that the user may have installed.
 # Each key in the dictionary is the name of an installed plugin and its value is a dictionary of settings.
@@ -307,6 +303,7 @@ RQ_DEFAULT_TIMEOUT = 300
 # re-authenticate. (Default: 1209600 [14 days])
 SESSION_COOKIE_AGE = 1209600  # 2 weeks, in seconds
 
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
 
 # By default, Nautobot will store session data in the database. Alternatively, a file path can be specified here to use
 # local file storage instead. (This can be useful for enabling authentication on a standby instance with read-only
