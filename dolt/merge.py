@@ -1,7 +1,13 @@
 from django.db import connection
 
-from dolt.models import Branch, Conflicts, Commit, author_from_user
-from dolt.tables import ConflictsTable
+from dolt.models import (
+    Branch,
+    Conflicts,
+    ConstraintViolations,
+    Commit,
+    author_from_user,
+)
+from dolt.tables import ConflictsTable, ConstraintViolationsTable
 from dolt.versioning import query_on_branch
 
 
@@ -16,11 +22,14 @@ def get_conflicts_for_merge(src, dest):
     """
     mc = get_or_make_merge_candidate(src, dest)
     with query_on_branch(mc):
-        if not Conflicts.objects.count():
+        if not conflicts_or_violations_exist():
             return {}
         return {
             "summary": {
-                "table": ConflictsTable(Conflicts.objects.all()),
+                "conflicts": ConflictsTable(Conflicts.objects.all()),
+                "violations": ConstraintViolationsTable(
+                    ConstraintViolations.objects.all()
+                ),
             },
         }
 
@@ -28,6 +37,7 @@ def get_conflicts_for_merge(src, dest):
 def merge_candidate_exists(src, dest):
     name = _merge_candidate_name(src, dest)
     try:
+        breakpoint()
         mc = Branch.objects.get(name=name)
         return merge_candidate_is_fresh(mc, src, dest)
     except Branch.DoesNotExist:
@@ -40,6 +50,7 @@ def merge_candidate_is_fresh(mc, src, dest):
     source and destination branches used to create the
     MC are unchanged since the MC was created.
     """
+    breakpoint()
     if not mc:
         return False
     src_stable = Commit.merge_base(mc, src) == src.hash
@@ -82,3 +93,9 @@ def get_or_make_merge_candidate(src, dest):
 
 def _merge_candidate_name(src, dest):
     return f"xxx-merge-candidate--{src}--{dest}"
+
+
+def conflicts_or_violations_exist():
+    conflicts = Conflicts.objects.count() != 0
+    violations = ConstraintViolations.objects.count() != 0
+    return conflicts or violations

@@ -256,6 +256,23 @@ class Conflicts(DoltSystemTable):
         return f"{self.table} ({self.num_conflicts})"
 
 
+class ConstraintViolations(DoltSystemTable):
+    """
+    Foreign Key and Unique Key Constraint Violations
+    """
+
+    table = models.TextField(primary_key=True)
+    num_violations = models.IntegerField()
+
+    class Meta:
+        managed = False
+        db_table = "dolt_constraint_violations"
+        verbose_name_plural = "constraint violations"
+
+    def __str__(self):
+        return f"{self.table} ({self.num_violations})"
+
+
 def author_from_user(usr):
     if usr and usr.username and usr.email:
         return f"{usr.username} <{usr.email}>"

@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from django_tables2 import A
 
-from dolt.models import Branch, Conflicts, Commit
+from dolt.models import Branch, Conflicts, ConstraintViolations, Commit
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
 __all__ = (
@@ -95,5 +95,15 @@ class ConflictsTable(BaseTable):
         fields = (
             "table",
             "num_conflicts",
+        )
+        default_columns = fields
+
+
+class ConstraintViolationsTable(BaseTable):
+    class Meta(BaseTable.Meta):
+        model = ConstraintViolations
+        fields = (
+            "table",
+            "num_violations",
         )
         default_columns = fields
