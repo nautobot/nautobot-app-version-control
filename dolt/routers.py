@@ -20,6 +20,10 @@ class GlobalStateRouter:
         Versioned models use the 'default' database and the Dolt branch that
         was checked out in `DoltBranchMiddleware`.
         """
+        if Branch.active_branch == DOLT_DEFAULT_BRANCH:
+            # If primary branch is active, send all queries
+            # to "global", even for versioned models
+            return self.global_db
         if is_versioned_model(model):
             return None
         return self.global_db
@@ -31,6 +35,10 @@ class GlobalStateRouter:
         was checked out in `DoltBranchMiddleware`.
         Prevents writes of non-versioned models on non-primary branches.
         """
+        if Branch.active_branch == DOLT_DEFAULT_BRANCH:
+            # If primary branch is active, send all queries
+            # to "global", even for versioned models
+            return self.global_db
         if is_versioned_model(model):
             return None
         if self._branch_is_not_primary():
