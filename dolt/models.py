@@ -108,9 +108,8 @@ class Branch(DoltSystemTable):
             # TODO: `dolt_merge()` is changing to boolean value
             msg = cursor.fetchone()[0]
 
-        if "Updating" in msg:
-            # only commit merged data on success
-            with connection.cursor() as cursor:
+            if "Updating" in msg:
+                # only commit merged data on success
                 msg = f"""merged "{merge_branch}" into "{self.name}"."""
                 cursor.execute(
                     f"""SELECT dolt_commit(
@@ -119,6 +118,9 @@ class Branch(DoltSystemTable):
                     '--message', '{msg}',
                     '--author', '{author}') FROM dual;"""
                 )
+            else:
+                cursor.execute(f"SELECT dolt_merge('--abort') FROM dual;")
+
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:

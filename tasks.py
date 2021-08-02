@@ -27,7 +27,7 @@ namespace.configure(
     {
         "nautobot_dolt": {
             "nautobot_ver": "1.0.1",
-            "project_name": "nautobot-dolt",
+            "project_name": "dolt",
             "python_ver": "3.6",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
@@ -209,7 +209,7 @@ def createsuperuser(context, user="admin"):
 )
 def makemigrations(context, name=""):
     """Perform makemigrations operation in Django."""
-    command = "nautobot-server makemigrations nautobot_dolt"
+    command = "nautobot-server makemigrations dolt"
 
     if name:
         command += f" --name {name}"
@@ -303,7 +303,7 @@ def bandit(context):
 @task
 def check_migrations(context):
     """Check for missing migrations."""
-    command = "nautobot-server --config=nautobot/core/tests/nautobot_config.py makemigrations --dry-run --check"
+    command = "nautobot-server makemigrations --dry-run --check"
 
     run_command(context, command)
 

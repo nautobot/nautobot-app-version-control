@@ -37,7 +37,6 @@ def get_conflicts_for_merge(src, dest):
 def merge_candidate_exists(src, dest):
     name = _merge_candidate_name(src, dest)
     try:
-        breakpoint()
         mc = Branch.objects.get(name=name)
         return merge_candidate_is_fresh(mc, src, dest)
     except Branch.DoesNotExist:
@@ -50,7 +49,6 @@ def merge_candidate_is_fresh(mc, src, dest):
     source and destination branches used to create the
     MC are unchanged since the MC was created.
     """
-    breakpoint()
     if not mc:
         return False
     src_stable = Commit.merge_base(mc, src) == src.hash
@@ -66,7 +64,6 @@ def get_merge_candidate(src, dest):
 
 
 def make_merge_candidate(src, dest):
-    breakpoint()
     name = _merge_candidate_name(src, dest)
     Branch(name=name, starting_branch=dest).save()
     with connection.cursor() as cursor:
