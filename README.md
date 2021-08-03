@@ -31,7 +31,7 @@ $ inv start
 ## Branches
 
 With the Nautobot-Dolt plugin installed, everything within Nautobot happens on a branch. 
-The "active branch" is always visible in a banner at the top of page.
+the "active branch" is always visible in a banner at the top of page.
 The default branch "main" represents the state of the production database, 
 all other branches represent the state of in-progress changes to main. 
 While changes can be made directly to the main branch (assuming appropriate permissions), 
