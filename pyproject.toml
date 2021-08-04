@@ -7,7 +7,7 @@ license = "LICENSE.txt"
 
 [tool.poetry.dependencies]
 python = "^3.6"
-nautobot = "^1.0.1"
+nautobot = "1.1.0"
 mysqlclient = "^2.0.3"
 
 [tool.poetry.dev-dependencies]
