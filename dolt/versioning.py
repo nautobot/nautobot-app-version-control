@@ -35,13 +35,8 @@ def db_for_commit(commit):
     TODO: add detail
     """
     cm_hash = str(commit)
-    connections.databases[cm_hash] = {
-        "id": cm_hash,
-        "NAME": f"{DB_NAME}/{cm_hash}",
-        "USER": "root",
-        "PASSWORD": "pass",
-        "HOST": "127.0.0.1",
-        "PORT": 3306,
-        "ENGINE": "django.db.backends.mysql",
-    }
+    db = deepcopy(connections.databases["default"])
+    db["id"] = cm_hash
+    db["NAME"] = f"{DB_NAME}/{cm_hash}"
+    connections.databases[cm_hash] = db
     return cm_hash

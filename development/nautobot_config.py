@@ -260,6 +260,7 @@ PLUGINS = [
 ]
 
 DATABASE_ROUTERS = [
+    # TODO: currently this breaks migrations
     "dolt.routers.GlobalStateRouter",
 ]
 
