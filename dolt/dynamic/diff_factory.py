@@ -263,6 +263,14 @@ class DiffListViewBase(tables.Table):
                 # can't render diff styling
                 return cell
 
+            after_name = f"to_{bound_column.name}"
+            if (
+                after_name in record.diff
+                and record.diff[after_name] == record.diff[before_name]
+            ):
+                # no diff
+                return cell
+
             # re-render the cell value with its before value
             kwargs["value"] = record.diff[before_name]
             before_cell = call_with_appropriate(fn, kwargs)
