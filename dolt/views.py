@@ -20,7 +20,7 @@ from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequired
 
 from dolt import diffs, filters, forms, merge, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
-from dolt.versioning import query_at_commit, query_on_branch, change_branches
+from dolt.versioning import db_for_commit, query_on_branch, change_branches
 from dolt.diffs import content_type_has_diff_view_table
 from dolt.middleware import branch_from_request
 from dolt.models import Branch, BranchMeta, Commit
@@ -41,7 +41,7 @@ class BranchView(generic.ObjectView):
 
 
 class BranchListView(generic.ObjectListView):
-    queryset = Branch.objects.all()
+    queryset = Branch.objects.exclude(name__startswith="xxx")
     filterset = filters.BranchFilterSet
     filterset_form = forms.BranchFilterForm
     table = tables.BranchTable
@@ -288,18 +288,19 @@ class DiffDetailView(View):
         from_commit = kwargs["from_commit"]
         to_commit = kwargs["to_commit"]
         qs = self.model.objects.all()
-
         added, removed = False, False
-        with query_at_commit(from_commit):
-            if qs.filter(pk=pk).exists():
-                before_obj = serialize_object(qs.get(pk=pk))
-            else:
-                before_obj, added = {}, True
-        with query_at_commit(to_commit):
-            if qs.filter(pk=pk).exists():
-                after_obj = serialize_object(qs.get(pk=pk))
-            else:
-                after_obj, removed = {}, True
+
+        from_qs = qs.using(db_for_commit(from_commit))
+        if from_qs.filter(pk=pk).exists():
+            before_obj = serialize_object(from_qs.get(pk=pk))
+        else:
+            before_obj, added = {}, True
+
+        to_qs = qs.using(db_for_commit(to_commit))
+        if to_qs.filter(pk=pk).exists():
+            after_obj = serialize_object(to_qs.get(pk=pk))
+        else:
+            after_obj, removed = {}, True
 
         diff_obj = []
         for field in self.model.csv_headers:

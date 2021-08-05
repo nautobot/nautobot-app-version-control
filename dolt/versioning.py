@@ -1,8 +1,9 @@
 from contextlib import contextmanager
 from copy import deepcopy
+import uuid
 
 from django.conf import settings
-from django.db import connection, transaction
+from django.db import connection, connections, transaction
 from django.db.models.signals import m2m_changed, pre_delete, post_save
 
 from nautobot.extras.models.change_logging import ObjectChange
@@ -20,26 +21,27 @@ def query_on_branch(branch):
         cursor.execute(f"""SELECT dolt_checkout("{prev}") FROM dual;""")
 
 
-@contextmanager
-def query_at_commit(commit):
-    # TODO: use database revision syntax (when available)
-    try:
-        with transaction.atomic():
-            with connection.cursor() as cursor:
-                cursor.execute(f"SELECT @@{DB_NAME}_working;")
-                previous = cursor.fetchone()[0]
-                cursor.execute(f"SET @@{DB_NAME}_working = '{commit}';")
-
-            yield
-
-            with connection.cursor() as cursor:
-                cursor.execute(f"SET @@{DB_NAME}_working = '{previous}';")
-
-    except Exception as e:
-        raise e
-
-
 def change_branches(sess=None, branch=None):
     if sess is None or branch is None:
         raise ValueError("invalid args to change_branches()")
     sess[DOLT_BRANCH_KEYWORD] = branch
+
+
+def db_for_commit(commit):
+    """
+    Uses "database-revision" syntax
+    adds a database entry for the commit
+    e.g. "nautobot/3a5mqdgao8029bf8ji0huobbskq1n1l5"
+    TODO: add detail
+    """
+    cm_hash = str(commit)
+    connections.databases[cm_hash] = {
+        "id": cm_hash,
+        "NAME": f"{DB_NAME}/{cm_hash}",
+        "USER": "root",
+        "PASSWORD": "pass",
+        "HOST": "127.0.0.1",
+        "PORT": 3306,
+        "ENGINE": "django.db.backends.mysql",
+    }
+    return cm_hash

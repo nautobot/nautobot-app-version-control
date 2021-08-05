@@ -109,6 +109,8 @@ class DiffListViewFactory:
 
     def make_table_model(self):
         try:
+            # lookup the list view table for this content type
+            # todo: once available, use https://github.com/nautobot/nautobot/issues/747
             ModelViewTable = MODEL_VIEW_TABLES[self.ct.app_label][self.ct.model]
 
             return type(
@@ -241,8 +243,15 @@ class DiffListViewBase(tables.Table):
                 "bound_row": bound_row,
                 "table": table,
             }
-            # render using the existing function
-            cell = call_with_appropriate(fn, kwargs)
+            try:
+                # render the existing column function with best effort.
+                cell = call_with_appropriate(fn, kwargs)
+            except Exception:
+                # In particular, rendering TemplateColumns for deleted rows
+                # causes errors. Deleted rows are accessed with "time-travel"
+                # queries, but are templates rendered from the current tip of
+                # the branch, leading to referential integrity errors.
+                return value
 
             if record.diff["diff_type"] != "modified":
                 # only render before/after diff styling

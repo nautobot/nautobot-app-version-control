@@ -6,6 +6,7 @@ from nautobot.virtualization import tables as virtualization_tables
 
 
 def content_type_has_diff_view_table(ct):
+    # todo: once available, use https://github.com/nautobot/nautobot/issues/747
     return (
         ct.app_label in MODEL_VIEW_TABLES
         and ct.model in MODEL_VIEW_TABLES[ct.app_label]
