@@ -3,7 +3,7 @@ from django.db.models import ProtectedError
 
 from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
 
-from dolt.models import Branch, Commit
+from dolt.models import Branch, Commit, PullRequest
 from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
@@ -122,3 +122,39 @@ class CommitFilterForm(forms.Form, BootstrapMixin):
     model = Commit
     field_order = ["q"]
     q = forms.CharField(required=False, label="Search")
+
+
+#
+# PullRequests
+#
+
+
+class PullRequestForm(forms.ModelForm, BootstrapMixin):
+    source_branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(), to_field_name="name", required=True
+    )
+    destination_branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(), to_field_name="name", required=True
+    )
+
+    class Meta:
+        model = PullRequest
+        fields = ["title", "source_branch", "destination_branch", "description",]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        # todo: not working yet
+        self.instance.creator = kwargs.pop("user", None)
+        return super().save(*args, **kwargs)
+
+
+
+class PullRequestFilterForm(forms.Form, BootstrapMixin):
+    model = PullRequest
+    field_order = ["q"]
+    q = forms.CharField(required=False, label="Search")
+
+    class Meta:
+        fields = ["title", "source_branch", "destination_branch", "description"]

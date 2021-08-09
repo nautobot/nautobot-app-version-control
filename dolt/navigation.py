@@ -24,6 +24,17 @@ menu_items = (
                         ),
                     ),
                     NavMenuItem(
+                        link="plugins:dolt:pull_request_list",
+                        name="Pull Requests",
+                        permissions=[],
+                        buttons=(
+                            NavMenuAddButton(
+                                link="plugins:dolt:pull_request_add",
+                                permissions=[],
+                            ),
+                        ),
+                    ),
+                    NavMenuItem(
                         link="plugins:dolt:commit_list",
                         name="Commits (Active Branch)",
                         permissions=[],

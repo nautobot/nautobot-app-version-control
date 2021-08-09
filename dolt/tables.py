@@ -1,13 +1,14 @@
 import django_tables2 as tables
 from django_tables2 import A
 
-from dolt.models import Branch, Conflicts, ConstraintViolations, Commit
+from dolt.models import Branch, Conflicts, ConstraintViolations, Commit, PullRequest
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
 __all__ = (
     "BranchTable",
     "ConflictsTable",
     "CommitTable",
+    "PullRequestTable"
 )
 
 
@@ -105,5 +106,27 @@ class ConstraintViolationsTable(BaseTable):
         fields = (
             "table",
             "num_violations",
+        )
+        default_columns = fields
+
+
+#
+# PullRequest
+#
+
+
+class PullRequestTable(BaseTable):
+    pk = ToggleColumn()
+
+    class Meta(BaseTable.Meta):
+        model = PullRequest
+        fields = (
+            "pk",
+            "title",
+            "source_branch",
+            "destination_branch",
+            "description",
+            "creator",
+            "created_at",
         )
         default_columns = fields

@@ -5,8 +5,8 @@ from dolt.models import (
     Conflicts,
     ConstraintViolations,
     Commit,
-    author_from_user,
 )
+from dolt.utils import author_from_user
 from dolt.tables import ConflictsTable, ConstraintViolationsTable
 from dolt.versioning import query_on_branch
 

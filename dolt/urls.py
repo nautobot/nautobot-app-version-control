@@ -46,4 +46,18 @@ urlpatterns = [
     ),
     # Diffs
     path("diffs/", views.ActiveBranchDiffs.as_view(), name="active_branch_diffs"),
+    # Pull Requests
+    path(
+        "pull-requests/", views.PullRequestListView.as_view(), name="pull_request_list"
+    ),
+    path(
+        "pull-requests/add/",
+        views.PullRequestEditView.as_view(),
+        name="pull_request_add",
+    ),
+    path(
+        "pull-requests/<str:pk>/",
+        views.PullRequestDetailView.as_view(),
+        name="pull_request",
+    ),
 ]

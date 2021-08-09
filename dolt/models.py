@@ -1,14 +1,19 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, connections
+from django.db.models.deletion import CASCADE, SET_NULL
 from django.urls import reverse
 
+from nautobot.core.models import BaseModel
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
+
+from dolt.utils import author_from_user
 
 
 __all__ = (
     "Branch",
     "Commit",
+    "PullRequest",
 )
 
 
@@ -134,6 +139,7 @@ class BranchMeta(models.Model):
     created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
+        # table name cannot start with "dolt"
         db_table = "plugin_dolt_branchmeta"
 
 
@@ -273,8 +279,60 @@ class ConstraintViolations(DoltSystemTable):
         return f"{self.table} ({self.num_violations})"
 
 
-def author_from_user(usr):
-    if usr and usr.username and usr.email:
-        return f"{usr.username} <{usr.email}>"
-    # default to generic user
-    return "nautobot <nautobot@ntc.com>"
+#
+# Pull Requests
+#
+
+
+class PullRequest(BaseModel):
+    # can't create Foreign Key to dolt_branches table :(
+    title = models.CharField(max_length=240)
+    source_branch = models.TextField()
+    destination_branch = models.TextField()
+    description = models.TextField()
+    creator = models.ForeignKey(User, null=True, on_delete=CASCADE)
+    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
+
+    class Meta:
+        # table name cannot start with "dolt"
+        db_table = "plugin_dolt_pull_request"
+        verbose_name_plural = "pull requests"
+
+    def __str__(self):
+        return f"{self.source_branch} -> {self.destination_branch}"
+
+    def get_merge_candidate(self):
+        pass
+
+
+class PullRequestReviews(BaseModel):
+    REQUESTED = 0
+    APPROVED = 1
+    BLOCKED = 2
+    REVIEW_STATE_CHOICES = [
+        (REQUESTED, "Requested"),
+        (APPROVED, "Approved"),
+        (BLOCKED, "Blocked"),
+    ]
+
+    state = models.IntegerField(choices=REVIEW_STATE_CHOICES, default=REQUESTED)
+    pull_request = models.ForeignKey(PullRequest, on_delete=CASCADE)
+    reviewer = models.ForeignKey(User, on_delete=CASCADE, related_name="requester")
+    requester = models.ForeignKey(User, on_delete=CASCADE)
+    requested_at = models.DateTimeField()
+
+    class Meta:
+        # table name cannot start with "dolt"
+        db_table = "plugin_dolt_pull_request_review"
+        verbose_name_plural = "pull request reviews"
+
+
+class PullRequestReviewComments(BaseModel):
+    comment = models.TextField()
+    commenter = models.ForeignKey(User, null=True, on_delete=SET_NULL)
+    creation_time = models.DateTimeField()
+
+    class Meta:
+        # table name cannot start with "dolt"
+        db_table = "plugin_dolt_pull_request_comment"
+        verbose_name_plural = "pull request comments"

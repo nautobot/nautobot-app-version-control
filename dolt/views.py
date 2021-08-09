@@ -23,7 +23,7 @@ from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
 from dolt.versioning import db_for_commit, query_on_branch, change_branches
 from dolt.diffs import content_type_has_diff_view_table
 from dolt.middleware import branch_from_request
-from dolt.models import Branch, BranchMeta, Commit
+from dolt.models import Branch, BranchMeta, Commit, PullRequest
 
 
 #
@@ -372,3 +372,45 @@ def serialize_object(obj, extra=None, exclude=None):
             data.pop(key)
 
     return data
+
+
+#
+# Pull Requests
+#
+
+
+class PullRequestDetailView(generic.ObjectView):
+    queryset = PullRequest.objects.all()
+
+
+class PullRequestListView(generic.ObjectListView):
+    queryset = PullRequest.objects.all()
+    filterset = filters.PullRequestFilterSet
+    filterset_form = forms.PullRequestFilterForm
+    table = tables.PullRequestTable
+    # action_buttons = ("add",)
+    action_buttons = ()
+    template_name = "dolt/pull_request_list.html"
+
+
+class PullRequestEditView(generic.ObjectEditView):
+    queryset = PullRequest.objects.all()
+    model_form = forms.PullRequestForm
+    template_name = "dolt/pull_request_edit.html"
+
+    def get(self, req, *args, **kwargs):
+        initial = {
+            "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
+        }
+        return render(
+            req,
+            self.template_name,
+            {
+                "obj_type": self.queryset.model._meta.verbose_name,
+                "form": self.model_form(initial=initial),
+            },
+        )
+
+    def post(self, req, *args, **kwargs):
+        kwargs["user"] = req.user
+        return super().post(req, *args, **kwargs)
