@@ -27,8 +27,11 @@
     </h1>
     {% include 'inc/created_updated.html' %}
     <ul class="nav nav-tabs">
-        <li role="presentation" {% if active_tab == 'details' %} class="active"{% endif %}>
-            <a href="{% url 'plugins:dolt:pull_request' pk=object.pk %}">Diff</a>
+        <li role="presentation" {% if active_tab == 'diffs' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:dolt:pull_request' pk=object.pk %}">Diffs</a>
+        </li>
+        <li role="presentation" {% if active_tab == 'conflicts' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:dolt:pull_request_conflicts' pk=object.pk %}">Conflicts</a>
         </li>
         <li role="presentation" {% if active_tab == 'reviews' %} class="active"{% endif %}>
             <a href="{% url 'plugins:dolt:pull_request_reviews' pk=object.pk %}">Reviews</a>

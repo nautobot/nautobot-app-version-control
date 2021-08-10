@@ -57,8 +57,13 @@ urlpatterns = [
     ),
     path(
         "pull-request/<str:pk>/",
-        views.PullRequestDetailView.as_view(),
+        views.PullRequestDiffView.as_view(),
         name="pull_request",
+    ),
+    path(
+        "pull-request/<str:pk>/conflicts",
+        views.PullRequestConflictView.as_view(),
+        name="pull_request_conflicts",
     ),
     path(
         "pull-request/<str:pk>/reviews",
