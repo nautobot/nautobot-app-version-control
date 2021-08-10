@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from django_tables2 import A
 
-from dolt.models import Branch, Conflicts, ConstraintViolations, Commit, PullRequest
+from dolt.models import Branch, Conflicts, ConstraintViolations, Commit, PullRequest, PullRequestReview
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
 __all__ = (
@@ -117,6 +117,7 @@ class ConstraintViolationsTable(BaseTable):
 
 class PullRequestTable(BaseTable):
     pk = ToggleColumn()
+    title = tables.LinkColumn()
 
     class Meta(BaseTable.Meta):
         model = PullRequest
@@ -130,3 +131,28 @@ class PullRequestTable(BaseTable):
             "created_at",
         )
         default_columns = fields
+
+
+class PullRequestReviewTable(BaseTable):
+    pk = ToggleColumn()
+    title = tables.LinkColumn()
+
+    class Meta(BaseTable.Meta):
+        model = PullRequestReview
+        fields = (
+            "pk",
+            "pull_request",
+            "reviewer",
+            "requester",
+            "requested_at",
+            "state",
+            "summary",
+            "last_updated",
+        )
+        default_columns = (
+            "pk",
+            "state",
+            "reviewer",
+            "requester",
+            "summary",
+        )

@@ -23,7 +23,7 @@ from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
 from dolt.versioning import db_for_commit, query_on_branch, change_branches
 from dolt.diffs import content_type_has_diff_view_table
 from dolt.middleware import branch_from_request
-from dolt.models import Branch, BranchMeta, Commit, PullRequest
+from dolt.models import Branch, BranchMeta, Commit, PullRequest, PullRequestReview
 
 
 #
@@ -381,6 +381,35 @@ def serialize_object(obj, extra=None, exclude=None):
 
 class PullRequestDetailView(generic.ObjectView):
     queryset = PullRequest.objects.all()
+    template_name = "dolt/pull_request/detail.html"
+
+
+class PullRequestReviewListView(generic.ObjectView):
+    queryset = PullRequest.objects.all()
+    table = tables.PullRequestReviewTable
+    action_buttons = () # todo: add button
+    template_name = "dolt/pull_request/review_list.html"
+
+    def extra_context(self, **kwargs):
+        qs = PullRequestReview.objects.all().filter(pull_request=kwargs.get("pk"))
+        return {
+            "review_list": self.table(qs),
+            "active_tab": "reviews",
+        }
+
+
+class PullRequestCommitListView(generic.ObjectView):
+    queryset = PullRequest.objects.all()
+    table = tables.CommitTable
+    action_buttons = ()
+    template_name = "dolt/pull_request/commit_list.html"
+
+    def extra_context(self, **kwargs):
+        qs = Commit.objects.none()
+        return {
+            "commit_list": self.table(qs),
+            "active_tab": "commits",
+        }
 
 
 class PullRequestListView(generic.ObjectListView):
@@ -388,15 +417,15 @@ class PullRequestListView(generic.ObjectListView):
     filterset = filters.PullRequestFilterSet
     filterset_form = forms.PullRequestFilterForm
     table = tables.PullRequestTable
-    # action_buttons = ("add",)
+    # action_buttons = ("add",)  # todo: add button
     action_buttons = ()
-    template_name = "dolt/pull_request_list.html"
+    template_name = "dolt/pull_request/list.html"
 
 
 class PullRequestEditView(generic.ObjectEditView):
     queryset = PullRequest.objects.all()
     model_form = forms.PullRequestForm
-    template_name = "dolt/pull_request_edit.html"
+    template_name = "dolt/pull_request/edit.html"
 
     def get(self, req, *args, **kwargs):
         initial = {

@@ -1,0 +1,73 @@
+{% extends 'dolt/pull_request/base.html' %}
+{% load buttons %}
+{% load custom_links %}
+{% load helpers %}
+{% load plugins %}
+{% load static %}
+{% load render_table from django_tables2 %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="details">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <strong>{{ object.title|placeholder }}</strong>
+                                </div>
+                                <table class="table table-hover panel-body attr-table">
+                                    <tr>
+                                        <td>description</td>
+                                        <td>{{ object.description|placeholder }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>src_branch</td>
+                                        <td>{{ object.src_branch|placeholder }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>dest_branch</td>
+                                        <td>{{ object.dest_branch|placeholder }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>creator</td>
+                                        <td>{{ object.creator|placeholder }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>created_at</td>
+                                        <td>{{ object.created_at|placeholder }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-3"></div>
+                        <div class="col-md-3">
+<!--                            <div class="panel panel-default">-->
+<!--                                <div class="panel-heading">-->
+<!--                                    <strong>Diff Summary</strong>-->
+<!--                                </div>-->
+<!--                                <div class="list-group">-->
+<!--                                    {% for obj_type in results %}-->
+<!--                                    <a href="#{{ obj_type.name|lower }}" class="row list-group-item">-->
+<!--                                        <div class="col-md-6 align-middle">{{ obj_type.name }}</div>-->
+<!--                                        <div class="col-md-6 text-right">-->
+<!--                                            <span class="label label-success">{{ obj_type.added }}</span>-->
+<!--                                            <span class="label label-warning">{{ obj_type.modified }}</span>-->
+<!--                                            <span class="label label-danger">{{ obj_type.removed }}</span>-->
+<!--                                            <span class="badge">{{ obj_type.table.page.paginator.count }}</span>-->
+<!--                                        </div>-->
+<!--                                    </a>-->
+<!--                                    {% endfor %}-->
+<!--                                </div>-->
+<!--                            </div>-->
+                        </div>
+                    </div>
+                </div>
+
+<!--                {% include 'dolt/diffs.html' with results=results %}-->
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

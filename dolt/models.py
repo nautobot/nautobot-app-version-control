@@ -299,13 +299,16 @@ class PullRequest(BaseModel):
         verbose_name_plural = "pull requests"
 
     def __str__(self):
-        return f"{self.source_branch} -> {self.destination_branch}"
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("plugins:dolt:pull_request", args=[self.id])
 
     def get_merge_candidate(self):
         pass
 
 
-class PullRequestReviews(BaseModel):
+class PullRequestReview(BaseModel):
     REQUESTED = 0
     APPROVED = 1
     BLOCKED = 2
@@ -315,11 +318,13 @@ class PullRequestReviews(BaseModel):
         (BLOCKED, "Blocked"),
     ]
 
-    state = models.IntegerField(choices=REVIEW_STATE_CHOICES, default=REQUESTED)
     pull_request = models.ForeignKey(PullRequest, on_delete=CASCADE)
     reviewer = models.ForeignKey(User, on_delete=CASCADE, related_name="requester")
     requester = models.ForeignKey(User, on_delete=CASCADE)
-    requested_at = models.DateTimeField()
+    requested_at = models.DateField(auto_now_add=True, blank=True, null=True)
+    state = models.IntegerField(choices=REVIEW_STATE_CHOICES, default=REQUESTED)
+    summary = models.TextField()
+    last_updated = models.DateField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
         # table name cannot start with "dolt"
@@ -327,7 +332,7 @@ class PullRequestReviews(BaseModel):
         verbose_name_plural = "pull request reviews"
 
 
-class PullRequestReviewComments(BaseModel):
+class PullRequestReviewComment(BaseModel):
     comment = models.TextField()
     commenter = models.ForeignKey(User, null=True, on_delete=SET_NULL)
     creation_time = models.DateTimeField()

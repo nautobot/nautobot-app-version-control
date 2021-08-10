@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% load buttons %}
+{% load static %}
+{% load helpers %}
+{% load plugins %}
+
+{% block title %}{{ object }}{% endblock %}
+
+{% block header %}
+    <div class="row noprint">
+        <div class="col-sm-8 col-md-9">
+        <ol class="breadcrumb">
+            <li><a href="{% url 'plugins:dolt:pull_request_list' %}">Pull Requests</a></li>
+            <li>{{ object }}</li>
+        </ol>
+        </div>
+    </div>
+
+    {% include 'inc/created_updated.html' %}
+
+    <ul class="nav nav-tabs">
+        <li role="presentation" {% if active_tab == 'details' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:dolt:pull_request' pk=object.pk %}">Pull Request</a>
+        </li>
+        <li role="presentation" {% if active_tab == 'reviews' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:dolt:pull_request_reviews' pk=object.pk %}">Reviews</a>
+        </li>
+<!--        <li role="presentation" {% if active_tab == 'commits' %} class="active"{% endif %}>-->
+<!--            <a href="{% url 'plugins:dolt:pull_request_commits' pk=object.pk %}">Commits</a>-->
+<!--        </li>-->
+    </ul>
+{% endblock %}
+
