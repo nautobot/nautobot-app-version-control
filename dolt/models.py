@@ -301,6 +301,26 @@ class PullRequest(BaseModel):
     def __str__(self):
         return self.title
 
+    @property
+    def approved(self):
+        return True
+
+    @property
+    def blocked(self):
+        return True
+
+    @property
+    def in_review(self):
+        return True
+
+    @property
+    def num_commits(self):
+        return 19
+
+    @property
+    def summary_description(self):
+        return f"""Merging {self.num_commits} commits from "{self.source_branch}" into "{self.destination_branch}" """
+
     def get_absolute_url(self):
         return reverse("plugins:dolt:pull_request", args=[self.id])
 

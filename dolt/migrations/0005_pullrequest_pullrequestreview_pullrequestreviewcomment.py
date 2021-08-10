@@ -10,54 +10,114 @@ class Migration(migrations.Migration):
 
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('dolt', '0004_constraintviolations'),
+        ("dolt", "0004_constraintviolations"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PullRequest',
+            name="PullRequest",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
-                ('title', models.CharField(max_length=240)),
-                ('source_branch', models.TextField()),
-                ('destination_branch', models.TextField()),
-                ('description', models.TextField()),
-                ('created_at', models.DateField(auto_now_add=True, null=True)),
-                ('creator', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                        unique=True,
+                    ),
+                ),
+                ("title", models.CharField(max_length=240)),
+                ("source_branch", models.TextField()),
+                ("destination_branch", models.TextField()),
+                ("description", models.TextField()),
+                ("created_at", models.DateField(auto_now_add=True, null=True)),
+                (
+                    "creator",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'pull requests',
-                'db_table': 'plugin_dolt_pull_request',
+                "verbose_name_plural": "pull requests",
+                "db_table": "plugin_dolt_pull_request",
             },
         ),
         migrations.CreateModel(
-            name='PullRequestReviewComment',
+            name="PullRequestReviewComment",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
-                ('comment', models.TextField()),
-                ('creation_time', models.DateTimeField()),
-                ('commenter', models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                        unique=True,
+                    ),
+                ),
+                ("comment", models.TextField()),
+                ("creation_time", models.DateTimeField()),
+                (
+                    "commenter",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'pull request comments',
-                'db_table': 'plugin_dolt_pull_request_comment',
+                "verbose_name_plural": "pull request comments",
+                "db_table": "plugin_dolt_pull_request_comment",
             },
         ),
         migrations.CreateModel(
-            name='PullRequestReview',
+            name="PullRequestReview",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False, unique=True)),
-                ('requested_at', models.DateField(auto_now_add=True, null=True)),
-                ('state', models.IntegerField(default=0)),
-                ('summary', models.TextField()),
-                ('last_updated', models.DateField(auto_now_add=True, null=True)),
-                ('pull_request', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='dolt.pullrequest')),
-                ('requester', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to=settings.AUTH_USER_MODEL)),
-                ('reviewer', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='requester', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                        unique=True,
+                    ),
+                ),
+                ("requested_at", models.DateField(auto_now_add=True, null=True)),
+                ("state", models.IntegerField(default=0)),
+                ("summary", models.TextField()),
+                ("last_updated", models.DateField(auto_now_add=True, null=True)),
+                (
+                    "pull_request",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="dolt.pullrequest",
+                    ),
+                ),
+                (
+                    "requester",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
+                (
+                    "reviewer",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="requester",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'verbose_name_plural': 'pull request reviews',
-                'db_table': 'plugin_dolt_pull_request_review',
+                "verbose_name_plural": "pull request reviews",
+                "db_table": "plugin_dolt_pull_request_review",
             },
         ),
     ]

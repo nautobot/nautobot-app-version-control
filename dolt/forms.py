@@ -139,7 +139,12 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
 
     class Meta:
         model = PullRequest
-        fields = ["title", "source_branch", "destination_branch", "description",]
+        fields = [
+            "title",
+            "source_branch",
+            "destination_branch",
+            "description",
+        ]
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -148,7 +153,6 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
         # todo: not working yet
         self.instance.creator = kwargs.pop("user", None)
         return super().save(*args, **kwargs)
-
 
 
 class PullRequestFilterForm(forms.Form, BootstrapMixin):

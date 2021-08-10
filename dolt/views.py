@@ -383,18 +383,26 @@ class PullRequestDetailView(generic.ObjectView):
     queryset = PullRequest.objects.all()
     template_name = "dolt/pull_request/detail.html"
 
+    def get_extra_context(self, req, obj, **kwargs):
+        head = Branch.objects.get(name=obj.source_branch).hash
+        merge_base = Commit.merge_base(obj.source_branch, obj.destination_branch)
+        return {
+            "active_tab": "details",
+            "results": diffs.two_dot_diffs(from_commit=merge_base, to_commit=head),
+        }
+
 
 class PullRequestReviewListView(generic.ObjectView):
     queryset = PullRequest.objects.all()
     table = tables.PullRequestReviewTable
-    action_buttons = () # todo: add button
+    action_buttons = ()  # todo: add button
     template_name = "dolt/pull_request/review_list.html"
 
-    def extra_context(self, **kwargs):
+    def get_extra_context(self, req, obj, **kwargs):
         qs = PullRequestReview.objects.all().filter(pull_request=kwargs.get("pk"))
         return {
-            "review_list": self.table(qs),
             "active_tab": "reviews",
+            "review_list": self.table(qs),
         }
 
 
@@ -404,11 +412,11 @@ class PullRequestCommitListView(generic.ObjectView):
     action_buttons = ()
     template_name = "dolt/pull_request/commit_list.html"
 
-    def extra_context(self, **kwargs):
+    def get_extra_context(self, req, obj, **kwargs):
         qs = Commit.objects.none()
         return {
-            "commit_list": self.table(qs),
             "active_tab": "commits",
+            "commit_list": self.table(qs),
         }
 
 

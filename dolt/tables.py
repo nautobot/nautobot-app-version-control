@@ -1,15 +1,17 @@
 import django_tables2 as tables
 from django_tables2 import A
 
-from dolt.models import Branch, Conflicts, ConstraintViolations, Commit, PullRequest, PullRequestReview
+from dolt.models import (
+    Branch,
+    Conflicts,
+    ConstraintViolations,
+    Commit,
+    PullRequest,
+    PullRequestReview,
+)
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
-__all__ = (
-    "BranchTable",
-    "ConflictsTable",
-    "CommitTable",
-    "PullRequestTable"
-)
+__all__ = ("BranchTable", "ConflictsTable", "CommitTable", "PullRequestTable")
 
 
 #

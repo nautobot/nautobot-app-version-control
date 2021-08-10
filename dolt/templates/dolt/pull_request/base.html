@@ -4,7 +4,7 @@
 {% load helpers %}
 {% load plugins %}
 
-{% block title %}{{ object }}{% endblock %}
+{% block title %}{{ object.title }}{% endblock %}
 
 {% block header %}
     <div class="row noprint">
@@ -15,12 +15,20 @@
         </ol>
         </div>
     </div>
-
+    <h1 id="pull_request_title">
+        {{ object.title }}
+        {% if object.approved %}
+            <span class="label label-success">Approved</span>
+        {% elif object.blocked %}
+            <span class="label label-danger">Blocked</span>
+        {% elif object.in_review %}
+            <span class="label label-primary">In Review</span>
+        {% endif %}
+    </h1>
     {% include 'inc/created_updated.html' %}
-
     <ul class="nav nav-tabs">
         <li role="presentation" {% if active_tab == 'details' %} class="active"{% endif %}>
-            <a href="{% url 'plugins:dolt:pull_request' pk=object.pk %}">Pull Request</a>
+            <a href="{% url 'plugins:dolt:pull_request' pk=object.pk %}">Diff</a>
         </li>
         <li role="presentation" {% if active_tab == 'reviews' %} class="active"{% endif %}>
             <a href="{% url 'plugins:dolt:pull_request_reviews' pk=object.pk %}">Reviews</a>
