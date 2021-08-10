@@ -16,7 +16,7 @@ def get_conflicts_for_merge(src, dest):
     Gather a merge-candidate for `src` and `dest`,
     then return Conflicts created by the merge
 
-    TODO: currenly we return conflicts summary,
+    TODO: currently we return conflicts summary,
         we need granular row-level conflicts and
         constraint violations.
     """

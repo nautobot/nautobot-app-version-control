@@ -7,7 +7,7 @@ from django.db.models import Q, F, Subquery, OuterRef, Value
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.serializers import serialize
-from django.shortcuts import render, redirect
+from django.shortcuts import get_list_or_404, render, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views import View
@@ -23,7 +23,14 @@ from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
 from dolt.versioning import db_for_commit, query_on_branch, change_branches
 from dolt.diffs import content_type_has_diff_view_table
 from dolt.middleware import branch_from_request
-from dolt.models import Branch, BranchMeta, Commit, PullRequest, PullRequestReview
+from dolt.models import (
+    Branch,
+    BranchMeta,
+    Commit,
+    CommitAncestor,
+    PullRequest,
+    PullRequestReview,
+)
 
 
 #
@@ -210,11 +217,30 @@ class BranchMergePreView(GetReturnURLMixin, View):
 class CommitView(generic.ObjectView):
     queryset = Commit.objects.all()
 
-    def get_extra_context(self, req, instance):
-        if not len(instance.parent_commits):
-            return {}  # init commit has no parents
-        parent = Commit.objects.get(commit_hash=instance.parent_commits[0])
-        return {"results": diffs.two_dot_diffs(from_commit=parent, to_commit=instance)}
+    def get(self, request, *args, **kwargs):
+        """
+        Looks up the requested commit using a database revision
+        to ensure the commit is accessible.
+        todo: explain ancestor
+        """
+        anc = get_list_or_404(CommitAncestor.objects.all(), **kwargs)[0]
+        db = db_for_commit(anc.commit_hash)
+        instance = self.queryset.using(db).get(commit_hash=anc.commit_hash)
+
+        if anc.parent_hash:
+            diff = diffs.two_dot_diffs(from_commit=anc.parent_hash, to_commit=instance)
+        else:
+            # init commit has no parents
+            diff = {}
+
+        return render(
+            request,
+            self.get_template_name(),
+            {
+                "object": instance,
+                "results": diff,
+            },
+        )
 
 
 class CommitListView(generic.ObjectListView):
@@ -395,11 +421,11 @@ class PullRequestDetailView(generic.ObjectView):
 class PullRequestReviewListView(generic.ObjectView):
     queryset = PullRequest.objects.all()
     table = tables.PullRequestReviewTable
-    action_buttons = ()  # todo: add button
     template_name = "dolt/pull_request/review_list.html"
+    action_buttons = ()  # todo: add button
 
     def get_extra_context(self, req, obj, **kwargs):
-        qs = PullRequestReview.objects.all().filter(pull_request=kwargs.get("pk"))
+        qs = PullRequestReview.objects.filter(pull_request=kwargs.get("pk"))
         return {
             "active_tab": "reviews",
             "review_list": self.table(qs),
@@ -409,14 +435,13 @@ class PullRequestReviewListView(generic.ObjectView):
 class PullRequestCommitListView(generic.ObjectView):
     queryset = PullRequest.objects.all()
     table = tables.CommitTable
-    action_buttons = ()
     template_name = "dolt/pull_request/commit_list.html"
+    action_buttons = ()
 
     def get_extra_context(self, req, obj, **kwargs):
-        qs = Commit.objects.none()
         return {
             "active_tab": "commits",
-            "commit_list": self.table(qs),
+            "commit_list": self.table(obj.commits),
         }
 
 

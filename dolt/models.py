@@ -7,6 +7,7 @@ from nautobot.core.models import BaseModel
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
+from dolt.versioning import db_for_commit
 from dolt.utils import author_from_user
 
 
@@ -301,6 +302,9 @@ class PullRequest(BaseModel):
     def __str__(self):
         return self.title
 
+    def get_absolute_url(self):
+        return reverse("plugins:dolt:pull_request", args=[self.id])
+
     @property
     def approved(self):
         return True
@@ -314,15 +318,20 @@ class PullRequest(BaseModel):
         return True
 
     @property
+    def commits(self):
+        merge_base = Commit.objects.get(
+            commit_hash=Commit.merge_base(self.source_branch, self.destination_branch)
+        )
+        db = db_for_commit(Branch.objects.get(name=self.source_branch).hash)
+        return Commit.objects.filter(date__gt=merge_base.date).using(db)
+
+    @property
     def num_commits(self):
-        return 19
+        return self.commits.count()
 
     @property
     def summary_description(self):
         return f"""Merging {self.num_commits} commits from "{self.source_branch}" into "{self.destination_branch}" """
-
-    def get_absolute_url(self):
-        return reverse("plugins:dolt:pull_request", args=[self.id])
 
     def get_merge_candidate(self):
         pass

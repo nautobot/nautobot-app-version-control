@@ -33,9 +33,9 @@
         <li role="presentation" {% if active_tab == 'reviews' %} class="active"{% endif %}>
             <a href="{% url 'plugins:dolt:pull_request_reviews' pk=object.pk %}">Reviews</a>
         </li>
-<!--        <li role="presentation" {% if active_tab == 'commits' %} class="active"{% endif %}>-->
-<!--            <a href="{% url 'plugins:dolt:pull_request_commits' pk=object.pk %}">Commits</a>-->
-<!--        </li>-->
+        <li role="presentation" {% if active_tab == 'commits' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:dolt:pull_request_commits' pk=object.pk %}">Commits</a>
+        </li>
     </ul>
 {% endblock %}
 
