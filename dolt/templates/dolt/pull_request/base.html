@@ -15,14 +15,31 @@
         </ol>
         </div>
     </div>
+    <div class="pull-right noprint">
+        <a href="{% url 'plugins:dolt:pull_request_add_review' pull_request=object.pk %}" type="button" class="btn btn-success">
+            <span class="mdi mdi-plus-thick" aria-hidden="true"></span> Add Review
+        </a>
+        <a href="{% url 'plugins:dolt:pull_request_merge' pk=object.pk %}" type="button" class="btn btn-info">
+            Merge
+        </a>
+        <a href="{% url 'plugins:dolt:pull_request_close' pk=object.pk %}" type="button" class="btn btn-danger">
+            <span class="mdi mdi-close-thick" aria-hidden="true"></span> Close
+        </a>
+    </div>
     <h1 id="pull_request_title">
         {{ object.title }}
-        {% if object.approved %}
-            <span class="label label-success">Approved</span>
-        {% elif object.blocked %}
-            <span class="label label-danger">Blocked</span>
-        {% elif object.in_review %}
-            <span class="label label-primary">In Review</span>
+        {% if object.status == "open" %}
+        <span class="label label-primary">Open</span>
+        {% elif object.status == "in-review" %}
+        <span class="label label-primary">In Review</span>
+        {% elif object.status == "blocked" %}
+        <span class="label label-warning">Blocked</span>
+        {% elif object.status == "approved" %}
+        <span class="label label-success">Approved</span>
+        {% elif object.status == "merged" %}
+        <span class="label label-info">Merged</span>
+        {% elif object.status == "closed" %}
+        <span class="label label-danger">Closed</span>
         {% endif %}
     </h1>
     {% include 'inc/created_updated.html' %}

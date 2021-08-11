@@ -3,7 +3,7 @@ from django.db.models import ProtectedError
 
 from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
 
-from dolt.models import Branch, Commit, PullRequest
+from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
@@ -162,3 +162,22 @@ class PullRequestFilterForm(forms.Form, BootstrapMixin):
 
     class Meta:
         fields = ["title", "source_branch", "destination_branch", "description"]
+
+
+class PullRequestReviewForm(forms.ModelForm, BootstrapMixin):
+
+    class Meta:
+        model = PullRequestReview
+        fields = [
+            "pull_request",
+            "summary",
+            "state",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        # todo: not working yet
+        self.instance.reviewer = kwargs.pop("user", None)
+        return super().save(*args, **kwargs)

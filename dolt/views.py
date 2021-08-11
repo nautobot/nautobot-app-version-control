@@ -248,7 +248,7 @@ class CommitListView(generic.ObjectListView):
     filterset = filters.CommitFilterSet
     filterset_form = forms.CommitFilterForm
     table = tables.CommitTable
-    template_name = "dolt/commit_list.html"
+    template_name = "dolt/commits.html"
     action_buttons = None
 
     def alter_queryset(self, req):
@@ -412,12 +412,12 @@ class PullRequestListView(generic.ObjectListView):
     table = tables.PullRequestTable
     # action_buttons = ("add",)  # todo: add button
     action_buttons = ()
-    template_name = "dolt/pull_request/list.html"
+    template_name = "dolt/pull_request/pull_request_list.html"
 
 
 class PullRequestDiffView(generic.ObjectView):
     queryset = PullRequest.objects.all()
-    template_name = "dolt/pull_request/diff_list.html"
+    template_name = "dolt/pull_request/diffs.html"
 
     def get_extra_context(self, req, obj, **kwargs):
         head = Branch.objects.get(name=obj.source_branch).hash
@@ -430,15 +430,10 @@ class PullRequestDiffView(generic.ObjectView):
 
 class PullRequestConflictView(generic.ObjectView):
     queryset = PullRequest.objects.all()
-    template_name = "dolt/pull_request/conflict_list.html"
+    template_name = "dolt/pull_request/conflicts.html"
 
     def get_extra_context(self, req, obj, **kwargs):
-        head = Branch.objects.get(name=obj.source_branch).hash
-        merge_base = Commit.merge_base(obj.source_branch, obj.destination_branch)
-        return {
-            "active_tab": "conflicts",
-            "results": {},
-        }
+        return {"active_tab": "conflicts", "results": {}}
 
 
 class PullRequestEditView(generic.ObjectEditView):
@@ -465,28 +460,37 @@ class PullRequestEditView(generic.ObjectEditView):
         return super().post(req, *args, **kwargs)
 
 
+class PullRequestMergeView(generic.ObjectView):
+    queryset = PullRequest.objects.all()
+    template_name = ""
+
+
+class PullRequestCloseView(generic.ObjectView):
+    queryset = PullRequest.objects.all()
+    template_name = ""
+
+
 class PullRequestReviewListView(generic.ObjectView):
     queryset = PullRequest.objects.all()
     table = tables.PullRequestReviewTable
     template_name = "dolt/pull_request/review_list.html"
-    action_buttons = ()  # todo: add button
 
-    def get_extra_context(self, req, obj, **kwargs):
-        qs = PullRequestReview.objects.filter(pull_request=kwargs.get("pk"))
+    def get_extra_context(self, req, obj):
+        reviews = PullRequestReview.objects.filter(pull_request=obj.pk).order_by("reviewed_at")
         return {
             "active_tab": "reviews",
-            "review_list": self.table(qs),
+            "review_list": reviews,
         }
 
 
 class PullRequestReviewEditView(generic.ObjectEditView):
-    queryset = PullRequest.objects.all()
-    model_form = forms.PullRequestForm
-    template_name = "dolt/pull_request/edit.html"
+    queryset = PullRequestReview.objects.all()
+    model_form = forms.PullRequestReviewForm
+    template_name = "dolt/pull_request/review_edit.html"
 
     def get(self, req, *args, **kwargs):
         initial = {
-            "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
+            "pull_request": PullRequest.objects.get(pk=kwargs["pull_request"]),
         }
         return render(
             req,
@@ -505,7 +509,7 @@ class PullRequestReviewEditView(generic.ObjectEditView):
 class PullRequestCommitListView(generic.ObjectView):
     queryset = PullRequest.objects.all()
     table = tables.CommitTable
-    template_name = "dolt/pull_request/commit_list.html"
+    template_name = "dolt/pull_request/commits.html"
     action_buttons = ()
 
     def get_extra_context(self, req, obj, **kwargs):

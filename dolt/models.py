@@ -291,7 +291,7 @@ class PullRequest(BaseModel):
     source_branch = models.TextField()
     destination_branch = models.TextField()
     description = models.TextField()
-    creator = models.ForeignKey(User, null=True, on_delete=CASCADE)
+    creator = models.ForeignKey(User, on_delete=CASCADE, null=True)   # todo: NOT NULL
     created_at = models.DateField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
@@ -306,16 +306,17 @@ class PullRequest(BaseModel):
         return reverse("plugins:dolt:pull_request", args=[self.id])
 
     @property
-    def approved(self):
-        return True
-
-    @property
-    def blocked(self):
-        return True
-
-    @property
-    def in_review(self):
-        return True
+    def status(self):
+        """
+        One of
+            - "open":
+            - "in-review":
+            - "blocked":
+            - "approved":
+            - "closed":
+            - "merged":
+        """
+        return "open"
 
     @property
     def commits(self):
@@ -338,22 +339,20 @@ class PullRequest(BaseModel):
 
 
 class PullRequestReview(BaseModel):
-    REQUESTED = 0
+    COMMENTED = 0
     APPROVED = 1
     BLOCKED = 2
     REVIEW_STATE_CHOICES = [
-        (REQUESTED, "Requested"),
+        (COMMENTED, "Commented"),
         (APPROVED, "Approved"),
         (BLOCKED, "Blocked"),
     ]
 
     pull_request = models.ForeignKey(PullRequest, on_delete=CASCADE)
-    reviewer = models.ForeignKey(User, on_delete=CASCADE, related_name="requester")
-    requester = models.ForeignKey(User, on_delete=CASCADE)
-    requested_at = models.DateField(auto_now_add=True, blank=True, null=True)
-    state = models.IntegerField(choices=REVIEW_STATE_CHOICES, default=REQUESTED)
+    reviewer = models.ForeignKey(User, on_delete=CASCADE, null=True)  # todo: NOT NULL
+    reviewed_at = models.DateField(auto_now_add=True, blank=True, null=True)
+    state = models.IntegerField(choices=REVIEW_STATE_CHOICES, null=True)
     summary = models.TextField()
-    last_updated = models.DateField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
         # table name cannot start with "dolt"
@@ -368,5 +367,5 @@ class PullRequestReviewComment(BaseModel):
 
     class Meta:
         # table name cannot start with "dolt"
-        db_table = "plugin_dolt_pull_request_comment"
         verbose_name_plural = "pull request comments"
+        db_table = "plugin_dolt_pull_request_comment"

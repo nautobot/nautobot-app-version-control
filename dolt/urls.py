@@ -61,6 +61,16 @@ urlpatterns = [
         name="pull_request",
     ),
     path(
+        "pull-request/<str:pk>/merge",
+        views.PullRequestMergeView.as_view(),
+        name="pull_request_merge",
+    ),
+    path(
+        "pull-request/<str:pk>/close",
+        views.PullRequestCloseView.as_view(),
+        name="pull_request_close",
+    ),
+    path(
         "pull-request/<str:pk>/conflicts",
         views.PullRequestConflictView.as_view(),
         name="pull_request_conflicts",
@@ -69,6 +79,11 @@ urlpatterns = [
         "pull-request/<str:pk>/reviews",
         views.PullRequestReviewListView.as_view(),
         name="pull_request_reviews",
+    ),
+    path(
+        "pull-request/<str:pull_request>/reviews/add/",
+        views.PullRequestReviewEditView.as_view(),
+        name="pull_request_add_review",
     ),
     path(
         "pull-request/<str:pk>/commits",
