@@ -9,10 +9,11 @@ python --version
 # setup dolt repo and run
 # dolt sql-server in the background
 function cleanup() {
-  rm -rf nautobot
+  rm -rf $REPO
   kill -9 $PID
 }
 mkdir nautobot
+REPO="`pwd`/nautobot"
 trap cleanup "EXIT"
 
 cp dolt-config.yaml nautobot/
@@ -24,6 +25,7 @@ popd
 
 # install poetry package manager
 curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+# (Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python -
 source $HOME/.poetry/env
 
 # setup poetry environment
