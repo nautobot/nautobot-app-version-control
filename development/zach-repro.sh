@@ -24,8 +24,8 @@ PID=$!
 popd
 
 # install poetry package manager
-curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
-# (Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python -
+#curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python -
+(Invoke-WebRequest -Uri https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py -UseBasicParsing).Content | python -
 source $HOME/.poetry/env
 
 # setup poetry environment
