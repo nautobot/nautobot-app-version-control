@@ -248,7 +248,7 @@ class CommitListView(generic.ObjectListView):
     filterset = filters.CommitFilterSet
     filterset_form = forms.CommitFilterForm
     table = tables.CommitTable
-    template_name = "dolt/commits.html"
+    template_name = "dolt/commit_list.html"
     action_buttons = None
 
     def alter_queryset(self, req):
