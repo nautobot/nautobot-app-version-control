@@ -412,7 +412,7 @@ class PullRequestListView(generic.ObjectListView):
     table = tables.PullRequestTable
     # action_buttons = ("add",)  # todo: add button
     action_buttons = ()
-    template_name = "dolt/pull_request/pull_request_list.html"
+    template_name = "dolt/pull_request_list.html"
 
 
 class PullRequestDiffView(generic.ObjectView):
@@ -476,7 +476,9 @@ class PullRequestReviewListView(generic.ObjectView):
     template_name = "dolt/pull_request/review_list.html"
 
     def get_extra_context(self, req, obj):
-        reviews = PullRequestReview.objects.filter(pull_request=obj.pk).order_by("reviewed_at")
+        reviews = PullRequestReview.objects.filter(pull_request=obj.pk).order_by(
+            "reviewed_at"
+        )
         return {
             "active_tab": "reviews",
             "review_list": reviews,

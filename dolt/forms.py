@@ -165,7 +165,6 @@ class PullRequestFilterForm(forms.Form, BootstrapMixin):
 
 
 class PullRequestReviewForm(forms.ModelForm, BootstrapMixin):
-
     class Meta:
         model = PullRequestReview
         fields = [

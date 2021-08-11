@@ -286,12 +286,22 @@ class ConstraintViolations(DoltSystemTable):
 
 
 class PullRequest(BaseModel):
+    OPEN = 0
+    MERGED = 1
+    CLOSED = 2
+    PR_STATE_CHOICES = [
+        (OPEN, "Open"),
+        (MERGED, "Approved"),
+        (CLOSED, "Closed"),
+    ]
+
     # can't create Foreign Key to dolt_branches table :(
     title = models.CharField(max_length=240)
+    state = models.IntegerField(choices=PR_STATE_CHOICES, default=OPEN)
     source_branch = models.TextField()
     destination_branch = models.TextField()
     description = models.TextField()
-    creator = models.ForeignKey(User, on_delete=CASCADE, null=True)   # todo: NOT NULL
+    creator = models.ForeignKey(User, on_delete=CASCADE, null=True)  # todo: NOT NULL
     created_at = models.DateField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
@@ -316,7 +326,21 @@ class PullRequest(BaseModel):
             - "closed":
             - "merged":
         """
-        return "open"
+        if self.state == PullRequest.CLOSED:
+            return "closed"
+        if self.state == PullRequest.MERGED:
+            return "merged"
+
+        reviews = [
+            pr.state for pr in PullRequestReview.objects.filter(pull_request=self.pk)
+        ]
+        if not len(reviews):
+            return "open"
+        if PullRequestReview.APPROVED in reviews:
+            return "approved"
+        if PullRequestReview.BLOCKED in reviews:
+            return "blocked"
+        return "in-review"
 
     @property
     def commits(self):
