@@ -185,18 +185,13 @@ class BranchMergePreView(GetReturnURLMixin, View):
         )
 
     def post(self, req, *args, **kwargs):
-        src = kwargs["src"]
-        dest = kwargs["dest"]
-        try:
-            Branch.objects.get(name=dest).merge(src, user=req.user)
-        except Exception as e:
-            messages.error(req, mark_safe(f"error during merge: {str(e)}"))
-            return redirect(req.path)
-        else:
-            msg = f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"
-            messages.info(req, mark_safe(msg))
-            change_branches(sess=req.session, branch=dest)
-            return redirect(f"/")
+        src, dest = kwargs["src"], kwargs["dest"]
+        Branch.objects.get(name=dest).merge(src, user=req.user)
+        messages.info(
+            req, mark_safe(f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>")
+        )
+        change_branches(sess=req.session, branch=dest)
+        return redirect(f"/")
 
     def get_extra_context(self, req, src, dest):
         merge_base = Commit.merge_base(src, dest)
@@ -462,9 +457,51 @@ class PullRequestEditView(generic.ObjectEditView):
         return obj
 
 
-class PullRequestMergeView(generic.ObjectView):
+class PullRequestMergeView(generic.ObjectEditView):
     queryset = PullRequest.objects.all()
-    template_name = ""
+    form = ConfirmationForm()
+    template_name = "dolt/pull_request/confirm_merge.html"
+
+    def get(self, request, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        if pr.state != PullRequest.OPEN:
+            msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be merged""")
+            messages.error(request, msg)
+            return redirect("plugins:dolt:pull_request", pk=pr.pk)
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "pull_request": pr,
+                "form": self.form,
+                "panel_class": "default",
+                "button_class": "primary",
+                "return_url": pr.get_absolute_url(),
+            },
+        )
+
+    def post(self, request, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        form = ConfirmationForm(request.POST)
+
+        if form.is_valid():
+            pr.merge(user=request.user)
+            messages.success(
+                request,
+                mark_safe(f"""Pull Request <strong>"{pr}"</strong> has been merged."""),
+            )
+            return redirect("plugins:dolt:pull_request", pk=pr.pk)
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "pull_request": pr,
+                "form": self.form,
+                "return_url": pr.get_absolute_url(),
+            },
+        )
 
 
 class PullRequestCloseView(generic.ObjectEditView):
@@ -475,9 +512,8 @@ class PullRequestCloseView(generic.ObjectEditView):
     def get(self, request, pk):
         pr = get_object_or_404(self.queryset, pk=pk)
         if pr.state != PullRequest.OPEN:
-            messages.error(
-                request, f"""Pull request "{pr}" is not open and cannot be closed"""
-            )
+            msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be closed""")
+            messages.error(request, msg)
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
 
         return render(
@@ -499,7 +535,10 @@ class PullRequestCloseView(generic.ObjectEditView):
         if form.is_valid():
             pr.state = PullRequest.CLOSED
             pr.save()
-            messages.success(request, f"""Pull Request "{pr}" has been closed.""")
+            msg = mark_safe(
+                f"""<strong>Pull Request "{pr}" has been closed.</strong>"""
+            )
+            messages.success(request, msg)
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
 
         return render(

@@ -1,8 +1,14 @@
 {% extends 'utilities/confirmation_form.html' %}
 {% load form_helpers %}
 
-{% block title %}Close Pull Request {{ pull_request }}?{% endblock %}
+{% block title %}
+<span>
+    Merge Pull Request <strong>{{ pull_request }}</strong>?
+</span>
+{% endblock %}
 
 {% block message %}
-<p>Are you sure you want to close this pull request <strong>{{ consoleport.device }}</strong>?</p>
+<p>
+    Are you sure you want to merge <strong>{{ pull_request.source_branch }}</strong> into <strong>{{ pull_request.destination_branch }}</strong>?
+</p>
 {% endblock %}

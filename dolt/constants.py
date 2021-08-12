@@ -1,6 +1,6 @@
 DB_NAME = "nautobot"
 
-GLOBAL_STATE_DB = "global"
+GLOBAL_DB = "global"
 
 # TODO: change to "main"
 # TODO: put into settings?

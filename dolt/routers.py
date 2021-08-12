@@ -3,7 +3,7 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.db import connections
 
 from . import is_versioned_model
-from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH, GLOBAL_STATE_DB
+from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH, GLOBAL_DB
 from dolt.models import Branch
 
 
@@ -12,7 +12,7 @@ class GlobalStateRouter:
     TODO
     """
 
-    global_db = GLOBAL_STATE_DB
+    global_db = GLOBAL_DB
 
     def db_for_read(self, model, **hints):
         """

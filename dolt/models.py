@@ -7,8 +7,8 @@ from nautobot.core.models import BaseModel
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
-from dolt.versioning import db_for_commit
-from dolt.utils import author_from_user
+from dolt.versioning import db_for_commit, query_on_main_branch
+from dolt.utils import author_from_user, DoltError
 
 
 __all__ = (
@@ -110,21 +110,28 @@ class Branch(DoltSystemTable):
         author = author_from_user(user)
         with connection.cursor() as cursor:
             cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
-            cursor.execute(f"""SELECT dolt_merge("{merge_branch}") FROM dual;""")
-            result = cursor.fetchone()
-            if result[0] == 1:
+            cursor.execute(
+                f"""SELECT dolt_merge(
+                    '--no-ff',
+                    '{merge_branch}'
+                ) FROM dual;"""
+            )
+            success = cursor.fetchone()[0] == 1
+
+            if success:
                 # only commit merged data on success
                 msg = f"""merged "{merge_branch}" into "{self.name}"."""
                 cursor.execute(
                     f"""SELECT dolt_commit(
-                    '--all', 
-                    '--allow-empty',
-                    '--message', '{msg}',
-                    '--author', '{author}') FROM dual;"""
+                        '--all', 
+                        '--allow-empty',
+                        '--message', '{msg}',
+                        '--author', '{author}'
+                    ) FROM dual;"""
                 )
             else:
                 cursor.execute(f"SELECT dolt_merge('--abort') FROM dual;")
-                raise ValueError("merge had conflicts")
+                raise DoltError("error during merge merge had conflicts")
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
@@ -295,9 +302,9 @@ class PullRequest(BaseModel):
         (CLOSED, "Closed"),
     ]
 
-    # can't create Foreign Key to dolt_branches table :(
     title = models.CharField(max_length=240)
     state = models.IntegerField(choices=PR_STATE_CHOICES, default=OPEN)
+    # can't create Foreign Key to dolt_branches table :(
     source_branch = models.TextField()
     destination_branch = models.TextField()
     description = models.TextField()
@@ -314,6 +321,10 @@ class PullRequest(BaseModel):
 
     def get_absolute_url(self):
         return reverse("plugins:dolt:pull_request", args=[self.id])
+
+    @property
+    def open(self):
+        return self.state == PullRequest.OPEN
 
     @property
     def status(self):
@@ -360,6 +371,19 @@ class PullRequest(BaseModel):
 
     def get_merge_candidate(self):
         pass
+
+    def merge(self, user=None):
+        try:
+            src = Branch.objects.get(name=self.source_branch)
+            dest = Branch.objects.get(name=self.destination_branch)
+            dest.merge(src, user=user)
+        except ObjectDoesNotExist as e:
+            raise DoltError(f"error merging {self}: {e}")
+
+        # update PR state to "merged" on primary branch
+        with query_on_main_branch():
+            self.state = PullRequest.MERGED
+            self.save()
 
 
 class PullRequestReview(BaseModel):

@@ -3,3 +3,7 @@ def author_from_user(usr):
         return f"{usr.username} <{usr.email}>"
     # default to generic user
     return "nautobot <nautobot@ntc.com>"
+
+
+class DoltError(Exception):
+    pass
