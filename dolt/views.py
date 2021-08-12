@@ -7,7 +7,7 @@ from django.db.models import Q, F, Subquery, OuterRef, Value
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.serializers import serialize
-from django.shortcuts import get_list_or_404, render, redirect
+from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views import View
@@ -15,6 +15,7 @@ from django.views import View
 from nautobot.core.views import generic
 from nautobot.dcim.models.sites import Site
 from nautobot.extras.utils import is_taggable
+from nautobot.utilities.forms import ConfirmationForm
 from nautobot.utilities.permissions import get_permission_for_model
 from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequiredMixin
 
@@ -466,9 +467,50 @@ class PullRequestMergeView(generic.ObjectView):
     template_name = ""
 
 
-class PullRequestCloseView(generic.ObjectView):
+class PullRequestCloseView(generic.ObjectEditView):
     queryset = PullRequest.objects.all()
-    template_name = ""
+    form = ConfirmationForm()
+    template_name = "dolt/pull_request/confirm_close.html"
+
+    def get(self, request, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        if pr.state != PullRequest.OPEN:
+            messages.error(
+                request, f"""Pull request "{pr}" is not open and cannot be closed"""
+            )
+            return redirect("plugins:dolt:pull_request", pk=pr.pk)
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "pull_request": pr,
+                "form": self.form,
+                "panel_class": "default",
+                "button_class": "primary",
+                "return_url": pr.get_absolute_url(),
+            },
+        )
+
+    def post(self, request, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        form = ConfirmationForm(request.POST)
+
+        if form.is_valid():
+            pr.state = PullRequest.CLOSED
+            pr.save()
+            messages.success(request, f"""Pull Request "{pr}" has been closed.""")
+            return redirect("plugins:dolt:pull_request", pk=pr.pk)
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "pull_request": pr,
+                "form": self.form,
+                "return_url": pr.get_absolute_url(),
+            },
+        )
 
 
 class PullRequestReviewListView(generic.ObjectView):
