@@ -383,7 +383,11 @@ class PullRequestReview(BaseModel):
         db_table = "plugin_dolt_pull_request_review"
         verbose_name_plural = "pull request reviews"
 
+    def __str__(self):
+        return f""" "{self.pull_request}" reviewed by {self.reviewer}"""
 
+
+# todo: remove
 class PullRequestReviewComment(BaseModel):
     comment = models.TextField()
     commenter = models.ForeignKey(User, null=True, on_delete=SET_NULL)
