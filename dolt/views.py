@@ -454,10 +454,11 @@ class PullRequestEditView(generic.ObjectEditView):
             },
         )
 
-    def post(self, req, *args, **kwargs):
-        # todo: user not displaying
-        kwargs["user"] = req.user
-        return super().post(req, *args, **kwargs)
+    def alter_obj(self, obj, request, url_args, url_kwargs):
+        # Allow views to add extra info to an object before it is processed. For example, a parent object can be defined
+        # given some parameter from the request URL.
+        obj.creator = request.user
+        return obj
 
 
 class PullRequestMergeView(generic.ObjectView):
@@ -507,6 +508,10 @@ class PullRequestReviewEditView(generic.ObjectEditView):
             "plugins:dolt:pull_request_reviews",
             kwargs={"pk": obj.pull_request.pk},
         )
+
+    def alter_obj(self, obj, request, url_args, url_kwargs):
+        obj.reviewer = request.user
+        return obj
 
     def post(self, req, *args, **kwargs):
         kwargs["user"] = req.user

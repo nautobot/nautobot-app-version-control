@@ -147,14 +147,6 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
             "description",
         ]
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def save(self, *args, **kwargs):
-        # todo: not working yet
-        self.instance.creator = kwargs.pop("user", None)
-        return super().save(*args, **kwargs)
-
 
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
     model = PullRequest
@@ -182,11 +174,3 @@ class PullRequestReviewForm(forms.ModelForm, BootstrapMixin):
             "summary",
             "state",
         ]
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def save(self, *args, **kwargs):
-        # todo: not working yet
-        self.instance.reviewer = kwargs.pop("user", None)
-        return super().save(*args, **kwargs)

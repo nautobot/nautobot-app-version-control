@@ -301,7 +301,7 @@ class PullRequest(BaseModel):
     source_branch = models.TextField()
     destination_branch = models.TextField()
     description = models.TextField()
-    creator = models.ForeignKey(User, on_delete=CASCADE, null=True)  # todo: NOT NULL
+    creator = models.ForeignKey(User, on_delete=CASCADE)
     created_at = models.DateField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
@@ -373,7 +373,7 @@ class PullRequestReview(BaseModel):
     ]
 
     pull_request = models.ForeignKey(PullRequest, on_delete=CASCADE)
-    reviewer = models.ForeignKey(User, on_delete=CASCADE, null=True)  # todo: NOT NULL
+    reviewer = models.ForeignKey(User, on_delete=CASCADE)
     reviewed_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     state = models.IntegerField(choices=REVIEW_STATE_CHOICES, null=True)
     summary = models.TextField()
