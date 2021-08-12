@@ -19,9 +19,11 @@
         <a href="{% url 'plugins:dolt:pull_request_add_review' pull_request=object.pk %}" type="button" class="btn btn-success">
             <span class="mdi mdi-plus-thick" aria-hidden="true"></span> Add Review
         </a>
+        {% if object.status == "approved" %}
         <a href="{% url 'plugins:dolt:pull_request_merge' pk=object.pk %}" type="button" class="btn btn-info">
             Merge
         </a>
+        {% endif %}
         <a href="{% url 'plugins:dolt:pull_request_close' pk=object.pk %}" type="button" class="btn btn-danger">
             <span class="mdi mdi-close-thick" aria-hidden="true"></span> Close
         </a>
