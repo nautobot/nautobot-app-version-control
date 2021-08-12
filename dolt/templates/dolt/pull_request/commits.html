@@ -12,7 +12,18 @@
         <div class="tab-content">
             <div role="tabpanel" class="tab-pane active" id="commits">
                 <div class="row">
-                    {% render_table commit_list 'inc/table.html' %}
+                    <div class="col-md-12">
+                        <div class="panel panel-default">
+                            <div class="panel-heading">
+                                <strong>
+                                    Commits in {{object.title}}
+                                </strong>
+                            </div>
+                            <div class="table table-hover attr-table">
+                                {% render_table commit_list 'inc/table.html' %}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

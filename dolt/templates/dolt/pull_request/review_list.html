@@ -9,8 +9,7 @@
     <div class="col-md-12">
         <div class="tab-content">
             <div role="tabpanel" class="tab-pane active" id="reviews">
-                <div class="row">
-                    {% if review_list %}
+                {% if review_list %}
                     <div class="row">
                         <div class="col-sm-3"></div>
                         <div class="col-md-6">
@@ -38,10 +37,9 @@
                         </div>
                         <div class="col-sm-3"></div>
                     </div>
-                    {% else %}
+                {% else %}
                     <h3 class="text-muted text-center">No Reviews Submitted</h3>
-                    {% endif %}
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
