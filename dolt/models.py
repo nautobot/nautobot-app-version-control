@@ -374,7 +374,7 @@ class PullRequestReview(BaseModel):
 
     pull_request = models.ForeignKey(PullRequest, on_delete=CASCADE)
     reviewer = models.ForeignKey(User, on_delete=CASCADE, null=True)  # todo: NOT NULL
-    reviewed_at = models.DateField(auto_now_add=True, blank=True, null=True)
+    reviewed_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     state = models.IntegerField(choices=REVIEW_STATE_CHOICES, null=True)
     summary = models.TextField()
 
@@ -386,14 +386,5 @@ class PullRequestReview(BaseModel):
     def __str__(self):
         return f""" "{self.pull_request}" reviewed by {self.reviewer}"""
 
-
-# todo: remove
-class PullRequestReviewComment(BaseModel):
-    comment = models.TextField()
-    commenter = models.ForeignKey(User, null=True, on_delete=SET_NULL)
-    creation_time = models.DateTimeField()
-
-    class Meta:
-        # table name cannot start with "dolt"
-        verbose_name_plural = "pull request comments"
-        db_table = "plugin_dolt_pull_request_comment"
+    def get_absolute_url(self):
+        return reverse("plugins:dolt:pull_request", args=[self.pull_request.id])

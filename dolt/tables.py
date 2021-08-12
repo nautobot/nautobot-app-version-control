@@ -156,28 +156,3 @@ class PullRequestTable(BaseTable):
             "created_at",
         )
         default_columns = fields
-
-
-class PullRequestReviewTable(BaseTable):
-    pk = ToggleColumn()
-    title = tables.LinkColumn()
-
-    class Meta(BaseTable.Meta):
-        model = PullRequestReview
-        fields = (
-            "pk",
-            "pull_request",
-            "reviewer",
-            "requester",
-            "requested_at",
-            "state",
-            "summary",
-            "last_updated",
-        )
-        default_columns = (
-            "pk",
-            "state",
-            "reviewer",
-            "requester",
-            "summary",
-        )

@@ -472,7 +472,6 @@ class PullRequestCloseView(generic.ObjectView):
 
 class PullRequestReviewListView(generic.ObjectView):
     queryset = PullRequest.objects.all()
-    table = tables.PullRequestReviewTable
     template_name = "dolt/pull_request/review_list.html"
 
     def get_extra_context(self, req, obj):
@@ -501,6 +500,12 @@ class PullRequestReviewEditView(generic.ObjectEditView):
                 "obj_type": self.queryset.model._meta.verbose_name,
                 "form": self.model_form(initial=initial),
             },
+        )
+
+    def get_return_url(self, req, obj):
+        return reverse(
+            "plugins:dolt:pull_request_reviews",
+            kwargs={"pk": obj.pull_request.pk},
         )
 
     def post(self, req, *args, **kwargs):
