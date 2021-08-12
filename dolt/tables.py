@@ -116,15 +116,38 @@ class ConstraintViolationsTable(BaseTable):
 # PullRequest
 #
 
+PR_TABLE_BADGES = """
+<div>
+{% if record.state == 0 %}
+    <span class="label label-success" title="active">
+        Open
+    </span>
+{% elif record.state == 1 %}
+    <span class="label label-info" title="merged">
+        Merged
+    </span>
+{% elif record.state == 2 %}
+    <span class="label label-danger" title="closed">
+        Closed
+    </span>
+{% endif %}
+</div>
+"""
+
 
 class PullRequestTable(BaseTable):
     pk = ToggleColumn()
+    state = tables.TemplateColumn(
+        template_code=PR_TABLE_BADGES,
+        verbose_name="State",
+    )
     title = tables.LinkColumn()
 
     class Meta(BaseTable.Meta):
         model = PullRequest
         fields = (
             "pk",
+            "state",
             "title",
             "source_branch",
             "destination_branch",

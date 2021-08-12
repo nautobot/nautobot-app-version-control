@@ -1,6 +1,7 @@
 from django import forms
 from django.db.models import ProtectedError
 
+from nautobot.users.models import User
 from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
 
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
@@ -157,11 +158,20 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
 
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
     model = PullRequest
-    field_order = ["q"]
     q = forms.CharField(required=False, label="Search")
+    state = forms.ChoiceField(required=False, choices=PullRequest.PR_STATE_CHOICES)
+    creator = forms.ModelChoiceField(
+        required=False, queryset=User.objects.all(), empty_label=None
+    )
 
     class Meta:
-        fields = ["title", "source_branch", "destination_branch", "description"]
+        fields = [
+            "state",
+            "title",
+            "source_branch",
+            "destination_branch",
+            "description",
+        ]
 
 
 class PullRequestReviewForm(forms.ModelForm, BootstrapMixin):

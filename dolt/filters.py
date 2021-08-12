@@ -75,6 +75,7 @@ class PullRequestFilterSet(BaseFilterSet):
         model = PullRequest
         fields = (
             "title",
+            "state",
             "source_branch",
             "destination_branch",
             "description",
@@ -89,6 +90,6 @@ class PullRequestFilterSet(BaseFilterSet):
             Q(title__icontains=value)
             | Q(source_branch__icontains=value)
             | Q(destination_branch__icontains=value)
-            | Q(description_branch__icontains=value)
+            | Q(description__icontains=value)
             | Q(creator__icontains=value)
         )
