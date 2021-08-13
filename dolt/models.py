@@ -298,7 +298,7 @@ class PullRequest(BaseModel):
     CLOSED = 2
     PR_STATE_CHOICES = [
         (OPEN, "Open"),
-        (MERGED, "Approved"),
+        (MERGED, "Merged"),
         (CLOSED, "Closed"),
     ]
 
