@@ -2,6 +2,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, connections
 from django.db.models.deletion import CASCADE, SET_NULL
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
 from nautobot.core.models import BaseModel
 from nautobot.users.models import User
@@ -131,7 +132,12 @@ class Branch(DoltSystemTable):
                 )
             else:
                 cursor.execute(f"SELECT dolt_merge('--abort') FROM dual;")
-                raise DoltError("error during merge merge had conflicts")
+                raise DoltError(
+                    mark_safe(
+                        f"""Merging {merge_branch} into {self} created merge conflicts.
+                    Resolve merge conflicts to reattempt the merge."""
+                    )
+                )
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
@@ -202,7 +208,7 @@ class Commit(DoltSystemTable):
     def save(self, *args, branch=None, author=None, **kwargs):
         author = author_from_user(author)
         if not branch:
-            raise ValueError("must specify branch to create commit")
+            raise DoltError("must specify branch to create commit")
 
         # TODO: empty commits are sometimes created
         with connection.cursor() as cursor:
@@ -378,7 +384,7 @@ class PullRequest(BaseModel):
             dest = Branch.objects.get(name=self.destination_branch)
             dest.merge(src, user=user)
         except ObjectDoesNotExist as e:
-            raise DoltError(f"error merging {self}: {e}")
+            raise DoltError(f"error merging Pull Request {self}: {e}")
 
         # update PR state to "merged" on primary branch
         with query_on_main_branch():

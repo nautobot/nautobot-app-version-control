@@ -1,10 +1,12 @@
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.sessions.backends.db import SessionStore
 from django.db import connections
+from django.utils.safestring import mark_safe
 
 from . import is_versioned_model
 from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH, GLOBAL_DB
 from dolt.models import Branch
+from dolt.utils import DoltError
 
 
 class GlobalStateRouter:
@@ -42,8 +44,12 @@ class GlobalStateRouter:
         if is_versioned_model(model):
             return None
         if self._branch_is_not_primary():
-            msg = f"cannot write non-version model {model} on non-primary branch"
-            raise ValueError(msg)
+            raise DoltError(
+                mark_safe(
+                    f"""Error writing <strong>{model.__name__}</strong>: non-versioned models 
+                    must be written on branch <strong>"{DOLT_DEFAULT_BRANCH}"</strong>."""
+                )
+            )
         return self.global_db
 
     def allow_relation(self, obj1, obj2, **hints):
