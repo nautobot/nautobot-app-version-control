@@ -1,4 +1,5 @@
 import json
+import logging
 
 from django.forms import ValidationError
 from django.contrib import messages
@@ -7,7 +8,7 @@ from django.db.models import Q, F, Subquery, OuterRef, Value
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.serializers import serialize
-from django.shortcuts import render, redirect
+from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views import View
@@ -15,6 +16,7 @@ from django.views import View
 from nautobot.core.views import generic
 from nautobot.dcim.models.sites import Site
 from nautobot.extras.utils import is_taggable
+from nautobot.utilities.forms import ConfirmationForm
 from nautobot.utilities.permissions import get_permission_for_model
 from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequiredMixin
 
@@ -23,7 +25,14 @@ from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
 from dolt.versioning import db_for_commit, query_on_branch, change_branches
 from dolt.diffs import content_type_has_diff_view_table
 from dolt.middleware import branch_from_request
-from dolt.models import Branch, BranchMeta, Commit
+from dolt.models import (
+    Branch,
+    BranchMeta,
+    Commit,
+    CommitAncestor,
+    PullRequest,
+    PullRequestReview,
+)
 
 
 #
@@ -111,6 +120,82 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
     queryset = Branch.objects.all()
     table = tables.BranchTable
     form = forms.BranchBulkDeleteForm
+    template_name = "dolt/branch_bulk_delete.html"
+
+    def get(self, request):
+        return redirect(self.get_return_url(request))
+
+    def post(self, request, **kwargs):
+        logger = logging.getLogger("nautobot.views.BulkDeleteView")
+        model = self.queryset.model
+
+        # Are we deleting *all* objects in the queryset or just a selected subset?
+        if request.POST.get("_all"):
+            if self.filterset is not None:
+                pk_list = [
+                    obj.pk
+                    for obj in self.filterset(request.GET, model.objects.only("pk")).qs
+                ]
+            else:
+                pk_list = model.objects.values_list("pk", flat=True)
+        else:
+            pk_list = request.POST.getlist("pk")
+
+        form_cls = self.get_form()
+
+        if "_confirm" in request.POST:
+            form = form_cls(request.POST)
+            if form.is_valid():
+                logger.debug("Form validation was successful")
+
+                # Delete objects
+                queryset = self.queryset.filter(pk__in=pk_list)
+                try:
+                    deleted_count = queryset.delete()[1][model._meta.label]
+                except ProtectedError as e:
+                    logger.info(
+                        "Caught ProtectedError while attempting to delete objects"
+                    )
+                    handle_protectederror(queryset, request, e)
+                    return redirect(self.get_return_url(request))
+
+                msg = "Deleted {} {}".format(
+                    deleted_count, model._meta.verbose_name_plural
+                )
+                logger.info(msg)
+                messages.success(request, msg)
+                return redirect(self.get_return_url(request))
+
+            else:
+                logger.debug("Form validation failed")
+
+        else:
+            form = form_cls(
+                initial={
+                    "pk": pk_list,
+                    "return_url": self.get_return_url(request),
+                }
+            )
+
+        # Retrieve objects being deleted
+        table = self.table(self.queryset.filter(pk__in=pk_list), orderable=False)
+        if not table.rows:
+            messages.warning(
+                request,
+                "No {} were selected for deletion.".format(
+                    model._meta.verbose_name_plural
+                ),
+            )
+            return redirect(self.get_return_url(request))
+
+        context = {
+            "form": form,
+            "obj_type_plural": model._meta.verbose_name_plural,
+            "table": table,
+            "return_url": self.get_return_url(request),
+        }
+        context.update(self.extra_context())
+        return render(request, self.template_name, context)
 
 
 #
@@ -177,18 +262,13 @@ class BranchMergePreView(GetReturnURLMixin, View):
         )
 
     def post(self, req, *args, **kwargs):
-        src = kwargs["src"]
-        dest = kwargs["dest"]
-        try:
-            Branch.objects.get(name=dest).merge(src, user=req.user)
-        except Exception as e:
-            messages.error(req, mark_safe(f"error during merge: {str(e)}"))
-            return redirect(req.path)
-        else:
-            msg = f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"
-            messages.info(req, mark_safe(msg))
-            change_branches(sess=req.session, branch=dest)
-            return redirect(f"/")
+        src, dest = kwargs["src"], kwargs["dest"]
+        Branch.objects.get(name=dest).merge(src, user=req.user)
+        messages.info(
+            req, mark_safe(f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>")
+        )
+        change_branches(sess=req.session, branch=dest)
+        return redirect(f"/")
 
     def get_extra_context(self, req, src, dest):
         merge_base = Commit.merge_base(src, dest)
@@ -210,11 +290,30 @@ class BranchMergePreView(GetReturnURLMixin, View):
 class CommitView(generic.ObjectView):
     queryset = Commit.objects.all()
 
-    def get_extra_context(self, req, instance):
-        if not len(instance.parent_commits):
-            return {}  # init commit has no parents
-        parent = Commit.objects.get(commit_hash=instance.parent_commits[0])
-        return {"results": diffs.two_dot_diffs(from_commit=parent, to_commit=instance)}
+    def get(self, request, *args, **kwargs):
+        """
+        Looks up the requested commit using a database revision
+        to ensure the commit is accessible.
+        todo: explain ancestor
+        """
+        anc = get_list_or_404(CommitAncestor.objects.all(), **kwargs)[0]
+        db = db_for_commit(anc.commit_hash)
+        instance = self.queryset.using(db).get(commit_hash=anc.commit_hash)
+
+        if anc.parent_hash:
+            diff = diffs.two_dot_diffs(from_commit=anc.parent_hash, to_commit=instance)
+        else:
+            # init commit has no parents
+            diff = {}
+
+        return render(
+            request,
+            self.get_template_name(),
+            {
+                "object": instance,
+                "results": diff,
+            },
+        )
 
 
 class CommitListView(generic.ObjectListView):
@@ -372,3 +471,219 @@ def serialize_object(obj, extra=None, exclude=None):
             data.pop(key)
 
     return data
+
+
+#
+# Pull Requests
+#
+
+
+class PullRequestListView(generic.ObjectListView):
+    queryset = PullRequest.objects.all()
+    filterset = filters.PullRequestFilterSet
+    filterset_form = forms.PullRequestFilterForm
+    table = tables.PullRequestTable
+    # action_buttons = ("add",)  # todo: add button
+    action_buttons = ()
+    template_name = "dolt/pull_request_list.html"
+
+
+class PullRequestDiffView(generic.ObjectView):
+    queryset = PullRequest.objects.all()
+    template_name = "dolt/pull_request/diffs.html"
+
+    def get_extra_context(self, req, obj, **kwargs):
+        head = Branch.objects.get(name=obj.source_branch).hash
+        merge_base = Commit.merge_base(obj.source_branch, obj.destination_branch)
+        return {
+            "active_tab": "diffs",
+            "results": diffs.two_dot_diffs(from_commit=merge_base, to_commit=head),
+        }
+
+
+class PullRequestConflictView(generic.ObjectView):
+    queryset = PullRequest.objects.all()
+    template_name = "dolt/pull_request/conflicts.html"
+
+    def get_extra_context(self, req, obj, **kwargs):
+        return {"active_tab": "conflicts", "results": {}}
+
+
+class PullRequestEditView(generic.ObjectEditView):
+    queryset = PullRequest.objects.all()
+    model_form = forms.PullRequestForm
+    template_name = "dolt/pull_request/edit.html"
+
+    def get(self, req, *args, **kwargs):
+        initial = {
+            "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
+        }
+        return render(
+            req,
+            self.template_name,
+            {
+                "obj_type": self.queryset.model._meta.verbose_name,
+                "form": self.model_form(initial=initial),
+            },
+        )
+
+    def alter_obj(self, obj, request, url_args, url_kwargs):
+        # Allow views to add extra info to an object before it is processed. For example, a parent object can be defined
+        # given some parameter from the request URL.
+        obj.creator = request.user
+        return obj
+
+
+class PullRequestMergeView(generic.ObjectEditView):
+    queryset = PullRequest.objects.all()
+    form = ConfirmationForm()
+    template_name = "dolt/pull_request/confirm_merge.html"
+
+    def get(self, request, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        if pr.state != PullRequest.OPEN:
+            msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be merged""")
+            messages.error(request, msg)
+            return redirect("plugins:dolt:pull_request", pk=pr.pk)
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "pull_request": pr,
+                "form": self.form,
+                "panel_class": "default",
+                "button_class": "primary",
+                "return_url": pr.get_absolute_url(),
+            },
+        )
+
+    def post(self, request, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        form = ConfirmationForm(request.POST)
+
+        if form.is_valid():
+            pr.merge(user=request.user)
+            messages.success(
+                request,
+                mark_safe(f"""Pull Request <strong>"{pr}"</strong> has been merged."""),
+            )
+            return redirect("plugins:dolt:pull_request", pk=pr.pk)
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "pull_request": pr,
+                "form": self.form,
+                "return_url": pr.get_absolute_url(),
+            },
+        )
+
+
+class PullRequestCloseView(generic.ObjectEditView):
+    queryset = PullRequest.objects.all()
+    form = ConfirmationForm()
+    template_name = "dolt/pull_request/confirm_close.html"
+
+    def get(self, request, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        if pr.state != PullRequest.OPEN:
+            msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be closed""")
+            messages.error(request, msg)
+            return redirect("plugins:dolt:pull_request", pk=pr.pk)
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "pull_request": pr,
+                "form": self.form,
+                "panel_class": "default",
+                "button_class": "primary",
+                "return_url": pr.get_absolute_url(),
+            },
+        )
+
+    def post(self, request, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        form = ConfirmationForm(request.POST)
+
+        if form.is_valid():
+            pr.state = PullRequest.CLOSED
+            pr.save()
+            msg = mark_safe(
+                f"""<strong>Pull Request "{pr}" has been closed.</strong>"""
+            )
+            messages.success(request, msg)
+            return redirect("plugins:dolt:pull_request", pk=pr.pk)
+
+        return render(
+            request,
+            self.template_name,
+            {
+                "pull_request": pr,
+                "form": self.form,
+                "return_url": pr.get_absolute_url(),
+            },
+        )
+
+
+class PullRequestReviewListView(generic.ObjectView):
+    queryset = PullRequest.objects.all()
+    template_name = "dolt/pull_request/review_list.html"
+
+    def get_extra_context(self, req, obj):
+        reviews = PullRequestReview.objects.filter(pull_request=obj.pk).order_by(
+            "reviewed_at"
+        )
+        return {
+            "active_tab": "reviews",
+            "review_list": reviews,
+        }
+
+
+class PullRequestReviewEditView(generic.ObjectEditView):
+    queryset = PullRequestReview.objects.all()
+    model_form = forms.PullRequestReviewForm
+    template_name = "dolt/pull_request/review_edit.html"
+
+    def get(self, req, *args, **kwargs):
+        initial = {
+            "pull_request": PullRequest.objects.get(pk=kwargs["pull_request"]),
+        }
+        return render(
+            req,
+            self.template_name,
+            {
+                "obj_type": self.queryset.model._meta.verbose_name,
+                "form": self.model_form(initial=initial),
+            },
+        )
+
+    def get_return_url(self, req, obj):
+        return reverse(
+            "plugins:dolt:pull_request_reviews",
+            kwargs={"pk": obj.pull_request.pk},
+        )
+
+    def alter_obj(self, obj, request, url_args, url_kwargs):
+        obj.reviewer = request.user
+        return obj
+
+    def post(self, req, *args, **kwargs):
+        kwargs["user"] = req.user
+        return super().post(req, *args, **kwargs)
+
+
+class PullRequestCommitListView(generic.ObjectView):
+    queryset = PullRequest.objects.all()
+    table = tables.CommitTable
+    template_name = "dolt/pull_request/commits.html"
+    action_buttons = ()
+
+    def get_extra_context(self, req, obj, **kwargs):
+        return {
+            "active_tab": "commits",
+            "commit_list": self.table(obj.commits),
+        }

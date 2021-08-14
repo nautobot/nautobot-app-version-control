@@ -46,4 +46,48 @@ urlpatterns = [
     ),
     # Diffs
     path("diffs/", views.ActiveBranchDiffs.as_view(), name="active_branch_diffs"),
+    # Pull Requests
+    path(
+        "pull-request/", views.PullRequestListView.as_view(), name="pull_request_list"
+    ),
+    path(
+        "pull-request/add/",
+        views.PullRequestEditView.as_view(),
+        name="pull_request_add",
+    ),
+    path(
+        "pull-request/<str:pk>/",
+        views.PullRequestDiffView.as_view(),
+        name="pull_request",
+    ),
+    path(
+        "pull-request/<str:pk>/merge",
+        views.PullRequestMergeView.as_view(),
+        name="pull_request_merge",
+    ),
+    path(
+        "pull-request/<str:pk>/close",
+        views.PullRequestCloseView.as_view(),
+        name="pull_request_close",
+    ),
+    path(
+        "pull-request/<str:pk>/conflicts",
+        views.PullRequestConflictView.as_view(),
+        name="pull_request_conflicts",
+    ),
+    path(
+        "pull-request/<str:pk>/reviews",
+        views.PullRequestReviewListView.as_view(),
+        name="pull_request_reviews",
+    ),
+    path(
+        "pull-request/<str:pull_request>/reviews/add/",
+        views.PullRequestReviewEditView.as_view(),
+        name="pull_request_add_review",
+    ),
+    path(
+        "pull-request/<str:pk>/commits",
+        views.PullRequestCommitListView.as_view(),
+        name="pull_request_commits",
+    ),
 ]

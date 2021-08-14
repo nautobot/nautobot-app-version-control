@@ -1,14 +1,21 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, connections
+from django.db.models.deletion import CASCADE, SET_NULL
 from django.urls import reverse
+from django.utils.safestring import mark_safe
 
+from nautobot.core.models import BaseModel
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
+
+from dolt.versioning import db_for_commit, query_on_main_branch
+from dolt.utils import author_from_user, DoltError
 
 
 __all__ = (
     "Branch",
     "Commit",
+    "PullRequest",
 )
 
 
@@ -104,21 +111,33 @@ class Branch(DoltSystemTable):
         author = author_from_user(user)
         with connection.cursor() as cursor:
             cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
-            cursor.execute(f"""SELECT dolt_merge("{merge_branch}") FROM dual;""")
-            result = cursor.fetchone()
-            if result[0] == 1:
+            cursor.execute(
+                f"""SELECT dolt_merge(
+                    '--no-ff',
+                    '{merge_branch}'
+                ) FROM dual;"""
+            )
+            success = cursor.fetchone()[0] == 1
+
+            if success:
                 # only commit merged data on success
                 msg = f"""merged "{merge_branch}" into "{self.name}"."""
                 cursor.execute(
                     f"""SELECT dolt_commit(
-                    '--all', 
-                    '--allow-empty',
-                    '--message', '{msg}',
-                    '--author', '{author}') FROM dual;"""
+                        '--all', 
+                        '--allow-empty',
+                        '--message', '{msg}',
+                        '--author', '{author}'
+                    ) FROM dual;"""
                 )
             else:
                 cursor.execute(f"SELECT dolt_merge('--abort') FROM dual;")
-                raise ValueError("merge had conflicts")
+                raise DoltError(
+                    mark_safe(
+                        f"""Merging {merge_branch} into {self} created merge conflicts.
+                    Resolve merge conflicts to reattempt the merge."""
+                    )
+                )
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
@@ -134,6 +153,7 @@ class BranchMeta(models.Model):
     created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
+        # table name cannot start with "dolt"
         db_table = "plugin_dolt_branchmeta"
 
 
@@ -188,7 +208,7 @@ class Commit(DoltSystemTable):
     def save(self, *args, branch=None, author=None, **kwargs):
         author = author_from_user(author)
         if not branch:
-            raise ValueError("must specify branch to create commit")
+            raise DoltError("must specify branch to create commit")
 
         # TODO: empty commits are sometimes created
         with connection.cursor() as cursor:
@@ -273,8 +293,128 @@ class ConstraintViolations(DoltSystemTable):
         return f"{self.table} ({self.num_violations})"
 
 
-def author_from_user(usr):
-    if usr and usr.username and usr.email:
-        return f"{usr.username} <{usr.email}>"
-    # default to generic user
-    return "nautobot <nautobot@ntc.com>"
+#
+# Pull Requests
+#
+
+
+class PullRequest(BaseModel):
+    OPEN = 0
+    MERGED = 1
+    CLOSED = 2
+    PR_STATE_CHOICES = [
+        (OPEN, "Open"),
+        (MERGED, "Merged"),
+        (CLOSED, "Closed"),
+    ]
+
+    title = models.CharField(max_length=240)
+    state = models.IntegerField(choices=PR_STATE_CHOICES, default=OPEN)
+    # can't create Foreign Key to dolt_branches table :(
+    source_branch = models.TextField()
+    destination_branch = models.TextField()
+    description = models.TextField()
+    creator = models.ForeignKey(User, on_delete=CASCADE)
+    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
+
+    class Meta:
+        # table name cannot start with "dolt"
+        db_table = "plugin_dolt_pull_request"
+        verbose_name_plural = "pull requests"
+
+    def __str__(self):
+        return self.title
+
+    def get_absolute_url(self):
+        return reverse("plugins:dolt:pull_request", args=[self.id])
+
+    @property
+    def open(self):
+        return self.state == PullRequest.OPEN
+
+    @property
+    def status(self):
+        """
+        One of
+            - "open":
+            - "in-review":
+            - "blocked":
+            - "approved":
+            - "closed":
+            - "merged":
+        """
+        if self.state == PullRequest.CLOSED:
+            return "closed"
+        if self.state == PullRequest.MERGED:
+            return "merged"
+
+        reviews = [
+            pr.state for pr in PullRequestReview.objects.filter(pull_request=self.pk)
+        ]
+        if not len(reviews):
+            return "open"
+        if PullRequestReview.APPROVED in reviews:
+            return "approved"
+        if PullRequestReview.BLOCKED in reviews:
+            return "blocked"
+        return "in-review"
+
+    @property
+    def commits(self):
+        merge_base = Commit.objects.get(
+            commit_hash=Commit.merge_base(self.source_branch, self.destination_branch)
+        )
+        db = db_for_commit(Branch.objects.get(name=self.source_branch).hash)
+        return Commit.objects.filter(date__gt=merge_base.date).using(db)
+
+    @property
+    def num_commits(self):
+        return self.commits.count()
+
+    @property
+    def summary_description(self):
+        return f"""Merging {self.num_commits} commits from "{self.source_branch}" into "{self.destination_branch}" """
+
+    def get_merge_candidate(self):
+        pass
+
+    def merge(self, user=None):
+        try:
+            src = Branch.objects.get(name=self.source_branch)
+            dest = Branch.objects.get(name=self.destination_branch)
+            dest.merge(src, user=user)
+        except ObjectDoesNotExist as e:
+            raise DoltError(f"error merging Pull Request {self}: {e}")
+
+        # update PR state to "merged" on primary branch
+        with query_on_main_branch():
+            self.state = PullRequest.MERGED
+            self.save()
+
+
+class PullRequestReview(BaseModel):
+    COMMENTED = 0
+    APPROVED = 1
+    BLOCKED = 2
+    REVIEW_STATE_CHOICES = [
+        (COMMENTED, "Commented"),
+        (APPROVED, "Approved"),
+        (BLOCKED, "Blocked"),
+    ]
+
+    pull_request = models.ForeignKey(PullRequest, on_delete=CASCADE)
+    reviewer = models.ForeignKey(User, on_delete=CASCADE)
+    reviewed_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+    state = models.IntegerField(choices=REVIEW_STATE_CHOICES, null=True)
+    summary = models.TextField()
+
+    class Meta:
+        # table name cannot start with "dolt"
+        db_table = "plugin_dolt_pull_request_review"
+        verbose_name_plural = "pull request reviews"
+
+    def __str__(self):
+        return f""" "{self.pull_request}" reviewed by {self.reviewer}"""
+
+    def get_absolute_url(self):
+        return reverse("plugins:dolt:pull_request", args=[self.pull_request.id])

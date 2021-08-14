@@ -1,14 +1,17 @@
 import django_tables2 as tables
 from django_tables2 import A
 
-from dolt.models import Branch, Conflicts, ConstraintViolations, Commit
+from dolt.models import (
+    Branch,
+    Conflicts,
+    ConstraintViolations,
+    Commit,
+    PullRequest,
+    PullRequestReview,
+)
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
-__all__ = (
-    "BranchTable",
-    "ConflictsTable",
-    "CommitTable",
-)
+__all__ = ("BranchTable", "ConflictsTable", "CommitTable", "PullRequestTable")
 
 
 #
@@ -105,5 +108,51 @@ class ConstraintViolationsTable(BaseTable):
         fields = (
             "table",
             "num_violations",
+        )
+        default_columns = fields
+
+
+#
+# PullRequest
+#
+
+PR_TABLE_BADGES = """
+<div>
+{% if record.state == 0 %}
+    <span class="label label-success" title="active">
+        Open
+    </span>
+{% elif record.state == 1 %}
+    <span class="label label-info" title="merged">
+        Merged
+    </span>
+{% elif record.state == 2 %}
+    <span class="label label-danger" title="closed">
+        Closed
+    </span>
+{% endif %}
+</div>
+"""
+
+
+class PullRequestTable(BaseTable):
+    pk = ToggleColumn()
+    state = tables.TemplateColumn(
+        template_code=PR_TABLE_BADGES,
+        verbose_name="State",
+    )
+    title = tables.LinkColumn()
+
+    class Meta(BaseTable.Meta):
+        model = PullRequest
+        fields = (
+            "pk",
+            "state",
+            "title",
+            "source_branch",
+            "destination_branch",
+            "description",
+            "creator",
+            "created_at",
         )
         default_columns = fields

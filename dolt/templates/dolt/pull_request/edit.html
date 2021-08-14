@@ -1,0 +1,15 @@
+{% extends 'generic/object_edit.html' %}
+{% load form_helpers %}
+
+{% block form %}
+<div class="panel panel-default">
+    <div class="panel-heading"><strong>Pull Request</strong></div>
+    <div class="panel-body">
+        {% render_field form.title %}
+        {% render_field form.source_branch %}
+        {% render_field form.destination_branch %}
+        {% render_field form.description %}
+    </div>
+</div>
+{% include 'inc/extras_features_edit_form_fields.html' %}
+{% endblock %}

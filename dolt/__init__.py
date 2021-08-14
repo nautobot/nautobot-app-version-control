@@ -29,13 +29,24 @@ class NautobotDolt(PluginConfig):
 # may also be a nest dict containing a subset of whitelisted models within
 # the app_label.
 __MODEL_VERSION_WHITELIST__ = {
+    "dolt": {
+        "branch": True,
+        "branchmeta": True,
+        "commit": True,
+        "commitancestor": True,
+        "conflicts": True,
+        "constraintviolations": True,
+        # Pull Requests are not versioned
+        "pullrequest": False,
+        "pullrequestreviewcomments": False,
+        "pullrequestreviews": False,
+    },
     "dcim": True,
     "circuits": True,
     "ipam": True,
     "virtualization": True,
     "taggit": True,
     "tenancy": True,
-    "dolt": True,
     "extras": {
         # TODO: what should be versioned from `extras`?
         "computedfield": True,

@@ -1,0 +1,8 @@
+{% extends 'utilities/confirmation_form.html' %}
+{% load form_helpers %}
+
+{% block title %}<strong>Close Pull Request</strong>{% endblock %}
+
+{% block message %}
+<p>Are you sure you want to close this pull request <strong>{{ pull_request.device }}</strong>?</p>
+{% endblock %}

@@ -13,6 +13,7 @@ from dolt.constants import (
 )
 from dolt.versioning import query_on_branch
 from dolt.models import Branch, Commit
+from dolt.utils import DoltError
 
 
 def branch_from_request(request):
@@ -47,7 +48,12 @@ class DoltBranchMiddleware:
                 </div>
             """
             messages.info(request, mark_safe(msg))
-        return view_func(request, *view_args, **view_kwargs)
+
+        try:
+            return view_func(request, *view_args, **view_kwargs)
+        except DoltError as e:
+            messages.error(request, mark_safe(e))
+            return redirect(request.path)
 
     def get_branch(self, request):
         # lookup the active branch in the session cookie

@@ -1,9 +1,10 @@
 from django import forms
 from django.db.models import ProtectedError
 
+from nautobot.users.models import User
 from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
 
-from dolt.models import Branch, Commit
+from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
@@ -122,3 +123,54 @@ class CommitFilterForm(forms.Form, BootstrapMixin):
     model = Commit
     field_order = ["q"]
     q = forms.CharField(required=False, label="Search")
+
+
+#
+# PullRequests
+#
+
+
+class PullRequestForm(forms.ModelForm, BootstrapMixin):
+    source_branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(), to_field_name="name", required=True
+    )
+    destination_branch = forms.ModelChoiceField(
+        queryset=Branch.objects.all(), to_field_name="name", required=True
+    )
+
+    class Meta:
+        model = PullRequest
+        fields = [
+            "title",
+            "source_branch",
+            "destination_branch",
+            "description",
+        ]
+
+
+class PullRequestFilterForm(forms.Form, BootstrapMixin):
+    model = PullRequest
+    q = forms.CharField(required=False, label="Search")
+    state = forms.ChoiceField(required=False, choices=PullRequest.PR_STATE_CHOICES)
+    creator = forms.ModelChoiceField(
+        required=False, queryset=User.objects.all(), empty_label=None
+    )
+
+    class Meta:
+        fields = [
+            "state",
+            "title",
+            "source_branch",
+            "destination_branch",
+            "description",
+        ]
+
+
+class PullRequestReviewForm(forms.ModelForm, BootstrapMixin):
+    class Meta:
+        model = PullRequestReview
+        fields = [
+            "pull_request",
+            "summary",
+            "state",
+        ]

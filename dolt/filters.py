@@ -2,7 +2,7 @@ import django_filters
 from django.db.models import Q
 
 from nautobot.utilities.filters import BaseFilterSet
-from dolt.models import Branch, Commit
+from dolt.models import Branch, Commit, PullRequest
 
 
 class BranchFilterSet(BaseFilterSet):
@@ -62,4 +62,34 @@ class CommitFilterSet(BaseFilterSet):
             | Q(email__icontains=value)
             | Q(date__icontains=value)
             | Q(message__icontains=value)
+        )
+
+
+class PullRequestFilterSet(BaseFilterSet):
+    q = django_filters.CharFilter(
+        method="search",
+        label="Search",
+    )
+
+    class Meta:
+        model = PullRequest
+        fields = (
+            "title",
+            "state",
+            "source_branch",
+            "destination_branch",
+            "description",
+            "creator",
+        )
+
+    def search(self, queryset, name, value):
+        value = value.strip()
+        if not value:
+            return queryset
+        return queryset.filter(
+            Q(title__icontains=value)
+            | Q(source_branch__icontains=value)
+            | Q(destination_branch__icontains=value)
+            | Q(description__icontains=value)
+            | Q(creator__icontains=value)
         )
