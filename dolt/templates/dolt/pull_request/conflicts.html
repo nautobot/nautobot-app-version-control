@@ -64,11 +64,13 @@
                         </div>
                     </div>
                 </div>
-
-                <div id="conflicts">
-                    <h3 class="text-muted text-center">No conflicts found</h3>
-                </div>
-
+                {% if conflicts %}
+                    {% include 'dolt/conflicts.html' with conflicts=conflicts %}
+                {% else %}
+                    <div id="conflicts">
+                        <h3 class="text-muted text-center">No conflicts found</h3>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
