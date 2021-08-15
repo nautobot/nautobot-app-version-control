@@ -7,7 +7,12 @@ from dolt.models import (
     Commit,
 )
 from dolt.utils import author_from_user
-from dolt.tables import ConflictsTable, ConstraintViolationsTable
+from dolt.tables import (
+    ConflictsSummaryTable,
+    ConflictsTable,
+    ConstraintViolationsSummaryTable,
+    ConstraintViolationsTable,
+)
 from dolt.versioning import query_on_branch
 
 
@@ -21,17 +26,58 @@ def get_conflicts_for_merge(src, dest):
         constraint violations.
     """
     mc = get_or_make_merge_candidate(src, dest)
+    conflicts = Conflicts.objects.all()
+    violations = ConstraintViolations.objects.all()
     with query_on_branch(mc):
         if not conflicts_or_violations_exist():
             return {}
         return {
             "summary": {
-                "conflicts": ConflictsTable(Conflicts.objects.all()),
-                "violations": ConstraintViolationsTable(
-                    ConstraintViolations.objects.all()
-                ),
+                "conflicts": ConflictsSummaryTable(conflicts),
+                "violations": ConstraintViolationsSummaryTable(violations),
             },
+            "conflicts": make_conflict_table(mc, conflicts),
+            "violations": make_constraint_violations_table(mc, violations),
         }
+
+
+def make_conflict_table(merge_candidate, conflicts):
+    rows = []
+    for c in conflicts:
+        rows.extend(get_rows_level_conflicts(c))
+    return ConflictsTable(rows)
+
+
+def get_rows_level_conflicts(conflict):
+    with connection.cursor() as cursor:
+        cursor.execute(f"SELECT base_id FROM dolt_conflicts_{conflict.table};")
+        return [
+            {"table": conflict.table, "id": tup[0], "conflicts": {}}
+            for tup in cursor.fetchall()
+        ]
+
+
+def make_constraint_violations_table(merge_candidate, violations):
+    rows = []
+    for v in violations:
+        rows.extend(get_rows_level_violations(v))
+    return ConstraintViolationsTable(rows)
+
+
+def get_rows_level_violations(violation):
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"SELECT id, violation_type FROM dolt_constraint_violations_{violation.table};"
+        )
+        return [
+            {
+                "table": violation.table,
+                "id": tup[0],
+                "violation_type": tup[1],
+                "violations": {},
+            }
+            for tup in cursor.fetchall()
+        ]
 
 
 def merge_candidate_exists(src, dest):

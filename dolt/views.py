@@ -506,7 +506,8 @@ class PullRequestConflictView(generic.ObjectView):
     template_name = "dolt/pull_request/conflicts.html"
 
     def get_extra_context(self, req, obj, **kwargs):
-        src, dest = obj.source_branch, obj.destination_branch
+        src = Branch.objects.get(name=obj.source_branch)
+        dest = Branch.objects.get(name=obj.destination_branch)
         return {
             "active_tab": "conflicts",
             "conflicts": merge.get_conflicts_for_merge(src, dest),

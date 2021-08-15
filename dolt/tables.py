@@ -11,7 +11,7 @@ from dolt.models import (
 )
 from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
-__all__ = ("BranchTable", "ConflictsTable", "CommitTable", "PullRequestTable")
+__all__ = ("BranchTable", "ConflictsSummaryTable", "CommitTable", "PullRequestTable")
 
 
 #
@@ -92,7 +92,7 @@ class CommitTable(BaseTable):
 #
 
 
-class ConflictsTable(BaseTable):
+class ConflictsSummaryTable(BaseTable):
     class Meta(BaseTable.Meta):
         model = Conflicts
         fields = (
@@ -102,12 +102,35 @@ class ConflictsTable(BaseTable):
         default_columns = fields
 
 
-class ConstraintViolationsTable(BaseTable):
+class ConflictsTable(BaseTable):
+    class Meta(BaseTable.Meta):
+        model = Conflicts
+        fields = (
+            "table",
+            "id",
+            "conflicts",
+        )
+        default_columns = fields
+
+
+class ConstraintViolationsSummaryTable(BaseTable):
     class Meta(BaseTable.Meta):
         model = ConstraintViolations
         fields = (
             "table",
             "num_violations",
+        )
+        default_columns = fields
+
+
+class ConstraintViolationsTable(BaseTable):
+    class Meta(BaseTable.Meta):
+        model = Conflicts
+        fields = (
+            "table",
+            "id",
+            "violation_type",
+            "violations",
         )
         default_columns = fields
 
