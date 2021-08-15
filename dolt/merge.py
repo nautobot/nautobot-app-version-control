@@ -1,3 +1,5 @@
+import json
+
 from django.db import connection
 
 from dolt.models import (
@@ -49,10 +51,43 @@ def make_conflict_table(merge_candidate, conflicts):
 
 
 def get_rows_level_conflicts(conflict):
+    """
+    todo
+    """
+
+    def dedupe_conflicts(obj):
+        if type(obj) is str:
+            obj = json.loads(obj)
+        obj2 = {}
+        for k, v in obj.items():
+            pre = "our_"
+            if not k.startswith(pre):
+                continue
+            suf = k[len(pre) :]
+            ours = obj[f"our_{suf}"]
+            theirs = obj[f"their_{suf}"]
+            base = obj[f"base_{suf}"]
+            if ours != theirs and ours != base:
+                obj2[f"our_{suf}"] = ours
+                obj2[f"their_{suf}"] = theirs
+                obj2[f"base_{suf}"] = base
+        return obj2
+
     with connection.cursor() as cursor:
-        cursor.execute(f"SELECT base_id FROM dolt_conflicts_{conflict.table};")
+        # introspect table schema to query conflict data as json
+        cursor.execute(f"DESCRIBE dolt_conflicts_{conflict.table}")
+        fields = ",".join([f"'{tup[0]}', {tup[0]}" for tup in cursor.fetchall()])
+
+        cursor.execute(
+            f"""SELECT base_id, JSON_OBJECT({fields})
+                FROM dolt_conflicts_{conflict.table};"""
+        )
         return [
-            {"table": conflict.table, "id": tup[0], "conflicts": {}}
+            {
+                "table": conflict.table,
+                "id": tup[0],
+                "conflicts": dedupe_conflicts(tup[1]),
+            }
             for tup in cursor.fetchall()
         ]
 
@@ -67,14 +102,15 @@ def make_constraint_violations_table(merge_candidate, violations):
 def get_rows_level_violations(violation):
     with connection.cursor() as cursor:
         cursor.execute(
-            f"SELECT id, violation_type FROM dolt_constraint_violations_{violation.table};"
+            f"""SELECT id, violation_type, violation_info
+                FROM dolt_constraint_violations_{violation.table};"""
         )
         return [
             {
                 "table": violation.table,
                 "id": tup[0],
                 "violation_type": tup[1],
-                "violations": {},
+                "violations": tup[2],
             }
             for tup in cursor.fetchall()
         ]
