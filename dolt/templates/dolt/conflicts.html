@@ -3,26 +3,6 @@
 <div class="conflicts" >
     {% if conflicts %}
 
-        {% if conflicts.summary %}
-            {% if conflicts.summary.conflicts and conflicts.summary.conflicts.rows %}
-                <div class="row">
-                    <div class="col-md-12">
-                        <h3 id="conflicts-heading">Merge Conflicts</h3>
-                        {% include 'dolt/conflicts_summary.html' with table=conflicts.summary.conflicts %}
-                    </div>
-                </div>
-            {% endif %}
-
-            {% if conflicts.summary.violations and conflicts.summary.violations.rows %}
-                <div class="row">
-                    <div class="col-md-12">
-                        <h3 id="violations-heading">Merge Constraint Violations</h3>
-                        {% include 'dolt/conflicts_summary.html' with table=conflicts.summary.violations %}
-                    </div>
-                </div>
-            {% endif %}
-        {% endif %}
-
         {% if conflicts.conflicts and conflicts.conflicts.rows %}
             <div class="row">
                 <div class="col-md-12">

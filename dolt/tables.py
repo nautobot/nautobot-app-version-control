@@ -93,12 +93,13 @@ class CommitTable(BaseTable):
 
 
 class ConflictsSummaryTable(BaseTable):
+    """
+    Summary table for `Conflicts` and `ConstraintViolations`
+    """
+
     class Meta(BaseTable.Meta):
         model = Conflicts
-        fields = (
-            "table",
-            "num_conflicts",
-        )
+        fields = ("table", "num_conflicts", "num_violations")
         default_columns = fields
 
 
@@ -109,16 +110,6 @@ class ConflictsTable(BaseTable):
             "table",
             "id",
             "conflicts",
-        )
-        default_columns = fields
-
-
-class ConstraintViolationsSummaryTable(BaseTable):
-    class Meta(BaseTable.Meta):
-        model = ConstraintViolations
-        fields = (
-            "table",
-            "num_violations",
         )
         default_columns = fields
 

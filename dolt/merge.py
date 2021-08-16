@@ -12,7 +12,6 @@ from dolt.utils import author_from_user
 from dolt.tables import (
     ConflictsSummaryTable,
     ConflictsTable,
-    ConstraintViolationsSummaryTable,
     ConstraintViolationsTable,
 )
 from dolt.versioning import query_on_branch
@@ -34,13 +33,21 @@ def get_conflicts_for_merge(src, dest):
         if not conflicts_or_violations_exist():
             return {}
         return {
-            "summary": {
-                "conflicts": ConflictsSummaryTable(conflicts),
-                "violations": ConstraintViolationsSummaryTable(violations),
-            },
+            "summary": make_conflict_summary_table(conflicts, violations),
             "conflicts": make_conflict_table(mc, conflicts),
             "violations": make_constraint_violations_table(mc, violations),
         }
+
+
+def make_conflict_summary_table(conflicts, violations):
+    summary = {
+        c.table: {"table": c.table, "num_conflicts": c.num_conflicts} for c in conflicts
+    }
+    for v in violations:
+        if v.table not in summary:
+            summary[v.table] = {"table": v.table}
+        summary[v.table]["num_violations"] = v.num_violations
+    return list(summary.values())
 
 
 def make_conflict_table(merge_candidate, conflicts):

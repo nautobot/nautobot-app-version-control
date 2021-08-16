@@ -1,0 +1,31 @@
+<div class="panel panel-default">
+    <div class="panel-heading">
+        <strong>Conflict Summary</strong>
+    </div>
+    <div class="list-group">
+        {% for tbl in conflicts.summary %}
+        <a href="#{{ tbl.table|lower }}" class="row list-group-item">
+            <div class="col-md-6 align-middle">{{ tbl.table }}</div>
+            <div class="col-md-6 text-right">
+                <span>
+                {% if tbl.num_conflicts %}
+                    <span class="label label-danger">{{ tbl.num_conflicts }}</span>
+                {% else %}
+                    <span class="label label-info">0</span>
+                {% endif %}
+                    <strong> conflicts </strong>
+                </span>
+
+                <span>
+                {% if tbl.num_violations %}
+                    <span class="label label-danger">{{ tbl.num_violations }}</span>
+                {% else %}
+                    <span class="label label-info">0</span>
+                {% endif %}
+                    <strong> violations </strong>
+                </span>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+</div>
