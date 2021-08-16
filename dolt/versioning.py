@@ -4,7 +4,6 @@ import uuid
 
 from django.conf import settings
 from django.db import connection, connections, transaction
-from django.db.models.signals import m2m_changed, pre_delete, post_save
 
 from nautobot.extras.models.change_logging import ObjectChange
 

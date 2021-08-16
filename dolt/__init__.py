@@ -1,4 +1,8 @@
+from django.db.models.signals import post_migrate
+
 from nautobot.extras.plugins import PluginConfig
+
+from dolt.migrations import dolt_autocommit_migration
 
 
 class NautobotDolt(PluginConfig):
@@ -21,6 +25,10 @@ class NautobotDolt(PluginConfig):
         "dolt.middleware.DoltBranchMiddleware",
         "dolt.middleware.DoltAutoCommitMiddleware",
     ]
+
+    def ready(self):
+        super().ready()
+        post_migrate.connect(dolt_autocommit_migration, sender=self)
 
 
 # Registry of Content Types of models that should be under version control.
