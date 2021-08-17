@@ -1,22 +1,22 @@
 {% load django_tables2 %}
 
 <div class="conflicts" >
-    {% if conflicts and conflicts.summary %}
+    {% if conflicts %}
 
-        {% if conflicts.summary.conflicts and conflicts.summary.conflicts.rows %}
+        {% if conflicts.conflicts and conflicts.conflicts.rows %}
             <div class="row">
                 <div class="col-md-12">
                     <h3 id="conflicts-heading">Merge Conflicts</h3>
-                    {% include 'dolt/conflicts_summary.html' with table=conflicts.summary.conflicts %}
+                    {% include 'dolt/conflicts_panel.html' with table=conflicts.conflicts %}
                 </div>
             </div>
         {% endif %}
 
-        {% if conflicts.summary.violations and conflicts.summary.violations.rows %}
+        {% if conflicts.violations and conflicts.violations.rows %}
             <div class="row">
                 <div class="col-md-12">
                     <h3 id="violations-heading">Merge Constraint Violations</h3>
-                    {% include 'dolt/conflicts_summary.html' with table=conflicts.summary.violations %}
+                    {% include 'dolt/conflicts_panel.html' with table=conflicts.violations %}
                 </div>
             </div>
         {% endif %}

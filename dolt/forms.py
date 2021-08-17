@@ -131,11 +131,12 @@ class CommitFilterForm(forms.Form, BootstrapMixin):
 
 
 class PullRequestForm(forms.ModelForm, BootstrapMixin):
+    qs = Branch.objects.exclude(name__startswith="xxx")
     source_branch = forms.ModelChoiceField(
-        queryset=Branch.objects.all(), to_field_name="name", required=True
+        queryset=qs, to_field_name="name", required=True
     )
     destination_branch = forms.ModelChoiceField(
-        queryset=Branch.objects.all(), to_field_name="name", required=True
+        queryset=qs, to_field_name="name", required=True
     )
 
     class Meta:

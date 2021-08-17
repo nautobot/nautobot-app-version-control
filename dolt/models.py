@@ -110,6 +110,7 @@ class Branch(DoltSystemTable):
     def merge(self, merge_branch, user=None):
         author = author_from_user(user)
         with connection.cursor() as cursor:
+            cursor.execute("SET dolt_force_transaction_commit = 1;")
             cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
             cursor.execute(
                 f"""SELECT dolt_merge(
@@ -118,7 +119,6 @@ class Branch(DoltSystemTable):
                 ) FROM dual;"""
             )
             success = cursor.fetchone()[0] == 1
-
             if success:
                 # only commit merged data on success
                 msg = f"""merged "{merge_branch}" into "{self.name}"."""
@@ -134,8 +134,8 @@ class Branch(DoltSystemTable):
                 cursor.execute(f"SELECT dolt_merge('--abort') FROM dual;")
                 raise DoltError(
                     mark_safe(
-                        f"""Merging {merge_branch} into {self} created merge conflicts.
-                    Resolve merge conflicts to reattempt the merge."""
+                        f"""Merging <strong>{merge_branch}</strong> into <strong>{self}</strong> 
+                            created merge conflicts. Resolve merge conflicts to reattempt the merge."""
                     )
                 )
 

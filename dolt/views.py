@@ -506,7 +506,12 @@ class PullRequestConflictView(generic.ObjectView):
     template_name = "dolt/pull_request/conflicts.html"
 
     def get_extra_context(self, req, obj, **kwargs):
-        return {"active_tab": "conflicts", "results": {}}
+        src = Branch.objects.get(name=obj.source_branch)
+        dest = Branch.objects.get(name=obj.destination_branch)
+        return {
+            "active_tab": "conflicts",
+            "conflicts": merge.get_conflicts_for_merge(src, dest),
+        }
 
 
 class PullRequestEditView(generic.ObjectEditView):
@@ -545,15 +550,15 @@ class PullRequestMergeView(generic.ObjectEditView):
             msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be merged""")
             messages.error(request, msg)
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
-
+        src = Branch.objects.get(name=pr.source_branch)
+        dest = Branch.objects.get(name=pr.destination_branch)
         return render(
             request,
             self.template_name,
             {
                 "pull_request": pr,
+                "conflicts": merge.get_conflicts_for_merge(src, dest),
                 "form": self.form,
-                "panel_class": "default",
-                "button_class": "primary",
                 "return_url": pr.get_absolute_url(),
             },
         )
