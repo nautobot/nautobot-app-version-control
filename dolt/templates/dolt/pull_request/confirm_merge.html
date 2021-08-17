@@ -5,6 +5,7 @@
 <div class="row">
     <div class="col-md-6 col-md-offset-3">
         <form action="" method="post" class="form">
+            {% csrf_token %}
             {% if conflicts.conflicts and conflicts.conflicts.rows %}
                 <div class="panel panel-danger">
                     <div class="panel-heading">
@@ -34,7 +35,7 @@
                             into <strong>{{ pull_request.destination_branch }}</strong>?
                         </p>
                         <div class="text-right">
-                            <button type="submit" name="_confirm" class="btn btn-{{ button_class|default:"danger" }}">Confirm</button>
+                            <button type="submit" name="_confirm" class="btn btn-primary">Confirm</button>
                             <a href="{{ return_url }}" class="btn btn-default">Cancel</a>
                         </div>
                     </div>

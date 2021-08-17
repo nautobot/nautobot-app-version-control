@@ -9,7 +9,7 @@ menu_items = (
         weight=1000,
         groups=(
             NavMenuGroup(
-                name="version control",
+                name="Version Control",
                 weight=100,
                 items=(
                     NavMenuItem(
