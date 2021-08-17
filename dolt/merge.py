@@ -112,16 +112,31 @@ def get_rows_level_violations(violation):
             f"""SELECT id, violation_type, violation_info
                 FROM dolt_constraint_violations_{violation.table};"""
         )
-        rows = []
-        for tup in cursor.fetchall():
-            js = json.loads(tup[2])
-            rows.append({
+        return [
+            {
                 "table": violation.table,
                 "id": tup[0],
                 "violation_type": tup[1],
-                "violations": f"""table '{js["Table"]}' has a missing reference to table '{js["ReferencedTable"]}'""",
-            })
-        return rows
+                "violations": fmt_violation(tup, violation.table),
+            }
+            for tup in cursor.fetchall()
+        ]
+
+
+def fmt_violation(v_row, v_table):
+    v_id, v_type = v_row[0], v_row[1]
+    v_info = json.loads(v_row[2])
+    if v_type == "foreign key":
+        if "Table" in v_info and "ReferencedTable" in v_info:
+            return f"""An object from table '{v_info["Table"]}', 
+                with id '{v_id}', references a missing object 
+                in table '{v_info["ReferencedTable"]}'"""
+    elif v_type == "unique index":
+        if "Columns" in v_info:
+            return f"""An object from table '{v_table}', 
+                violates a unique index constraint defined
+                over the columns '{v_info["Columns"]}'"""
+    return "Unknown constraint violation"
 
 
 def merge_candidate_exists(src, dest):
