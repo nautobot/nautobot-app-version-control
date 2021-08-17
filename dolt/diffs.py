@@ -13,6 +13,7 @@ from nautobot.utilities.tables import BaseTable
 
 from dolt.dynamic.diff_factory import DiffModelFactory, DiffListViewFactory
 from dolt.dynamic.model_view_map import content_type_has_diff_view_table
+from dolt.models import Commit
 from dolt.versioning import db_for_commit
 from dolt.functions import JSONObject
 
@@ -28,6 +29,13 @@ def diffable_content_types():
             "virtualization",
         )
     )
+
+
+def three_dot_diffs(from_commit=None, to_commit=None):
+    if not (from_commit and to_commit):
+        raise ValueError("must specify both a to_commit and from_commit")
+    merge_base = Commit.merge_base(from_commit, to_commit)
+    return two_dot_diffs(from_commit=merge_base, to_commit=to_commit)
 
 
 def two_dot_diffs(from_commit=None, to_commit=None):

@@ -6,6 +6,9 @@
     <div class="col-md-6 col-md-offset-3">
         <form action="" method="post" class="form">
             {% csrf_token %}
+            {% for field in form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
             {% if conflicts.conflicts and conflicts.conflicts.rows %}
                 <div class="panel panel-danger">
                     <div class="panel-heading">
@@ -44,11 +47,13 @@
         </form>
     </div>
 
-    {% if conflicts.conflicts and conflicts.conflicts.rows %}
-        <div class="col-md-10 col-md-offset-1">
+    <div class="col-md-10 col-md-offset-1">
+        {% if conflicts.conflicts and conflicts.conflicts.rows %}
             {% include 'dolt/conflicts.html' with conflicts=conflicts %}
-        </div>
-    {% endif %}
+        {% else %}
+            {% include 'dolt/diffs.html' with results=diffs %}
+        {% endif %}
+    </div>
 
 </div>
 {% endblock %}
