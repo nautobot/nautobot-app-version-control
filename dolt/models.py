@@ -385,11 +385,8 @@ class PullRequest(BaseModel):
             dest.merge(src, user=user)
         except ObjectDoesNotExist as e:
             raise DoltError(f"error merging Pull Request {self}: {e}")
-
-        # update PR state to "merged" on primary branch
-        with query_on_main_branch():
-            self.state = PullRequest.MERGED
-            self.save()
+        self.state = PullRequest.MERGED
+        self.save()
 
 
 class PullRequestReview(BaseModel):

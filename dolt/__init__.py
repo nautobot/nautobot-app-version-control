@@ -31,23 +31,29 @@ class NautobotDolt(PluginConfig):
         post_migrate.connect(dolt_autocommit_migration, sender=self)
 
 
+config = NautobotDolt
+
+
 # Registry of Content Types of models that should be under version control.
 # Top-level dict keys are app_labels. If the top-level dict value is `True`,
-# then all models under that app_label are whitelisted.The top-level value
-# may also be a nest dict containing a subset of whitelisted models within
-# the app_label.
-__MODEL_VERSION_WHITELIST__ = {
+# then all models under that app_label are allowlisted.The top-level value
+# may also be a nest dict containing a subset of version-controlled models
+# within the app_label.
+__MODELS_UNDER_VERSION_CONTROL__ = {
     "dolt": {
+        # Pull Requests are not versioned
+        "pullrequest": False,
+        "pullrequestreviewcomments": False,
+        "pullrequestreviews": False,
+        # todo: calling the following "versioned" is odd.
+        #   their contents are parameterized by branch
+        #   changes, but they are not under VCS.
         "branch": True,
         "branchmeta": True,
         "commit": True,
         "commitancestor": True,
         "conflicts": True,
         "constraintviolations": True,
-        # Pull Requests are not versioned
-        "pullrequest": False,
-        "pullrequestreviewcomments": False,
-        "pullrequestreviews": False,
     },
     "dcim": True,
     "circuits": True,
@@ -84,9 +90,9 @@ def register_versioned_models(ct_dict):
     """Register additional content types to be versioned.
     Args:
         ct_dict: a python dictionary following the same
-            format as __MODEL_VERSION_WHITELIST__
+            format as __MODELS_UNDER_VERSION_CONTROL__
     """
-    err = ValueError("invalid model version whitelist")
+    err = ValueError("invalid model version allowlist")
     for key, val in ct_dict.items:
         if not isinstance(key, str):
             # key must be string
@@ -105,31 +111,49 @@ def register_versioned_models(ct_dict):
             if not isinstance(v, bool):
                 # val must be bool
                 raise err
-    __MODEL_VERSION_WHITELIST__.update(ct_dict)
+    __MODELS_UNDER_VERSION_CONTROL__.update(ct_dict)
 
 
 def is_versioned_model(model):
     """
-    Determines whether a model's content type is on the whitelist.
-    See __MODEL_VERSION_WHITELIST__ for more info.
+    Determines whether a model's is under version control.
+    See __MODELS_UNDER_VERSION_CONTROL__ for more info.
+    """
+    allowlist = __MODELS_UNDER_VERSION_CONTROL__
+    return _lookup_allowlist(model, allowlist)
+
+
+def is_pr_model(model):
+    """
+    Return True is `model` is related to PullRequests.
+    """
+    allowlist = {
+        "dolt": {
+            "pullrequest": True,
+            "pullrequestreviewcomments": True,
+            "pullrequestreviews": True,
+        },
+    }
+    return _lookup_allowlist(model, allowlist)
+
+
+def _lookup_allowlist(model, allowlist):
+    """
+    performs a lookup on allowlists with the structure
+    of  __MODELS_UNDER_VERSION_CONTROL__
     """
     app_label = model._meta.app_label
     model = model.__name__.lower()
-    whitelist = __MODEL_VERSION_WHITELIST__
 
-    if app_label not in whitelist:
+    if app_label not in allowlist:
         return False
-    if isinstance(whitelist[app_label], bool):
-        return whitelist[app_label]
+    if isinstance(allowlist[app_label], bool):
+        return allowlist[app_label]
 
     # subset specified
-    if isinstance(whitelist[app_label], dict):
-        if model not in whitelist[app_label]:
+    if isinstance(allowlist[app_label], dict):
+        if model not in allowlist[app_label]:
             return False
-        if isinstance(whitelist[app_label][model], bool):
-            return whitelist[app_label][model]
-
-    raise ValueError("invalid model version whitelist")
-
-
-config = NautobotDolt
+        if isinstance(allowlist[app_label][model], bool):
+            return allowlist[app_label][model]
+    raise ValueError("invalid g allowlist")

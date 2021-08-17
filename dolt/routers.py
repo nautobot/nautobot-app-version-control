@@ -3,7 +3,7 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.db import connections
 from django.utils.safestring import mark_safe
 
-from . import is_versioned_model
+from . import is_versioned_model, is_pr_model
 from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH, GLOBAL_DB
 from dolt.models import Branch
 from dolt.utils import DoltError
@@ -26,8 +26,10 @@ class GlobalStateRouter:
             # If primary branch is active, send all queries
             # to "global", even for versioned models
             return self.global_db
+
         if is_versioned_model(model):
             return None
+
         return self.global_db
 
     def db_for_write(self, model, **hints):
@@ -41,8 +43,15 @@ class GlobalStateRouter:
             # If primary branch is active, send all queries
             # to "global", even for versioned models
             return self.global_db
+
+        if is_pr_model(model):
+            # PullRequests can be created or edited from any branch.
+            # Edits will be applied to the primary branch
+            return self.global_db
+
         if is_versioned_model(model):
             return None
+
         if self._branch_is_not_primary():
             raise DoltError(
                 mark_safe(
@@ -50,6 +59,7 @@ class GlobalStateRouter:
                     must be written on branch <strong>"{DOLT_DEFAULT_BRANCH}"</strong>."""
                 )
             )
+
         return self.global_db
 
     def allow_relation(self, obj1, obj2, **hints):
