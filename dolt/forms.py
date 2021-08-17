@@ -138,6 +138,7 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
     destination_branch = forms.ModelChoiceField(
         queryset=qs, to_field_name="name", required=True
     )
+
     class Meta:
         model = PullRequest
         fields = [

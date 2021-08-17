@@ -159,6 +159,7 @@ def make_merge_candidate(src, dest):
         cursor.execute("SET @@dolt_force_transaction_commit = 1;")
         cursor.execute(f"""SELECT dolt_checkout("{name}") FROM dual;""")
         cursor.execute(f"""SELECT dolt_merge("{src}") FROM dual;""")
+        cursor.execute(f"""SELECT dolt_add("-A") FROM dual;""")
         msg = f"""creating merge candidate with src: "{src}" and dest: "{dest}"."""
         cursor.execute(
             f"""SELECT dolt_commit(
