@@ -313,7 +313,7 @@ class PullRequest(BaseModel):
     # can't create Foreign Key to dolt_branches table :(
     source_branch = models.TextField()
     destination_branch = models.TextField()
-    description = models.TextField()
+    description = models.TextField(blank=True, null=True)
     creator = models.ForeignKey(User, on_delete=CASCADE)
     created_at = models.DateField(auto_now_add=True, blank=True, null=True)
 
@@ -403,7 +403,7 @@ class PullRequestReview(BaseModel):
     reviewer = models.ForeignKey(User, on_delete=CASCADE)
     reviewed_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     state = models.IntegerField(choices=REVIEW_STATE_CHOICES, null=True)
-    summary = models.TextField()
+    summary = models.TextField(blank=True, null=True)
 
     class Meta:
         # table name cannot start with "dolt"

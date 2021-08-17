@@ -130,8 +130,8 @@ def is_pr_model(model):
     allowlist = {
         "dolt": {
             "pullrequest": True,
-            "pullrequestreviewcomments": True,
-            "pullrequestreviews": True,
+            "pullrequestreviewcomment": True,
+            "pullrequestreview": True,
         },
     }
     return _lookup_allowlist(model, allowlist)
