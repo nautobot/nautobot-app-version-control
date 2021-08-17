@@ -112,15 +112,16 @@ def get_rows_level_violations(violation):
             f"""SELECT id, violation_type, violation_info
                 FROM dolt_constraint_violations_{violation.table};"""
         )
-        return [
-            {
+        rows = []
+        for tup in cursor.fetchall():
+            js = json.loads(tup[2])
+            rows.append({
                 "table": violation.table,
                 "id": tup[0],
                 "violation_type": tup[1],
-                "violations": tup[2],
-            }
-            for tup in cursor.fetchall()
-        ]
+                "violations": f"""table '{js["Table"]}' has a missing reference to table '{js["ReferencedTable"]}'""",
+            })
+        return rows
 
 
 def merge_candidate_exists(src, dest):
