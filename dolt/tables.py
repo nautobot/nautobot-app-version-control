@@ -103,7 +103,20 @@ class ConflictsSummaryTable(BaseTable):
         default_columns = fields
 
 
+CONFLICT_TABLE_JSON = """
+{% load helpers %}
+<div class="rendered-json-data">
+    <pre>{{ record.conflicts|render_yaml }}</pre>
+</div>
+"""
+
+
 class ConflictsTable(BaseTable):
+    conflicts = tables.TemplateColumn(
+        template_code=CONFLICT_TABLE_JSON,
+        verbose_name="Conflicts",
+    )
+
     class Meta(BaseTable.Meta):
         model = Conflicts
         fields = (
