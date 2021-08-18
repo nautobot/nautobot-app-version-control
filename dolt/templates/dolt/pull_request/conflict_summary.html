@@ -5,7 +5,7 @@
     <div class="list-group">
         {% for tbl in conflicts.summary %}
         <a href="#{{ tbl.table|lower }}" class="row list-group-item">
-            <div class="col-md-4 align-middle">{{ tbl.table }}</div>
+            <div class="col-md-4 align-middle">{{ tbl.model }}</div>
             <div class="col-md-8 text-right">
                 <span>
                 {% if tbl.num_conflicts %}

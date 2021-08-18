@@ -51,11 +51,11 @@ def get_conflicts_for_merge(src, dest):
     """
     mc = get_or_make_merge_candidate(src, dest)
     with query_on_branch(mc):
-        cons = MergeConflicts(src, dest)
+        conflicts = MergeConflicts(src, dest)
         return {
-            "summary": cons.make_conflict_summary_table(),
-            "conflicts": cons.make_conflict_table(),
-            "violations": cons.make_constraint_violations_table(),
+            "summary": conflicts.make_conflict_summary_table(),
+            "conflicts": conflicts.make_conflict_table(),
+            "violations": conflicts.make_constraint_violations_table(),
         }
 
 
@@ -145,12 +145,15 @@ class MergeConflicts:
         conflicts = Conflicts.objects.all()
         violations = ConstraintViolations.objects.all()
         summary = {
-            c.table: {"table": c.table, "num_conflicts": c.num_conflicts}
+            c.table: {
+                "model": self._model_from_table(c.table),
+                "num_conflicts": c.num_conflicts,
+            }
             for c in conflicts
         }
         for v in violations:
             if v.table not in summary:
-                summary[v.table] = {"table": v.table}
+                summary[v.table] = {"model": self._model_from_table(v.table)}
             summary[v.table]["num_violations"] = v.num_violations
         return list(summary.values())
 
