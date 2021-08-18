@@ -44,6 +44,8 @@
         <span class="label label-info">Merged</span>
         {% elif object.status == "closed" %}
         <span class="label label-danger">Closed</span>
+        {% else %}
+        <span class="label label-danger">Unknown</span>
         {% endif %}
     </h1>
     {% include 'inc/created_updated.html' %}

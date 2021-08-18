@@ -334,29 +334,34 @@ class PullRequest(BaseModel):
     @property
     def status(self):
         """
-        One of
-            - "open":
-            - "in-review":
-            - "blocked":
-            - "approved":
-            - "closed":
-            - "merged":
+        The status of a PullRequest is determined by considering
+        both the PullRequest and its PullRequestReviews.
+        PRs in a closed or merged state have the corresponding status.
+        An open PR's state is determined by the last non-comment review.
         """
         if self.state == PullRequest.CLOSED:
             return "closed"
         if self.state == PullRequest.MERGED:
             return "merged"
 
-        reviews = [
-            pr.state for pr in PullRequestReview.objects.filter(pull_request=self.pk)
-        ]
-        if not len(reviews):
+        pr_reviews = PullRequestReview.objects.filter(pull_request=self.pk)
+        if not pr_reviews:
             return "open"
-        if PullRequestReview.APPROVED in reviews:
+
+        # get the most recent review that approved or blocked
+        decision = (
+            pr_reviews.exclude(state=PullRequestReview.COMMENTED)
+            .order_by("-reviewed_at")
+            .first()
+        )
+        if not decision:
+            # all PRs are "comments"
+            return "in-review"
+        if decision.state == PullRequestReview.APPROVED:
             return "approved"
-        if PullRequestReview.BLOCKED in reviews:
+        if decision.state == PullRequestReview.BLOCKED:
             return "blocked"
-        return "in-review"
+        return "unknown"  # unreachable
 
     @property
     def commits(self):
