@@ -1,6 +1,7 @@
 import json
 
 from django.db import connection
+from django.db.models import Sum
 
 from dolt.models import (
     Branch,
@@ -17,6 +18,24 @@ from dolt.tables import (
 from dolt.versioning import query_on_branch
 
 
+def get_conflicts_count_for_merge(src, dest):
+    """
+    Gather a merge-candidate for `src` and `dest`,
+    then return Conflicts created by the merge
+
+    TODO: currently we return conflicts summary,
+        we need granular row-level conflicts and
+        constraint violations.
+    """
+    mc = get_or_make_merge_candidate(src, dest)
+    with query_on_branch(mc):
+        c = Conflicts.objects.all().aggregate(Sum("num_conflicts"))
+        v = ConstraintViolations.objects.all().aggregate(Sum("num_violations"))
+        num_conflicts = c["num_conflicts__sum"] if c["num_conflicts__sum"] else 0
+        num_violations = v["num_violations__sum"] if v["num_violations__sum"] else 0
+        return num_conflicts + num_violations
+
+
 def get_conflicts_for_merge(src, dest):
     """
     Gather a merge-candidate for `src` and `dest`,
@@ -27,9 +46,9 @@ def get_conflicts_for_merge(src, dest):
         constraint violations.
     """
     mc = get_or_make_merge_candidate(src, dest)
-    conflicts = Conflicts.objects.all()
-    violations = ConstraintViolations.objects.all()
     with query_on_branch(mc):
+        conflicts = Conflicts.objects.all()
+        violations = ConstraintViolations.objects.all()
         if not conflicts_or_violations_exist():
             return {}
         return {

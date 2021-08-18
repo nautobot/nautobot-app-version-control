@@ -327,6 +327,11 @@ class PullRequest(BaseModel):
     def get_absolute_url(self):
         return reverse("plugins:dolt:pull_request", args=[self.id])
 
+    def get_src_dest_branches(self):
+        src = Branch.objects.get(name=self.source_branch)
+        dest = Branch.objects.get(name=self.destination_branch)
+        return src, dest
+
     @property
     def open(self):
         return self.state == PullRequest.OPEN
@@ -374,6 +379,10 @@ class PullRequest(BaseModel):
     @property
     def num_commits(self):
         return self.commits.count()
+
+    @property
+    def num_reviews(self):
+        return PullRequestReview.objects.filter(pull_request=self.pk).count()
 
     @property
     def summary_description(self):

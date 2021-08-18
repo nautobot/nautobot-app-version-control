@@ -54,13 +54,19 @@
             <a href="{% url 'plugins:dolt:pull_request' pk=object.pk %}">Diffs</a>
         </li>
         <li role="presentation" {% if active_tab == 'conflicts' %} class="active"{% endif %}>
-            <a href="{% url 'plugins:dolt:pull_request_conflicts' pk=object.pk %}">Conflicts</a>
+            <a href="{% url 'plugins:dolt:pull_request_conflicts' pk=object.pk %}">
+                Conflicts <span class="badge badge-danger">{{ counts.num_conflicts }}</span>
+            </a>
         </li>
         <li role="presentation" {% if active_tab == 'reviews' %} class="active"{% endif %}>
-            <a href="{% url 'plugins:dolt:pull_request_reviews' pk=object.pk %}">Reviews</a>
+            <a href="{% url 'plugins:dolt:pull_request_reviews' pk=object.pk %}">
+                Reviews <span class="badge">{{ counts.num_reviews }}</span>
+            </a>
         </li>
         <li role="presentation" {% if active_tab == 'commits' %} class="active"{% endif %}>
-            <a href="{% url 'plugins:dolt:pull_request_commits' pk=object.pk %}">Commits</a>
+            <a href="{% url 'plugins:dolt:pull_request_commits' pk=object.pk %}">
+                Commits <span class="badge">{{ counts.num_commits }}</span>
+            </a>
         </li>
     </ul>
 {% endblock %}
