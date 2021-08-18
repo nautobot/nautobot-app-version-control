@@ -1,7 +1,9 @@
 import json
 
+from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 from django.db.models import Sum
+from django.contrib.contenttypes.models import ContentType
 
 from dolt.models import (
     Branch,
@@ -16,6 +18,8 @@ from dolt.tables import (
     ConstraintViolationsTable,
 )
 from dolt.versioning import query_on_branch
+
+# TODO: this file should be named "conflicts.py"
 
 
 def get_conflicts_count_for_merge(src, dest):
@@ -47,115 +51,12 @@ def get_conflicts_for_merge(src, dest):
     """
     mc = get_or_make_merge_candidate(src, dest)
     with query_on_branch(mc):
-        conflicts = Conflicts.objects.all()
-        violations = ConstraintViolations.objects.all()
-        if not conflicts_or_violations_exist():
-            return {}
+        cons = MergeConflicts(src, dest)
         return {
-            "summary": make_conflict_summary_table(conflicts, violations),
-            "conflicts": make_conflict_table(mc, conflicts),
-            "violations": make_constraint_violations_table(mc, violations),
+            "summary": cons.make_conflict_summary_table(),
+            "conflicts": cons.make_conflict_table(),
+            "violations": cons.make_constraint_violations_table(),
         }
-
-
-def make_conflict_summary_table(conflicts, violations):
-    summary = {
-        c.table: {"table": c.table, "num_conflicts": c.num_conflicts} for c in conflicts
-    }
-    for v in violations:
-        if v.table not in summary:
-            summary[v.table] = {"table": v.table}
-        summary[v.table]["num_violations"] = v.num_violations
-    return list(summary.values())
-
-
-def make_conflict_table(merge_candidate, conflicts):
-    rows = []
-    for c in conflicts:
-        rows.extend(get_rows_level_conflicts(c))
-    return ConflictsTable(rows)
-
-
-def get_rows_level_conflicts(conflict):
-    """
-    todo
-    """
-
-    def dedupe_conflicts(obj):
-        if type(obj) is str:
-            obj = json.loads(obj)
-        obj2 = {}
-        for k, v in obj.items():
-            pre = "our_"
-            if not k.startswith(pre):
-                continue
-            suf = k[len(pre) :]
-            ours = obj[f"our_{suf}"]
-            theirs = obj[f"their_{suf}"]
-            base = obj[f"base_{suf}"]
-            if ours != theirs and ours != base:
-                obj2[f"our_{suf}"] = ours
-                obj2[f"their_{suf}"] = theirs
-                obj2[f"base_{suf}"] = base
-        return obj2
-
-    with connection.cursor() as cursor:
-        # introspect table schema to query conflict data as json
-        cursor.execute(f"DESCRIBE dolt_conflicts_{conflict.table}")
-        fields = ",".join([f"'{tup[0]}', {tup[0]}" for tup in cursor.fetchall()])
-
-        cursor.execute(
-            f"""SELECT base_id, JSON_OBJECT({fields})
-                FROM dolt_conflicts_{conflict.table};"""
-        )
-        return [
-            {
-                "table": conflict.table,
-                "id": tup[0],
-                "conflicts": dedupe_conflicts(tup[1]),
-            }
-            for tup in cursor.fetchall()
-        ]
-
-
-def make_constraint_violations_table(merge_candidate, violations):
-    rows = []
-    for v in violations:
-        rows.extend(get_rows_level_violations(v))
-    return ConstraintViolationsTable(rows)
-
-
-def get_rows_level_violations(violation):
-    with connection.cursor() as cursor:
-        cursor.execute(
-            f"""SELECT id, violation_type, violation_info
-                FROM dolt_constraint_violations_{violation.table};"""
-        )
-        return [
-            {
-                "table": violation.table,
-                "id": tup[0],
-                "violation_type": tup[1],
-                "violations": fmt_violation(tup, violation.table),
-            }
-            for tup in cursor.fetchall()
-        ]
-
-
-def fmt_violation(v_row, v_table):
-    v_id, v_type = v_row[0], v_row[1]
-    v_info = json.loads(v_row[2])
-    if v_type == "foreign key":
-        if "Table" in v_info and "ReferencedTable" in v_info:
-            return f"""An object from table '{v_info["Table"]}', 
-                with id '{v_id}', references a missing object 
-                in table '{v_info["ReferencedTable"]}'"""
-    elif v_type == "unique index":
-        if "Columns" in v_info:
-            return f"""An object from table '{v_table}', 
-                violates a unique index constraint defined
-                over the columns '{v_info["Columns"]}'"""
-    return "Unknown constraint violation"
 
 
 def merge_candidate_exists(src, dest):
@@ -218,7 +119,148 @@ def _merge_candidate_name(src, dest):
     return f"xxx-merge-candidate--{src}--{dest}"
 
 
-def conflicts_or_violations_exist():
-    conflicts = Conflicts.objects.count() != 0
-    violations = ConstraintViolations.objects.count() != 0
-    return conflicts or violations
+class MergeConflicts:
+    """
+    Must run under the mc branch
+    """
+
+    def __init__(self, src, dest):
+        self.src = src
+        self.dest = dest
+        self.model_map = self._model_map()
+
+    @staticmethod
+    def _model_map():
+        return {
+            ct.model_class()._meta.db_table: ct.model_class()
+            for ct in ContentType.objects.all()
+        }
+
+    def conflicts_exist(self):
+        conflicts = Conflicts.objects.count() != 0
+        violations = ConstraintViolations.objects.count() != 0
+        return conflicts or violations
+
+    def make_conflict_summary_table(self):
+        conflicts = Conflicts.objects.all()
+        violations = ConstraintViolations.objects.all()
+        summary = {
+            c.table: {"table": c.table, "num_conflicts": c.num_conflicts}
+            for c in conflicts
+        }
+        for v in violations:
+            if v.table not in summary:
+                summary[v.table] = {"table": v.table}
+            summary[v.table]["num_violations"] = v.num_violations
+        return list(summary.values())
+
+    def make_conflict_table(self):
+        rows = []
+        for c in Conflicts.objects.all():
+            rows.extend(self.get_rows_level_conflicts(c, self.src, self.dest))
+        return ConflictsTable(rows)
+
+    def make_constraint_violations_table(self):
+        rows = []
+        for v in ConstraintViolations.objects.all():
+            rows.extend(self.get_rows_level_violations(v))
+        return ConstraintViolationsTable(rows)
+
+    def get_rows_level_conflicts(self, conflict, src, dest):
+        """
+        todo
+        """
+        with connection.cursor() as cursor:
+            # introspect table schema to query conflict data as json
+            cursor.execute(f"DESCRIBE dolt_conflicts_{conflict.table}")
+            fields = ",".join([f"'{tup[0]}', {tup[0]}" for tup in cursor.fetchall()])
+
+            cursor.execute(
+                f"""SELECT base_id, JSON_OBJECT({fields})
+                    FROM dolt_conflicts_{conflict.table};"""
+            )
+            model_name = self._model_from_table(conflict.table)
+            return [
+                {
+                    "model": model_name,
+                    "id": self._object_name_from_id(conflict.table, tup[0]),
+                    "conflicts": self._transform_conflicts_obj(tup[1]),
+                }
+                for tup in cursor.fetchall()
+            ]
+
+    def _transform_conflicts_obj(self, obj):
+        if type(obj) is str:
+            obj = json.loads(obj)
+        obj2 = {}
+        for k, v in obj.items():
+            prefix = "our_"
+            if not k.startswith(prefix):
+                continue
+            suffix = k[len(prefix) :]
+            ours = obj[f"our_{suffix}"]
+            theirs = obj[f"their_{suffix}"]
+            base = obj[f"base_{suffix}"]
+
+            conflicted = ours != theirs and ours != base
+            if conflicted:
+                obj2[suffix] = {
+                    f"{self.dest}": ours,
+                    f"{self.src}": theirs,
+                    "base": base,
+                }
+        return obj2
+
+    def get_rows_level_violations(self, violation):
+        with connection.cursor() as cursor:
+            rows = []
+            model_name = self._model_from_table(violation.table)
+            cursor.execute(
+                f"""SELECT id, violation_type, violation_info
+                    FROM dolt_constraint_violations_{violation.table};"""
+            )
+            for v_row in cursor.fetchall():
+                obj_name = self._object_name_from_id(violation.table, v_row[0])
+                rows.append(
+                    {
+                        "model": model_name,
+                        "id": obj_name,
+                        "violation_type": v_row[1],
+                        "violations": self._fmt_violation(v_row, model_name, obj_name),
+                    }
+                )
+            return rows
+
+    def _model_from_table(self, tbl_name):
+        model = self.model_map[tbl_name]
+        return model._meta.verbose_name
+
+    def _object_name_from_id(self, tbl_name, id):
+        try:
+            model = self.model_map[tbl_name]
+            obj = model.objects.get(id=id)
+            return str(obj)
+        except ObjectDoesNotExist:
+            return id
+
+    def _fmt_violation(self, v_row, model_name, obj_name):
+        v_type = v_row[1]
+        v_info = json.loads(v_row[2])
+
+        if v_type == "foreign key":
+            if "ReferencedTable" in v_info:
+                rt = v_info["ReferencedTable"]
+                ref_model_name = self._model_from_table(rt)
+                return f"""
+                    The {model_name} "{obj_name}" references a 
+                    missing "{ref_model_name}" object 
+                """
+
+        elif v_type == "unique index":
+            if "Columns" in v_info:
+                return f"""
+                    The {model_name} "{obj_name}" violates a 
+                    uniqueness constraint defined over the 
+                    columns [{v_info["Columns"]}]
+                """
+        return "Unknown constraint violation"

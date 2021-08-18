@@ -120,7 +120,7 @@ class ConflictsTable(BaseTable):
     class Meta(BaseTable.Meta):
         model = Conflicts
         fields = (
-            "table",
+            "model",
             "id",
             "conflicts",
         )
@@ -131,9 +131,8 @@ class ConstraintViolationsTable(BaseTable):
     class Meta(BaseTable.Meta):
         model = Conflicts
         fields = (
-            "table",
+            "model",
             "id",
-            "violation_type",
             "violations",
         )
         default_columns = fields
