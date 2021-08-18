@@ -479,7 +479,7 @@ def serialize_object(obj, extra=None, exclude=None):
 
 
 class PullRequestListView(generic.ObjectListView):
-    queryset = PullRequest.objects.all()
+    queryset = PullRequest.objects.all().order_by("-created_at")
     filterset = filters.PullRequestFilterSet
     filterset_form = forms.PullRequestFilterForm
     table = tables.PullRequestTable

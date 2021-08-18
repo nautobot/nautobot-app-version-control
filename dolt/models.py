@@ -314,7 +314,7 @@ class PullRequest(BaseModel):
     destination_branch = models.TextField()
     description = models.TextField(blank=True, null=True)
     creator = models.ForeignKey(User, on_delete=CASCADE)
-    created_at = models.DateField(auto_now_add=True, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
     class Meta:
         # table name cannot start with "dolt"

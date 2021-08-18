@@ -176,8 +176,8 @@ class PullRequestTable(BaseTable):
         model = PullRequest
         fields = (
             "pk",
-            "status",
             "title",
+            "status",
             "source_branch",
             "destination_branch",
             "description",
