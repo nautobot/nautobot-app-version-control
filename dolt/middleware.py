@@ -12,7 +12,7 @@ from dolt.constants import (
     DOLT_DEFAULT_BRANCH,
 )
 from dolt.versioning import query_on_branch
-from dolt.models import Branch, Commit
+from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 from dolt.utils import DoltError
 
 
@@ -117,8 +117,17 @@ class AutoDoltCommit(object):
         """
         Fires when an object is created or updated.
         """
+
+        if self.is_pr_object(instance):
+            # pull request related objects are always
+            # written to "main"
+            self.branch = DOLT_DEFAULT_BRANCH
+            msg = self.change_msg_for_pr(instance, kwargs)
+            self.changes.append(msg)
+
         if type(instance) == ObjectChange:
-            self.changes.append(instance)
+            self.changes.append(str(instance))
+
         if "created" in kwargs:
             self.commit = True
         elif kwargs.get("action") in ["post_add", "post_remove"] and kwargs["pk_set"]:
@@ -132,13 +141,27 @@ class AutoDoltCommit(object):
         self.commit = True
 
     def _commit(self):
-        Commit(message=self._get_commit_message()).save(
+        msg = self._get_commit_message()
+        Commit(message=msg).save(
             branch=self.branch,
-            author=self.request.user,
+            user=self.request.user,
         )
 
     def _get_commit_message(self):
         if not self.changes:
             return "auto dolt commit"
-        self.changes = sorted(self.changes, key=lambda obj: obj.time)
-        return "; ".join([str(c) for c in self.changes])
+        return "; ".join(self.changes)
+
+    @staticmethod
+    def is_pr_object(instance):
+        pr_models = (
+            PullRequest,
+            PullRequestReview,
+        )
+        return type(instance) in pr_models
+
+    @staticmethod
+    def change_msg_for_pr(instance, kwargs):
+        created = "created" in kwargs and kwargs["created"]
+        verb = "Created" if created else "Updated"
+        return f"""{verb} {instance._meta.verbose_name} "{instance}" """

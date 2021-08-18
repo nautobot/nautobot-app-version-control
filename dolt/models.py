@@ -205,13 +205,13 @@ class Commit(DoltSystemTable):
             "parent_hash", flat=True
         )
 
-    def save(self, *args, branch=None, author=None, **kwargs):
-        author = author_from_user(author)
+    def save(self, *args, using="default", branch=None, user=None, **kwargs):
+        """"""
         if not branch:
             raise DoltError("must specify branch to create commit")
-
-        # TODO: empty commits are sometimes created
-        with connection.cursor() as cursor:
+        author = author_from_user(user)
+        conn = connections[using]
+        with conn.cursor() as cursor:
             cursor.execute(f"""SELECT dolt_checkout("{branch}") FROM dual;""")
             cursor.execute(
                 f"""
@@ -222,9 +222,8 @@ class Commit(DoltSystemTable):
                 '--author', '{author}')
             FROM dual;"""
             )
-            commit_hash = cursor.fetchone()[0]
-        # TODO: is this necessary?
-        commit = Commit.objects.get(pk=commit_hash)
+            hash = cursor.fetchone()[0]
+        commit = Commit.objects.get(pk=hash)
         self.commit_hash = commit.commit_hash
         self.committer = commit.committer
         self.email = commit.email
@@ -411,7 +410,7 @@ class PullRequestReview(BaseModel):
         verbose_name_plural = "pull request reviews"
 
     def __str__(self):
-        return f""" "{self.pull_request}" reviewed by {self.reviewer}"""
+        return f""""{self.pull_request}" reviewed by {self.reviewer}"""
 
     def get_absolute_url(self):
         return reverse("plugins:dolt:pull_request", args=[self.pull_request.id])
