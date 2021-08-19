@@ -561,7 +561,7 @@ class PullRequestCommitListView(PullRequestBase):
         ctx.update(
             {
                 "active_tab": "commits",
-                "commit_list": self.table(obj.commits),
+                "commits_table": self.table(obj.commits),
             }
         )
         return ctx
