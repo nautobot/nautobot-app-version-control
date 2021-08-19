@@ -264,6 +264,6 @@ class MergeConflicts:
                 return f"""
                     The {model_name} "{obj_name}" violates a 
                     uniqueness constraint defined over the 
-                    columns [{v_info["Columns"]}]
+                    columns {v_info["Columns"]}
                 """
         return "Unknown constraint violation"
