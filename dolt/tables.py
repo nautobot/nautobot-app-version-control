@@ -179,7 +179,6 @@ class PullRequestTable(BaseTable):
             "status",
             "source_branch",
             "destination_branch",
-            "description",
             "creator",
             "created_at",
         )
