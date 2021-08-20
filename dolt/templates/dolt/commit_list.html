@@ -7,3 +7,9 @@
 {% block title %}
     Commits in {{ active_branch }}
 {% endblock %}
+
+{% block bulk_buttons %}
+    <button type="submit" name="_revert" formaction="{% url 'plugins:dolt:commit_revert' %}" class="btn btn-warning btn-sm">
+        <span class="mdi mdi-undo-variant" aria-hidden="true"></span> Revert Selected Commits
+    </button>
+{% endblock %}

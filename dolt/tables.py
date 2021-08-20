@@ -73,6 +73,23 @@ class BranchTable(BaseTable):
 
 
 class CommitTable(BaseTable):
+    pk = ToggleColumn(visible=True)
+    short_message = tables.LinkColumn(verbose_name="Commit Message")
+
+    class Meta(BaseTable.Meta):
+        model = Commit
+        fields = (
+            "pk",
+            "short_message",
+            "date",
+            "committer",
+            "email",
+            "commit_hash",
+        )
+        default_columns = fields
+
+
+class CommitRevertTable(BaseTable):
     short_message = tables.LinkColumn(verbose_name="Commit Message")
 
     class Meta(BaseTable.Meta):

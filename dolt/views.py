@@ -348,6 +348,64 @@ class CommitDeleteView(generic.ObjectDeleteView):
     queryset = Commit.objects.all()
 
 
+class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
+    """
+    Revert Commits in bulk.
+    """
+
+    queryset = Commit.objects.all()
+    form = forms.CommitBulkRevertForm
+    table = tables.CommitRevertTable
+    template_name = "dolt/commit_revert.html"
+
+    def get_required_permission(self):
+        return get_permission_for_model(self.queryset.model, "change")
+
+    def get_return_url(self, req):
+        return reverse("plugins:dolt:commit_list")
+
+    def post(self, request, **kwargs):
+        model = self.queryset.model
+        pk_list = request.POST.getlist("pk")
+        commits = self.queryset.filter(commit_hash__in=pk_list)
+
+        if not commits.count():
+            breakpoint()
+            messages.warning(request, "No commits were selected to revert.")
+            return redirect(self.get_return_url(request))
+
+        context = {
+            "pk": pk_list,
+            "obj_type_plural": model._meta.verbose_name_plural,
+            "content_type": ContentType.objects.get_for_model(model),
+            "return_url": self.get_return_url(request),
+        }
+
+        if "_revert" in request.POST:
+            context.update(
+                {
+                    "form": self.form(
+                        initial={"pk": pk_list, "branch": Branch.active_branch()}
+                    ),
+                    "table": self.table(commits),
+                }
+            )
+            return render(request, self.template_name, context)
+
+        elif "_confirm" in request.POST:
+            form = self.form(request.POST)
+            if form.is_valid():
+                commits = form.cleaned_data["pk"]
+                msg = ", ".join(
+                    [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
+                )
+                messages.success(
+                    request, mark_safe(f"Successfully reverted commits {msg}")
+                )
+
+        return redirect(self.get_return_url(request))
+
+
 #
 # Diffs
 #

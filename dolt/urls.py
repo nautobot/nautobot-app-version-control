@@ -32,6 +32,11 @@ urlpatterns = [
     # Commits
     path("commits/", views.CommitListView.as_view(), name="commit_list"),
     path("commits/add/", views.CommitEditView.as_view(), name="commit_add"),
+    path(
+        "commits/revert/",
+        views.CommitRevertView.as_view(),
+        name="commit_revert",
+    ),
     path("commits/<str:pk>/", views.CommitView.as_view(), name="commit"),
     path("commits/<str:pk>/edit/", views.CommitEditView.as_view(), name="commit_edit"),
     path(
