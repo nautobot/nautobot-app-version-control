@@ -129,12 +129,6 @@ class CommitBulkRevertForm(forms.Form, BootstrapMixin):
     pk = forms.ModelMultipleChoiceField(
         queryset=Commit.objects.all(), widget=forms.MultipleHiddenInput()
     )
-    branch = forms.ModelChoiceField(
-        queryset=Branch.objects.exclude(name__startswith="xxx"),
-        to_field_name="name",
-        required=True,
-        help_text="Choose a branch to revert the commits on",
-    )
 
     class Meta:
         fields = ["branch"]

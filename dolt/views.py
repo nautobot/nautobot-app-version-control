@@ -368,14 +368,23 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
         model = self.queryset.model
         pk_list = request.POST.getlist("pk")
         commits = self.queryset.filter(commit_hash__in=pk_list)
+        branch = Branch.active_branch()
 
-        if not commits.count():
-            breakpoint()
-            messages.warning(request, "No commits were selected to revert.")
+        if commits.count() != len(pk_list):
+            found = set([c.commit_hash for c in commits])
+            missing = [f"<strong>{h}</strong>" for h in pk_list if h not in found]
+            messages.warning(
+                request,
+                mark_safe(
+                    f"""Cannot revert commit(s) {", ".join(missing)},
+                    commits were not found on branch <strong>{branch}</strong>"""
+                ),
+            )
             return redirect(self.get_return_url(request))
 
         context = {
             "pk": pk_list,
+            "active_branch": branch,
             "obj_type_plural": model._meta.verbose_name_plural,
             "content_type": ContentType.objects.get_for_model(model),
             "return_url": self.get_return_url(request),
@@ -384,9 +393,7 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
         if "_revert" in request.POST:
             context.update(
                 {
-                    "form": self.form(
-                        initial={"pk": pk_list, "branch": Branch.active_branch()}
-                    ),
+                    "form": self.form(initial={"pk": pk_list}),
                     "table": self.table(commits),
                 }
             )
@@ -396,11 +403,11 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
             form = self.form(request.POST)
             if form.is_valid():
                 commits = form.cleaned_data["pk"]
-                msg = ", ".join(
-                    [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
-                )
+                _ = Commit.revert(commits)
+
+                cc = [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
                 messages.success(
-                    request, mark_safe(f"Successfully reverted commits {msg}")
+                    request, mark_safe(f"""Successfully reverted commits {", ".join(cc)}""")
                 )
 
         return redirect(self.get_return_url(request))

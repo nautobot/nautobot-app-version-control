@@ -21,32 +21,31 @@
             {% endif %}
 
             {% block form %}
-            <div class="panel panel-default">
-                <div class="panel-heading"><strong>Revert Commits</strong></div>
+            <div class="panel panel-warning">
+                <div class="panel-heading"><strong>Confirm Revert Commits</strong></div>
                 <div class="panel-body">
-                    <div class="row">
-                        <div class="panel-body">
-                            {% render_field form.branch %}
-                        </div>
-                    </div>
+                    <p>
+                        <strong>Warning:</strong>
+                        The following operation will revert {{ table.rows|length }} commits
+                        on branch <strong>{{ active_branch }}</strong>. Please carefully review
+                        the commits to be reverted and confirm below.</p>
+                    {% block message_extra %}{% endblock %}
                 </div>
             </div>
             {% endblock %}
 
-            <div class="row">
-                <div class="panel panel-default">
-                    <div class="panel-heading">
-                        <strong>
-                            Commits to Revert
-                        </strong>
-                    </div>
-                    <div class="table table-hover attr-table">
-                        {% render_table table 'inc/table.html' %}
-                    </div>
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>
+                        Commits to Revert
+                    </strong>
+                </div>
+                <div class="table table-hover attr-table">
+                    {% render_table table 'inc/table.html' %}
                 </div>
             </div>
 
-            <div class="row text-right">
+            <div class="text-right">
                 <button type="submit" name="_confirm" formaction="{% url 'plugins:dolt:commit_revert' %}" class="btn btn-primary">
                     Confirm
                 </button>

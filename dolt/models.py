@@ -187,7 +187,15 @@ class Commit(DoltSystemTable):
     @staticmethod
     def merge_base(left, right):
         with connection.cursor() as c:
+            # author credentials not set
             c.execute(f"SELECT DOLT_MERGE_BASE('{left}', '{right}') FROM dual;")
+            return c.fetchone()[0]
+
+    @staticmethod
+    def revert(commits):
+        args = ", ".join([f"'{c}'" for c in commits])
+        with connection.cursor() as c:
+            c.execute(f"SELECT DOLT_REVERT({args}) FROM dual;")
             return c.fetchone()[0]
 
     @property
