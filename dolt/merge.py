@@ -31,13 +31,18 @@ def get_conflicts_count_for_merge(src, dest):
         we need granular row-level conflicts and
         constraint violations.
     """
-    mc = get_or_make_merge_candidate(src, dest)
-    with query_on_branch(mc):
-        c = Conflicts.objects.all().aggregate(Sum("num_conflicts"))
-        v = ConstraintViolations.objects.all().aggregate(Sum("num_violations"))
-        num_conflicts = c["num_conflicts__sum"] if c["num_conflicts__sum"] else 0
-        num_violations = v["num_violations__sum"] if v["num_violations__sum"] else 0
-        return num_conflicts + num_violations
+    try:
+        mc = get_or_make_merge_candidate(src, dest)
+        with query_on_branch(mc):
+            c = Conflicts.objects.all().aggregate(Sum("num_conflicts"))
+            v = ConstraintViolations.objects.all().aggregate(Sum("num_violations"))
+            num_conflicts = c["num_conflicts__sum"] if c["num_conflicts__sum"] else 0
+            num_violations = v["num_violations__sum"] if v["num_violations__sum"] else 0
+            return num_conflicts + num_violations
+    except Exception:
+        # best effort
+        # todo: fix dolt merge bug
+        return 0
 
 
 def get_conflicts_for_merge(src, dest):
@@ -49,14 +54,20 @@ def get_conflicts_for_merge(src, dest):
         we need granular row-level conflicts and
         constraint violations.
     """
-    mc = get_or_make_merge_candidate(src, dest)
-    with query_on_branch(mc):
-        conflicts = MergeConflicts(src, dest)
-        return {
-            "summary": conflicts.make_conflict_summary_table(),
-            "conflicts": conflicts.make_conflict_table(),
-            "violations": conflicts.make_constraint_violations_table(),
-        }
+    try:
+        mc = get_or_make_merge_candidate(src, dest)
+        with query_on_branch(mc):
+            conflicts = MergeConflicts(src, dest)
+            return {
+                "summary": conflicts.make_conflict_summary_table(),
+                "conflicts": conflicts.make_conflict_table(),
+                "violations": conflicts.make_constraint_violations_table(),
+            }
+
+    except Exception:
+        # best effort
+        # todo: fix dolt merge bug
+        return {}
 
 
 def merge_candidate_exists(src, dest):
@@ -90,6 +101,7 @@ def get_merge_candidate(src, dest):
 
 def make_merge_candidate(src, dest):
     name = _merge_candidate_name(src, dest)
+    # force updates the merge-candidate branch
     Branch(name=name, starting_branch=dest).save()
     with connection.cursor() as cursor:
         cursor.execute("SET @@dolt_force_transaction_commit = 1;")
