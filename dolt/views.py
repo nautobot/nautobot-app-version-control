@@ -403,12 +403,25 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
             form = self.form(request.POST)
             if form.is_valid():
                 commits = form.cleaned_data["pk"]
-                _ = Commit.revert(commits)
-
-                cc = [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
-                messages.success(
-                    request, mark_safe(f"""Successfully reverted commits {", ".join(cc)}""")
-                )
+                msgs = [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
+                try:
+                    _ = Commit.revert(commits)
+                except Exception as e:
+                    # catch database error
+                    messages.error(
+                        request,
+                        mark_safe(
+                            f"""Error reverting commits {", ".join(msgs)}: {e}"""
+                        ),
+                    )
+                    return redirect(self.get_return_url(request))
+                else:
+                    messages.success(
+                        request,
+                        mark_safe(
+                            f"""Successfully reverted commits {", ".join(msgs)}"""
+                        ),
+                    )
 
         return redirect(self.get_return_url(request))
 
