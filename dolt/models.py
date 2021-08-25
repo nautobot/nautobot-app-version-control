@@ -46,7 +46,6 @@ class Branch(DoltSystemTable):
     """
 
     name = models.TextField(primary_key=True)
-    # TODO: expose working hash in Dolt?
     hash = models.TextField()
     latest_committer = models.TextField()
     latest_committer_email = models.TextField()
@@ -323,6 +322,8 @@ class PullRequest(BaseModel):
     description = models.TextField(blank=True, null=True)
     creator = models.ForeignKey(User, on_delete=CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
+
+    objects = RestrictedQuerySet.as_manager()
 
     class Meta:
         # table name cannot start with "dolt"

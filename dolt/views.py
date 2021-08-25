@@ -561,7 +561,6 @@ class PullRequestListView(generic.ObjectListView):
     filterset = filters.PullRequestFilterSet
     filterset_form = forms.PullRequestFilterForm
     table = tables.PullRequestTable
-    # action_buttons = ("add",)  # todo: add button
     action_buttons = ()
     template_name = "dolt/pull_request_list.html"
 

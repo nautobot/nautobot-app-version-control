@@ -2,6 +2,9 @@
 {% load helpers %}
 
 {% block buttons %}
+    <a href="{% url 'plugins:dolt:pull_request_add' %}" class="btn btn-primary">
+        <span class="mdi mdi-plus-thick" aria-hidden="true"></span> Add
+    </a>
 {% endblock %}
 
 {% block title %}
