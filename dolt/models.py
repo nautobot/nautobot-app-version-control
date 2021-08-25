@@ -216,6 +216,7 @@ class Commit(DoltSystemTable):
         """"""
         if not branch:
             raise DoltError("must specify branch to create commit")
+        self.message = self.message.replace('"', "")
         author = author_from_user(user)
         conn = connections[using]
         with conn.cursor() as cursor:
@@ -225,8 +226,8 @@ class Commit(DoltSystemTable):
             SELECT dolt_commit(
                 '--all', 
                 '--allow-empty',
-                '--message', '{self.message}',
-                '--author', '{author}')
+                '--message', "{self.message}",
+                '--author', "{author}")
             FROM dual;"""
             )
             hash = cursor.fetchone()[0]
