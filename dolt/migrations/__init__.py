@@ -1,8 +1,10 @@
 from django.db import connection
 
+from dolt.constants import DOLT_DEFAULT_BRANCH
 
-def dolt_autocommit_migration(sender, **kwargs):
-    msg = "created dolt commit for database migration"
+
+def auto_dolt_commit_migration(sender, **kwargs):
+    msg = "completed database migration"
     author = "nautobot <nautobot@ntc.com>"
     with connection.cursor() as cursor:
         cursor.execute("SELECT dolt_add('-A') FROM dual;")

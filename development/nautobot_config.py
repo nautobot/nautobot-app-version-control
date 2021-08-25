@@ -55,7 +55,7 @@ DATABASES = {
     "default": {
         "NAME": "nautobot",  # Database name
         "USER": os.getenv("DOLT_USER", ""),  # Database username
-        "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Datbase password
+        "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Database password
         "HOST": os.getenv("DOLT_HOST", "localhost"),  # Database server
         "PORT": os.getenv("DOLT_PORT", ""),  # Database port (leave blank for default)
         "ENGINE": "django.db.backends.mysql",
@@ -66,7 +66,7 @@ DATABASES = {
         # "NAME": "nautobot/master",   # Database username
         "NAME": "nautobot",  # Database username
         "USER": os.getenv("DOLT_USER", ""),  # Database username
-        "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Datbase password
+        "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Database password
         "HOST": os.getenv("DOLT_HOST", "localhost"),  # Database server
         "PORT": os.getenv("DOLT_PORT", ""),  # Database port (leave blank for default)
         "ENGINE": "django.db.backends.mysql",
@@ -112,7 +112,7 @@ CACHEOPS_REDIS = f"{REDIS_SCHEME}://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/
 # For optimal security, SECRET_KEY should be at least 50 characters in length and contain a mix of letters, numbers, and
 # symbols. Nautobot will not run without this defined. For more information, see
 # https://docs.djangoproject.com/en/stable/ref/settings/#std:setting-SECRET_KEY
-SECRET_KEY = os.environ["SECRET_KEY"]
+SECRET_KEY = os.getenv("SECRET_KEY")
 
 
 #########################
@@ -156,7 +156,7 @@ BANNER_LOGIN = os.environ.get("BANNER_LOGIN", "")
 # Cache timeout in seconds. Cannot be 0. Defaults to 900 (15 minutes). To disable caching, set CACHEOPS_ENABLED to False
 CACHEOPS_DEFAULTS = {"timeout": 900}
 
-# Set to False to disable caching with cacheops. (Default: True)
+# CACHEOPS is not compatible with Dolt
 CACHEOPS_ENABLED = False
 
 # Maximum number of days to retain logged changes. Set to 0 to retain changes indefinitely. (Default: 90)

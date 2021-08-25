@@ -2,7 +2,7 @@ from django.db.models.signals import post_migrate
 
 from nautobot.extras.plugins import PluginConfig
 
-from dolt.migrations import dolt_autocommit_migration
+from dolt.migrations import auto_dolt_commit_migration
 
 
 class NautobotDolt(PluginConfig):
@@ -15,6 +15,7 @@ class NautobotDolt(PluginConfig):
     required_settings = []
     default_settings = {
         # TODO: are these respected?
+        #   this is also set in /development/nautobot_config.py
         "DATABASE_ROUTERS": [
             "dolt.routers.GlobalStateRouter",
         ],
@@ -28,7 +29,9 @@ class NautobotDolt(PluginConfig):
 
     def ready(self):
         super().ready()
-        post_migrate.connect(dolt_autocommit_migration, sender=self)
+
+        # make a Dolt commit to save database migrations
+        post_migrate.connect(auto_dolt_commit_migration, sender=self)
 
 
 config = NautobotDolt

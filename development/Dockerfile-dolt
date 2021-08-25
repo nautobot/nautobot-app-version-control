@@ -16,5 +16,9 @@ WORKDIR /var/lib/nautobot
 EXPOSE 3306
 
 ENV DOLT_ENABLE_DB_REVISIONS=true
+ENV READ_COMMITTED_HACK=true
 
 RUN dolt init
+
+# rename default branch to "main"
+RUN dolt branch -m master main
