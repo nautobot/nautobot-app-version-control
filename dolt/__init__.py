@@ -29,6 +29,7 @@ class NautobotDolt(PluginConfig):
         "dolt.middleware.DoltBranchMiddleware",
         "dolt.middleware.DoltAutoCommitMiddleware",
     ]
+    banner_function = "banner.dolt_banner"
 
     def ready(self):
         super().ready()
