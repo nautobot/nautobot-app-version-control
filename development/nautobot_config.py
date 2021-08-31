@@ -260,7 +260,7 @@ PLUGINS = [
 
 DATABASE_ROUTERS = [
     # TODO: currently this breaks migrations
-    "dolt.routers.GlobalStateRouter",
+    # "dolt.routers.GlobalStateRouter",
 ]
 
 # Plugins configuration settings. These settings are used by various plugins that the user may have installed.

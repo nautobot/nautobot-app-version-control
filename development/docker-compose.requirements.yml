@@ -13,7 +13,7 @@ services:
       - "dev.env"
       - "creds.env"
     volumes:
-      - "dolt_data:/var/lib/dolt/.dolt/noms"
+      - "dolt_data:/var/lib/nautobot"
       - "./dolt-config.yaml:/dolt-config.yaml"
     ports:
       - "3306:3306"

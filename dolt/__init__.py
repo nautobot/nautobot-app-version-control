@@ -94,6 +94,14 @@ def register_versioned_models(ct_dict):
     Args:
         ct_dict: a python dictionary following the same
             format as __MODELS_UNDER_VERSION_CONTROL__
+    eg:
+        register_versioned_models({
+            "my_app_label": {
+                "my_content_type": True,
+            },
+            "my_other_app_label": True,
+        })
+
     """
     err = ValueError("invalid model version allowlist")
     for key, val in ct_dict.items:
