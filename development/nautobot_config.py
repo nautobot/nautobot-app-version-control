@@ -63,7 +63,6 @@ DATABASES = {
     # TODO: use `dolt.constants.GLOBAL_STATE_DB`
     "global": {
         # TODO: use `dolt.constants.DOLT_DEFAULT_BRANCH`
-        # "NAME": "nautobot/master",   # Database username
         "NAME": "nautobot",  # Database username
         "USER": os.getenv("DOLT_USER", ""),  # Database username
         "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Database password

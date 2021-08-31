@@ -7,6 +7,7 @@ RUN mkdir -p /var/lib/nautobot
 
 ARG DOLT_RELEASE=latest
 RUN curl -L https://github.com/dolthub/dolt/releases/${DOLT_RELEASE}/download/install.sh | bash
+
 RUN dolt config --global --add user.name nautobot
 RUN dolt config --global --add user.email opensource@networktocode.COM
 
@@ -16,7 +17,6 @@ WORKDIR /var/lib/nautobot
 EXPOSE 3306
 
 ENV DOLT_ENABLE_DB_REVISIONS=true
-ENV READ_COMMITTED_HACK=true
 
 RUN dolt init
 
