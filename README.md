@@ -11,13 +11,19 @@ A local environment based on Docker Compose is available for development and tes
 invoke build
 invoke migrate
 invoke load-data
+invoke start
 ```
+
+> `invoke load-data` can take up to 30 min to run and it will generate many Warning messages, these messages can be ignored.
+
 Run the following commands to Reset the Local environment and load the sample dataset again
 ```
+invoke stop
 invoke build
 invoke destroy
 invoke migrate
 invoke load-data
+invoke start
 ```
 ### Start the Local environment with an empty database
 ```
