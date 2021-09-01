@@ -258,10 +258,9 @@ PLUGINS = [
     "dolt",
 ]
 
-DATABASE_ROUTERS = [
-    # TODO: currently this breaks migrations
-    # "dolt.routers.GlobalStateRouter",
-]
+# Pull the list of routers from environment variable to be able to disable all routers when we are running the migrations
+routers = os.getenv("DATABASE_ROUTERS", "").split(",")
+DATABASE_ROUTERS = routers if routers != [""] else []
 
 # Plugins configuration settings. These settings are used by various plugins that the user may have installed.
 # Each key in the dictionary is the name of an installed plugin and its value is a dictionary of settings.

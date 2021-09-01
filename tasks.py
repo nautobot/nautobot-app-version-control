@@ -26,7 +26,7 @@ namespace = Collection("nautobot_dolt")
 namespace.configure(
     {
         "nautobot_dolt": {
-            "nautobot_ver": "1.0.1",
+            "nautobot_ver": "1.1.2",
             "project_name": "dolt",
             "python_ver": "3.6",
             "local": False,
@@ -72,8 +72,15 @@ def docker_compose(context, command, **kwargs):
         "NAUTOBOT_VER": context.nautobot_dolt.nautobot_ver,
         "PYTHON_VER": context.nautobot_dolt.python_ver,
     }
-    compose_command = f'docker-compose --project-name {context.nautobot_dolt.project_name} --project-directory "{context.nautobot_dolt.compose_dir}"'
-    for compose_file in context.nautobot_dolt.compose_files:
+    compose_command = f'docker compose --project-name {context.nautobot_dolt.project_name} --project-directory "{context.nautobot_dolt.compose_dir}"'
+
+    if "compose_files" in kwargs:
+        compose_files = kwargs["compose_files"]
+        del kwargs["compose_files"]
+    else:
+        compose_files = context.nautobot_dolt.compose_files
+
+    for compose_file in compose_files:
         compose_file_path = os.path.join(
             context.nautobot_dolt.compose_dir, compose_file
         )
@@ -88,10 +95,10 @@ def run_command(context, command, **kwargs):
     if is_truthy(context.nautobot_dolt.local):
         context.run(command, **kwargs)
     else:
-        # Check if netbox is running, no need to start another netbox container to run a command
+        # Check if Nautobot is running, no need to start another Nautobot container to run a command
         docker_compose_status = "ps --services --filter status=running"
         results = docker_compose(context, docker_compose_status, hide="out")
-        if "nautobot" in results.stdout:
+        if "nautobot" in results.stdout:    
             compose_command = f"exec nautobot {command}"
         else:
             compose_command = f"run --entrypoint '{command}' nautobot"
@@ -222,7 +229,17 @@ def migrate(context):
     """Perform migrate operation in Django."""
     command = "nautobot-server migrate"
 
-    run_command(context, command)
+    compose_files = [
+        "docker-compose.requirements.yml",
+        "docker-compose.base.yml",
+        "docker-compose.migrate.yml",
+    ]
+
+    if is_truthy(context.nautobot_dolt.local):
+        context.run(command)
+    else:
+        compose_command = f"run --entrypoint '{command}' nautobot"
+        docker_compose(context, compose_command, pty=True, compose_files=compose_files)
 
 
 @task(help={})
@@ -242,6 +259,26 @@ def post_upgrade(context):
     command = "nautobot-server post_upgrade"
 
     run_command(context, command)
+
+
+@task
+def load_data(context):
+    """Load data."""
+    commands = [
+        "nautobot-server cleanup_data",
+        "nautobot-server loaddata development/db.json"
+    ]
+
+    compose_files = [
+        "docker-compose.requirements.yml",
+        "docker-compose.base.yml",
+        "docker-compose.migrate.yml",
+    ]
+
+    for command in commands:
+        compose_command = f"run --entrypoint '{command}' nautobot"
+        docker_compose(context, compose_command, pty=True, compose_files=compose_files)
+
 
 
 # ------------------------------------------------------------------------------
