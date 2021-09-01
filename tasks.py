@@ -72,7 +72,7 @@ def docker_compose(context, command, **kwargs):
         "NAUTOBOT_VER": context.nautobot_dolt.nautobot_ver,
         "PYTHON_VER": context.nautobot_dolt.python_ver,
     }
-    compose_command = f'docker compose --project-name {context.nautobot_dolt.project_name} --project-directory "{context.nautobot_dolt.compose_dir}"'
+    compose_command = f'docker-compose --project-name {context.nautobot_dolt.project_name} --project-directory "{context.nautobot_dolt.compose_dir}"'
 
     if "compose_files" in kwargs:
         compose_files = kwargs["compose_files"]
