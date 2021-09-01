@@ -98,7 +98,7 @@ def run_command(context, command, **kwargs):
         # Check if Nautobot is running, no need to start another Nautobot container to run a command
         docker_compose_status = "ps --services --filter status=running"
         results = docker_compose(context, docker_compose_status, hide="out")
-        if "nautobot" in results.stdout:    
+        if "nautobot" in results.stdout:
             compose_command = f"exec nautobot {command}"
         else:
             compose_command = f"run --entrypoint '{command}' nautobot"
@@ -266,7 +266,7 @@ def load_data(context):
     """Load data."""
     commands = [
         "nautobot-server cleanup_data",
-        "nautobot-server loaddata development/db.json"
+        "nautobot-server loaddata development/db.json",
     ]
 
     compose_files = [
@@ -278,7 +278,6 @@ def load_data(context):
     for command in commands:
         compose_command = f"run --entrypoint '{command}' nautobot"
         docker_compose(context, compose_command, pty=True, compose_files=compose_files)
-
 
 
 # ------------------------------------------------------------------------------

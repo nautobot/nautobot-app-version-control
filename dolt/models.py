@@ -5,18 +5,13 @@ from django.urls import reverse
 from django.utils.safestring import mark_safe
 
 from nautobot.core.models import BaseModel
+from nautobot.extras.utils import extras_features
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
+
 from dolt.versioning import db_for_commit, query_on_main_branch
 from dolt.utils import author_from_user, DoltError
-
-
-__all__ = (
-    "Branch",
-    "Commit",
-    "PullRequest",
-)
 
 
 class DoltSystemTable(models.Model):
@@ -305,6 +300,9 @@ class ConstraintViolations(DoltSystemTable):
 #
 
 
+@extras_features(
+    "webhooks",
+)
 class PullRequest(BaseModel):
     OPEN = 0
     MERGED = 1

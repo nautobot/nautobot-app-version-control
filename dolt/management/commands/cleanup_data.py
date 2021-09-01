@@ -4,6 +4,7 @@ from django.contrib.contenttypes.models import ContentType
 
 from nautobot.extras.models import Status
 
+
 class Command(BaseCommand):
     """Cleanup Database after migrations."""
 
