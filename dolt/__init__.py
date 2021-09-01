@@ -86,6 +86,7 @@ __MODELS_UNDER_VERSION_CONTROL__ = {
         "taggeditem": True,
         "webhook": True,
     },
+    "nautobot_bgp_models": True,
 }
 
 
