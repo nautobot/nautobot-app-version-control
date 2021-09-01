@@ -284,7 +284,7 @@ DATABASE_ROUTERS = routers if routers != [""] else []
 # prefer IPv4 instead.
 PREFER_IPV4 = is_truthy(os.environ.get("PREFER_IPV4", False))
 
-# Rack elevation size defaults, in pixels. For best results, the ratio of width to height should be roughly 10:1.
+# Rack elevation size defaults, in pixels. For best results, the ratio of width to height should be roughly 10:1.s
 RACK_ELEVATION_DEFAULT_UNIT_HEIGHT = 22
 RACK_ELEVATION_DEFAULT_UNIT_WIDTH = 220
 
