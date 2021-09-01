@@ -38,11 +38,13 @@ menu_items = (
                         link="plugins:dolt:commit_list",
                         name="Commits (Active Branch)",
                         permissions=[],
+                        buttons=(),
                     ),
                     NavMenuItem(
                         link="plugins:dolt:active_branch_diffs",
                         name="Diffs (Active Branch)",
                         permissions=[],
+                        buttons=(),
                     ),
                 ),
             ),
