@@ -124,6 +124,7 @@ __VERSIONED_MODEL_REGISTRY___ = {
         "taggeditem": True,
         "webhook": True,
     },
+    "nautobot_bgp_models": True,
 }
 
 
