@@ -78,6 +78,10 @@ class Branch(DoltSystemTable):
         return self.name == self.active_branch()
 
     @property
+    def ahead_behind(self):
+        return f"{0} ahead / {0} behind"
+
+    @property
     def created_by(self):
         m = self._branch_meta()
         return m.author if m else None

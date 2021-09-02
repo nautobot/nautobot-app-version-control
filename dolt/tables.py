@@ -52,6 +52,7 @@ class BranchTable(BaseTable):
             "pk",
             "name",
             "hash",
+            "ahead_behind",
             "latest_committer",
             "latest_committer_email",
             "latest_commit_date",
@@ -60,6 +61,7 @@ class BranchTable(BaseTable):
         )
         default_columns = (
             "name",
+            "ahead_behind",
             "latest_committer",
             "latest_committer_email",
             "latest_commit_date",
