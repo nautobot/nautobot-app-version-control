@@ -18,19 +18,6 @@ from dolt.utils import db_for_commit
 from dolt.functions import JSONObject
 
 
-def diffable_content_types():
-    # todo: once available, use https://github.com/nautobot/nautobot/issues/748
-    return ContentType.objects.filter(
-        app_label__in=(
-            "dcim",
-            "circuits",
-            "ipam",
-            "tenancy",
-            "virtualization",
-        )
-    )
-
-
 def three_dot_diffs(from_commit=None, to_commit=None):
     if not (from_commit and to_commit):
         raise ValueError("must specify both a to_commit and from_commit")
@@ -43,8 +30,11 @@ def two_dot_diffs(from_commit=None, to_commit=None):
         raise ValueError("must specify both a to_commit and from_commit")
 
     diff_results = []
-    for content_type in diffable_content_types():
-        if not diff_table_for_model(content_type.model_class()):
+    for content_type in ContentType.objects.all():
+        model = content_type.model_class()
+        if not model:
+            continue
+        if not diff_table_for_model(model):
             continue
 
         factory = DiffModelFactory(content_type)
