@@ -17,7 +17,9 @@
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <strong>
-                                        Reviewed By {{ review.reviewer|placeholder }} on {{ review.reviewed_at|placeholder}}
+                                        Reviewed By
+                                        <label class="label label-primary">{{ review.reviewer|placeholder }}</label>
+                                         on {{ review.reviewed_at|placeholder}}
                                     </strong>
                                     <div class="pull-right">
                                         {% if review.state == 0 %}
