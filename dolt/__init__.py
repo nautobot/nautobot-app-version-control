@@ -47,15 +47,15 @@ def query_registry(model, registry):
         registry: a python dictionary like
             ```
             {
-                "my_app_label": {
-                    "my_model": <value>,
+                "my_app_label": True,
+                "my_other_model": {
+                    "my_model": True,
                 },
-                "my_other_model": <value>,
             }
             ```
-            where the type of `<value>` is specific
-            to the registry. A return value of `None`
-            signals the `model` is absent in `registry`
+            The type of `<value>` is specific to each
+            registry. A return value of `None` signals
+            that nothing is registered for that `model`.
     """
     app_label = model._meta.app_label
     model = model.__name__.lower()
@@ -135,8 +135,16 @@ def is_versioned_model(model):
 def register_versioned_models(registry):
     """Register additional content types to be versioned.
     Args:
-        registry: a python dictionary following the same
-            format as __VERSIONED_MODEL_REGISTRY___
+        registry: a python dict of content types that
+            will be placed under version control:
+            ```
+            {
+                "my_app_label": True,
+                "my_other_model": {
+                    "my_model": True,
+                },
+            }
+            ```
     """
     err = ValueError("invalid versioned model registry")
     for key, val in registry.items():
@@ -164,12 +172,28 @@ __DIFF_TABLE_REGISTRY__ = {}
 
 
 def diff_table_for_model(model):
+    """
+    Returns a table object for a model, if it exists in
+    the ` __DIFF_TABLE_REGISTRY__`.
+    """
     return query_registry(model, __DIFF_TABLE_REGISTRY__)
 
 
 def register_diff_tables(registry):
-    """
-    TODO
+    """Register additional tables to be used in diffs.
+    Registry values must be subclasses of django_tables2.Table.
+
+    Args:
+        registry: a python dict of content types that
+            will be placed under version control:
+            ```
+            {
+                "my_app_label": True,
+                "my_other_model": {
+                    "my_model": True,
+                },
+            }
+            ```
     """
     err = ValueError("invalid diff table registry")
     for key, val in registry.items():
