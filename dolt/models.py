@@ -190,8 +190,10 @@ class Commit(DoltSystemTable):
             return c.fetchone()[0]
 
     @staticmethod
-    def revert(commits):
+    def revert(commits, user):
         args = ", ".join([f"'{c}'" for c in commits])
+        author = author_from_user(user)
+        args += f", '--author', '{author}'"
         with connection.cursor() as c:
             c.execute(f"SELECT DOLT_REVERT({args}) FROM dual;")
             return c.fetchone()[0]
