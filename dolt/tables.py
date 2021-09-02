@@ -38,6 +38,7 @@ BRANCH_TABLE_BADGES = """
 class BranchTable(BaseTable):
     pk = ToggleColumn()
     name = tables.LinkColumn()
+    ahead_behind = tables.Column(accessor=A("ahead_behind"), verbose_name="ahead_behind")
     hash = tables.LinkColumn("plugins:dolt:commit", args=[A("hash")])
     actions = ButtonsColumn(
         Branch,

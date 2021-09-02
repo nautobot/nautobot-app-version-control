@@ -79,7 +79,12 @@ class Branch(DoltSystemTable):
 
     @property
     def ahead_behind(self):
-        return f"{0} ahead / {0} behind"
+        merge_base = Commit.merge_base(self.name, 'main')
+        merge_base_commit = Commit.objects.filter(commit_hash=merge_base)[0]
+        ahead = Commit.objects.filter(date__gt=merge_base_commit.date).using(db_for_commit(self.hash)).count()
+        behind = Commit.objects.filter(date__gt=merge_base_commit.date).using(db_for_commit('main')).count()
+
+        return f"{ahead} ahead / {behind} behind"
 
     @property
     def created_by(self):
