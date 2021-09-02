@@ -405,7 +405,7 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
                 commits = form.cleaned_data["pk"]
                 msgs = [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
                 try:
-                    _ = Commit.revert(commits,request.user)
+                    _ = Commit.revert(commits, request.user)
                 except Exception as e:
                     # catch database error
                     messages.error(
