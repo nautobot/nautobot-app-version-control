@@ -1,7 +1,10 @@
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import connection
 from django.db import models
-from django.db.models import Q, F, Subquery, OuterRef, Value
+from django.db.models.expressions import RawSQL
+from django.db.models import F, OuterRef, Q, Subquery, Value
 
 from nautobot.dcim.tables import cables, devices, devicetypes, power, racks, sites
 from nautobot.circuits import tables as circuits_tables
@@ -41,46 +44,48 @@ def two_dot_diffs(from_commit=None, to_commit=None):
         diffs = factory.get_model().objects.filter(
             from_commit=from_commit, to_commit=to_commit
         )
+        tbl_name = content_type.model_class()._meta.db_table
         to_queryset = (
             content_type.model_class()
-            .objects.filter(pk__in=diffs.values_list("to_id", flat=True))
-            .annotate(
-                diff=Subquery(
-                    diffs.annotate(
-                        obj=JSONObject(
-                            root=Value("to", output_field=models.CharField()),
-                            **diff_annotation_query_fields(diffs.model),
-                        )
-                    )
-                    .filter(to_id=OuterRef("id"))
-                    .values("obj"),
-                    output_field=models.JSONField(),
-                ),
+            .objects.filter(
+                pk__in=RawSQL(
+                    f"""SELECT to_id FROM dolt_commit_diff_{tbl_name} 
+                        WHERE to_commit = %s AND from_commit = %s""",
+                    (to_commit, from_commit),
+                )
             )
+            .annotate(
+                # Annotate each row with a JSON-ified diff
+                diff=RawSQL(
+                    f"""SELECT JSON_OBJECT("root", "to", {json_diff_fields(tbl_name)})
+                        FROM dolt_commit_diff_{tbl_name} 
+                        WHERE to_commit = %s AND from_commit = %s AND from_id = %s """,
+                    (to_commit, from_commit, OuterRef("id")),
+                )
+            )
+            # "time-travel" query the database at `to_commit`
             .using(db_for_commit(to_commit))
         )
 
         from_queryset = (
             content_type.model_class()
             .objects.filter(
-                # we only want deleted rows in this queryset
-                # modified rows come from `to_queryset`
-                pk__in=diffs.filter(diff_type="removed").values_list(
-                    "from_id", flat=True
+                # add the `diff_type = 'removed'` clause, because we only want deleted
+                # rows in this queryset. modified rows come from the `to_queryset`
+                pk__in=RawSQL(
+                    f"""SELECT to_id FROM dolt_commit_diff_{tbl_name} 
+                        WHERE to_commit = %s AND from_commit = %s AND diff_type = 'removed' """,
+                    (to_commit, from_commit),
                 )
             )
             .annotate(
-                diff=Subquery(
-                    diffs.annotate(
-                        obj=JSONObject(
-                            root=Value("from", output_field=models.CharField()),
-                            **diff_annotation_query_fields(diffs.model),
-                        )
-                    )
-                    .filter(from_id=OuterRef("id"))
-                    .values("obj"),
-                    output_field=models.JSONField(),
-                ),
+                # Annotate each row with a JSON-ified diff
+                diff=RawSQL(
+                    f"""SELECT JSON_OBJECT("root", "from", {json_diff_fields(tbl_name)})
+                        FROM dolt_commit_diff_{tbl_name} 
+                        WHERE to_commit = %s AND from_commit = %s AND from_id = %s """,
+                    (to_commit, from_commit, OuterRef("id")),
+                )
             )
             # "time-travel" query the database at `from_commit`
             .using(db_for_commit(from_commit))
@@ -95,6 +100,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             {
                 "name": f"{factory.source_model_verbose_name} Diffs",
                 "table": diff_view_table(diff_rows),
+                # todo: convert to raw SQL to eliminate diff factory dependency
                 "added": diffs.filter(diff_type="added").count(),
                 "modified": diffs.filter(diff_type="modified").count(),
                 "removed": diffs.filter(diff_type="removed").count(),
@@ -103,16 +109,12 @@ def two_dot_diffs(from_commit=None, to_commit=None):
     return diff_results
 
 
-def diff_annotation_query_fields(model):
-    names = [
-        f.name
-        for f in model._meta.get_fields()
-        # field names containing "__" cannot be
-        # diffed as Django interprets kwargs with
-        # "__" as lookups
-        if "__" not in f.name
-    ]
-    return {name: F(name) for name in names}
+def json_diff_fields(tbl_name):
+    with connection.cursor() as cursor:
+        cursor.execute(f"DESCRIBE {tbl_name}")
+        cols = cursor.fetchall()
+    pairs = [f"'{c[0]}', {tbl_name}.{c[0]}" for c in cols]
+    return ", ".join(pairs)
 
 
 register_diff_tables(
