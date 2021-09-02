@@ -509,48 +509,20 @@ class DiffDetailView(View):
 
         from_qs = qs.using(db_for_commit(from_commit))
         if from_qs.filter(pk=pk).exists():
-            before_obj = self.serialize_object(from_qs.get(pk=pk))
+            before_obj = self.serialize_obj(from_qs.get(pk=pk))
         to_qs = qs.using(db_for_commit(to_commit))
         if to_qs.filter(pk=pk).exists():
-            after_obj = self.serialize_object(to_qs.get(pk=pk))
+            after_obj = self.serialize_obj(to_qs.get(pk=pk))
 
         return before_obj, after_obj
 
     @staticmethod
-    def serialize_object(obj, extra=None, exclude=None):
-        """
-        Return a generic JSON representation of an object using Django's built-in serializer. (This is used for things like
-        change logging, not the REST API.) Optionally include a dictionary to supplement the object data. A list of keys
-        can be provided to exclude them from the returned dictionary. Private fields (prefaced with an underscore) are
-        implicitly excluded.
-        """
-        json_str = serialize("json", [obj])
-        data = json.loads(json_str)[0]["fields"]
-
-        # Include custom_field_data as "custom_fields"
-        if hasattr(obj, "_custom_field_data"):
-            data["custom_fields"] = data.pop("_custom_field_data")
-
-        # Include any tags. Check for tags cached on the instance; fall back to using the manager.
-        if is_taggable(obj):
-            tags = getattr(obj, "_tags", []) or obj.tags.all()
-            data["tags"] = [tag.name for tag in tags]
-
-        # Append any extra data
-        if extra is not None:
-            data.update(extra)
-
-        # Copy keys to list to avoid 'dictionary changed size during iteration' exception
-        for key in list(data):
-            # Private fields shouldn't be logged in the object change
-            if isinstance(key, str) and key.startswith("_"):
-                data.pop(key)
-
-            # Explicitly excluded keys
-            if isinstance(exclude, (list, tuple)) and key in exclude:
-                data.pop(key)
-
-        return data
+    def serialize_obj(obj):
+        stringify = lambda val: str(val) if val else " - "
+        return {
+            str(field.name): stringify(getattr(obj, field.name))
+            for field in obj._meta.fields
+        }
 
 
 #

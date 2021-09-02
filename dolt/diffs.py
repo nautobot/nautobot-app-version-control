@@ -123,3 +123,33 @@ def diff_annotation_query_fields(model):
         if "__" not in f.name
     ]
     return {name: F(name) for name in names}
+
+    #
+    #
+    # json_str = serialize("json", [obj])
+    # data = json.loads(json_str)[0]["fields"]
+    #
+    # # Include custom_field_data as "custom_fields"
+    # if hasattr(obj, "_custom_field_data"):
+    #     data["custom_fields"] = data.pop("_custom_field_data")
+    #
+    # # Include any tags. Check for tags cached on the instance; fall back to using the manager.
+    # if is_taggable(obj):
+    #     tags = getattr(obj, "_tags", []) or obj.tags.all()
+    #     data["tags"] = [tag.name for tag in tags]
+    #
+    # # Append any extra data
+    # if extra is not None:
+    #     data.update(extra)
+    #
+    # # Copy keys to list to avoid 'dictionary changed size during iteration' exception
+    # for key in list(data):
+    #     # Private fields shouldn't be logged in the object change
+    #     if isinstance(key, str) and key.startswith("_"):
+    #         data.pop(key)
+    #
+    #     # Explicitly excluded keys
+    #     if isinstance(exclude, (list, tuple)) and key in exclude:
+    #         data.pop(key)
+    #
+    # return data
