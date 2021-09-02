@@ -2,6 +2,8 @@ from django.db.models.signals import post_migrate
 
 from nautobot.extras.plugins import PluginConfig
 
+import django_tables2 as tables
+
 from dolt.migrations import auto_dolt_commit_migration
 
 
@@ -38,12 +40,43 @@ class NautobotDolt(PluginConfig):
 config = NautobotDolt
 
 
+def query_registry(model, registry):
+    """Performs a lookup on a content type registry.
+    Args:
+        model: a Django model class
+        registry: a python dictionary like
+            ```
+            {
+                "my_app_label": {
+                    "my_model": <value>,
+                },
+                "my_other_model": <value>,
+            }
+            ```
+            where the type of `<value>` is specific
+            to the registry. A return value of `None`
+            signals the `model` is absent in `registry`
+    """
+    app_label = model._meta.app_label
+    model = model.__name__.lower()
+
+    if app_label not in registry:
+        return None
+    if not isinstance(registry[app_label], dict):
+        return registry[app_label]
+
+    # subset specified
+    if model not in registry[app_label]:
+        return None
+    return registry[app_label][model]
+
+
 # Registry of Content Types of models that should be under version control.
 # Top-level dict keys are app_labels. If the top-level dict value is `True`,
 # then all models under that app_label are allowlisted.The top-level value
 # may also be a nest dict containing a subset of version-controlled models
 # within the app_label.
-__MODELS_UNDER_VERSION_CONTROL__ = {
+__VERSIONED_MODEL_REGISTRY___ = {
     "dolt": {
         # Pull Requests are not versioned
         "pullrequest": False,
@@ -90,22 +123,23 @@ __MODELS_UNDER_VERSION_CONTROL__ = {
 }
 
 
-def register_versioned_models(ct_dict):
+def is_versioned_model(model):
+    """
+    Determines whether a model's is under version control.
+    See __MODELS_UNDER_VERSION_CONTROL__ for more info.
+    """
+    registry = __VERSIONED_MODEL_REGISTRY___
+    return bool(query_registry(model, registry))
+
+
+def register_versioned_models(registry):
     """Register additional content types to be versioned.
     Args:
-        ct_dict: a python dictionary following the same
-            format as __MODELS_UNDER_VERSION_CONTROL__
-    eg:
-        register_versioned_models({
-            "my_app_label": {
-                "my_content_type": True,
-            },
-            "my_other_app_label": True,
-        })
-
+        registry: a python dictionary following the same
+            format as __VERSIONED_MODEL_REGISTRY___
     """
-    err = ValueError("invalid model version allowlist")
-    for key, val in ct_dict.items:
+    err = ValueError("invalid versioned model registry")
+    for key, val in registry.items():
         if not isinstance(key, str):
             # key must be string
             raise err
@@ -118,40 +152,38 @@ def register_versioned_models(ct_dict):
         # validate nested dict
         for k, v in val.items():
             if not isinstance(k, str):
-                # key must be string
+                # k must be string
                 raise err
             if not isinstance(v, bool):
-                # val must be bool
+                # v must be bool
                 raise err
-    __MODELS_UNDER_VERSION_CONTROL__.update(ct_dict)
+    __VERSIONED_MODEL_REGISTRY___.update(registry)
 
 
-def is_versioned_model(model):
+__DIFF_TABLE_REGISTRY__ = {}
+
+
+def diff_table_for_model(model):
+    return query_registry(model, __DIFF_TABLE_REGISTRY__)
+
+
+def register_diff_tables(registry):
     """
-    Determines whether a model's is under version control.
-    See __MODELS_UNDER_VERSION_CONTROL__ for more info.
+    TODO
     """
-    allowlist = __MODELS_UNDER_VERSION_CONTROL__
-    return _lookup_allowlist(model, allowlist)
-
-
-def _lookup_allowlist(model, allowlist):
-    """
-    performs a lookup on allowlists with the structure
-    of  __MODELS_UNDER_VERSION_CONTROL__
-    """
-    app_label = model._meta.app_label
-    model = model.__name__.lower()
-
-    if app_label not in allowlist:
-        return False
-    if isinstance(allowlist[app_label], bool):
-        return allowlist[app_label]
-
-    # subset specified
-    if isinstance(allowlist[app_label], dict):
-        if model not in allowlist[app_label]:
-            return False
-        if isinstance(allowlist[app_label][model], bool):
-            return allowlist[app_label][model]
-    raise ValueError("invalid g allowlist")
+    err = ValueError("invalid diff table registry")
+    for key, val in registry.items():
+        if not isinstance(key, str):
+            # key must be string
+            raise err
+        if not isinstance(val, dict):
+            # val must be dict
+            raise err
+        for k, v in val.items():
+            if not isinstance(k, str):
+                # k must be string
+                raise err
+            if not issubclass(v, tables.Table):
+                # v must be Table
+                raise err
+    __DIFF_TABLE_REGISTRY__.update(registry)

@@ -22,6 +22,8 @@ from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequired
 
 from dolt import diffs, filters, forms, merge, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
+from dolt.versioning import db_for_commit, query_on_branch, change_branches
+from dolt.middleware import branch_from_request
 from dolt.utils import alter_session_branch, db_for_commit, active_branch
 from dolt.diffs import content_type_has_diff_view_table
 from dolt.models import (

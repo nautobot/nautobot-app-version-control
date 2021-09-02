@@ -51,7 +51,7 @@ class GlobalStateRouter:
         if is_versioned_model(model):
             return None
 
-        if self._branch_is_not_primary():
+        if self.branch_is_not_primary():
             breakpoint()
             # non-versioned models can only be edited on "main"
             raise DoltError(
@@ -67,5 +67,19 @@ class GlobalStateRouter:
         return True
 
     @staticmethod
-    def _branch_is_not_primary():
+    def branch_is_not_primary():
         return active_branch() != DOLT_DEFAULT_BRANCH
+
+    @staticmethod
+    def is_pr_model(model):
+        """
+        Return True is `model` is related to PullRequests.
+        """
+        pr_models = {
+            "dolt": {
+                "pullrequest": True,
+                "pullrequestreviewcomment": True,
+                "pullrequestreview": True,
+            },
+        }
+        return bool(query_registry(model, pr_models))

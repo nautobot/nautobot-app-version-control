@@ -13,7 +13,7 @@ from django_tables2.utils import call_with_appropriate
 from nautobot.utilities.querysets import RestrictedQuerySet
 from nautobot.utilities.tables import BaseTable
 
-from dolt.dynamic.model_view_map import MODEL_VIEW_TABLES
+from dolt import diff_table_for_model
 
 
 class DiffModelFactory:
@@ -111,7 +111,8 @@ class DiffListViewFactory:
         try:
             # lookup the list view table for this content type
             # todo: once available, use https://github.com/nautobot/nautobot/issues/747
-            ModelViewTable = MODEL_VIEW_TABLES[self.ct.app_label][self.ct.model]
+            model = self.ct.model_class()
+            ModelViewTable = diff_table_for_model(model)
 
             return type(
                 self.table_model_name,
