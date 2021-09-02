@@ -161,18 +161,22 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
     model = PullRequest
     q = forms.CharField(required=False, label="Search")
-    state = forms.ChoiceField(required=False, choices=PullRequest.PR_STATE_CHOICES)
-    creator = forms.ModelChoiceField(
-        required=False, queryset=User.objects.all(), empty_label=None
+    creator = forms.ModelChoiceField(required=False, queryset=User.objects.all())
+    reviewer = forms.ModelChoiceField(
+        required=False,
+        label="Reviewer",
+        queryset=User.objects.all(),
+    )
+    status = forms.MultipleChoiceField(
+        required=False, label="Status", choices=PullRequest.PR_STATUS_CHOICES
     )
 
     class Meta:
         fields = [
-            "state",
-            "title",
-            "source_branch",
-            "destination_branch",
-            "description",
+            "q",
+            "creator",
+            "reviewer",
+            "status",
         ]
 
 

@@ -1,7 +1,9 @@
 import django_filters
 from django.db.models import Q
 
+from nautobot.users.models import User
 from nautobot.utilities.filters import BaseFilterSet
+
 from dolt.models import Branch, Commit, PullRequest
 
 
@@ -70,16 +72,23 @@ class PullRequestFilterSet(BaseFilterSet):
         method="search",
         label="Search",
     )
+    reviewer = django_filters.MultipleChoiceFilter(
+        label="Reviewer",
+        method="search_by_reviewer",
+    )
+    status = django_filters.MultipleChoiceFilter(
+        label="Status",
+        method="filter_by_status",
+    )
 
     class Meta:
         model = PullRequest
+        # todo: are these right?
         fields = (
-            "title",
-            "state",
-            "source_branch",
-            "destination_branch",
-            "description",
+            "q",
             "creator",
+            "reviewer",
+            "status",
         )
 
     def search(self, queryset, name, value):
@@ -91,5 +100,13 @@ class PullRequestFilterSet(BaseFilterSet):
             | Q(source_branch__icontains=value)
             | Q(destination_branch__icontains=value)
             | Q(description__icontains=value)
-            | Q(creator__icontains=value)
+            | Q(creator__username__icontains=value)
         )
+
+    def search_by_reviewer(self, queryset, name, value):
+        breakpoint()
+        return queryset.filter(pullrequestreview__reviewer=value)
+
+    def filter_by_status(self, queryset, name, value):
+        breakpoint()
+        return queryset

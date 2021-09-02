@@ -306,17 +306,35 @@ class ConstraintViolations(DoltSystemTable):
     "webhooks",
 )
 class PullRequest(BaseModel):
-    OPEN = 0
-    MERGED = 1
-    CLOSED = 2
+    # `state` a materialized database field.
+    STATE_OPEN = 0
+    STATE_MERGED = 1
+    STATE_CLOSED = 2
     PR_STATE_CHOICES = [
-        (OPEN, "Open"),
-        (MERGED, "Merged"),
-        (CLOSED, "Closed"),
+        (STATE_OPEN, "Open"),
+        (STATE_MERGED, "Merged"),
+        (STATE_CLOSED, "Closed"),
+    ]
+    # `status` is a computed field, it is
+    # determined by referencing state and
+    # associated PullRequestReviews.
+    STATUS_OPEN = "open"
+    STATUS_MERGED = "merged"
+    STATUS_CLOSED = "closed"
+    STATUS_IN_REVIEW = "in-review"
+    STATUS_APPROVED = "approved"
+    STATUS_BLOCKED = "blocked"
+    PR_STATUS_CHOICES = [
+        (STATUS_OPEN, "Open"),
+        (STATUS_MERGED, "Merged"),
+        (STATUS_CLOSED, "Closed"),
+        (STATUS_IN_REVIEW, "In Review"),
+        (STATUS_APPROVED, "Approved"),
+        (STATUS_BLOCKED, "Blocked"),
     ]
 
     title = models.CharField(max_length=240)
-    state = models.IntegerField(choices=PR_STATE_CHOICES, default=OPEN)
+    state = models.IntegerField(choices=PR_STATE_CHOICES, default=STATE_OPEN)
     # can't create Foreign Key to dolt_branches table :(
     source_branch = models.TextField()
     destination_branch = models.TextField()
@@ -344,7 +362,7 @@ class PullRequest(BaseModel):
 
     @property
     def open(self):
-        return self.state == PullRequest.OPEN
+        return self.state == PullRequest.STATE_OPEN
 
     @property
     def status(self):
@@ -354,14 +372,14 @@ class PullRequest(BaseModel):
         PRs in a closed or merged state have the corresponding status.
         An open PR's state is determined by the last non-comment review.
         """
-        if self.state == PullRequest.CLOSED:
-            return "closed"
-        if self.state == PullRequest.MERGED:
-            return "merged"
+        if self.state == PullRequest.STATE_CLOSED:
+            return PullRequest.STATUS_CLOSED
+        if self.state == PullRequest.STATE_MERGED:
+            return PullRequest.STATUS_MERGED
 
         pr_reviews = PullRequestReview.objects.filter(pull_request=self.pk)
         if not pr_reviews:
-            return "open"
+            return PullRequest.STATUS_OPEN
 
         # get the most recent review that approved or blocked
         decision = (
@@ -371,11 +389,11 @@ class PullRequest(BaseModel):
         )
         if not decision:
             # all PRs are "comments"
-            return "in-review"
+            return PullRequest.STATUS_IN_REVIEW
         if decision.state == PullRequestReview.APPROVED:
-            return "approved"
+            return PullRequest.STATUS_APPROVED
         if decision.state == PullRequestReview.BLOCKED:
-            return "blocked"
+            return PullRequest.STATUS_BLOCKED
         return "unknown"  # unreachable
 
     @property
@@ -408,7 +426,7 @@ class PullRequest(BaseModel):
             dest.merge(src, user=user)
         except ObjectDoesNotExist as e:
             raise DoltError(f"error merging Pull Request {self}: {e}")
-        self.state = PullRequest.MERGED
+        self.state = PullRequest.STATE_MERGED
         self.save()
 
 

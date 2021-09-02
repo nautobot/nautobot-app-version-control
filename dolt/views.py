@@ -709,7 +709,7 @@ class PullRequestMergeView(generic.ObjectEditView):
 
     def get(self, request, pk):
         pr = get_object_or_404(self.queryset, pk=pk)
-        if pr.state != PullRequest.OPEN:
+        if pr.state != PullRequest.STATE_OPEN:
             msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be merged""")
             messages.error(request, msg)
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
@@ -757,7 +757,7 @@ class PullRequestCloseView(generic.ObjectEditView):
 
     def get(self, request, pk):
         pr = get_object_or_404(self.queryset, pk=pk)
-        if pr.state != PullRequest.OPEN:
+        if pr.state != PullRequest.STATE_OPEN:
             msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be closed""")
             messages.error(request, msg)
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
@@ -779,7 +779,7 @@ class PullRequestCloseView(generic.ObjectEditView):
         form = ConfirmationForm(request.POST)
 
         if form.is_valid():
-            pr.state = PullRequest.CLOSED
+            pr.state = PullRequest.STATE_CLOSED
             pr.save()
             msg = mark_safe(
                 f"""<strong>Pull Request "{pr}" has been closed.</strong>"""
