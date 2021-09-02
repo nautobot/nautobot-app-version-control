@@ -456,30 +456,24 @@ class DiffDetailView(View):
             self.template_name,
             {
                 "verbose_name": self.display_name(kwargs),
-                "diff_obj": self.diff_obj(kwargs),
+                "diff_obj": self.get_json_diff(kwargs),
             },
         )
 
-    def diff_obj(self, kwargs):
-        pk = kwargs["pk"]
-        from_commit = kwargs["from_commit"]
-        to_commit = kwargs["to_commit"]
-        qs = self.model.objects.all()
-        added, removed = False, False
+    def get_model(self, kwargs):
+        return ContentType.objects.get(
+            app_label=kwargs["app_label"], model=kwargs["model"]
+        ).model_class()
 
-        from_qs = qs.using(db_for_commit(from_commit))
-        if from_qs.filter(pk=pk).exists():
-            before_obj = serialize_object(from_qs.get(pk=pk))
-        else:
-            before_obj, added = {}, True
+    def display_name(self, kwargs):
+        return self.get_model(kwargs)._meta.verbose_name.capitalize()
 
-        to_qs = qs.using(db_for_commit(to_commit))
-        if to_qs.filter(pk=pk).exists():
-            after_obj = serialize_object(to_qs.get(pk=pk))
-        else:
-            after_obj, removed = {}, True
+    def get_json_diff(self, kwargs):
+        before_obj, after_obj = self.get_objs(kwargs)
+        added = before_obj is None
+        removed = after_obj is None
 
-        diff_obj = []
+        json_diff = []
         for field in self.model.csv_headers:
             if field in before_obj or field in after_obj:
                 before_val = before_obj.get(field, "")
@@ -494,7 +488,7 @@ class DiffDetailView(View):
                     before_style = "bg-danger"
                     after_style = "bg-success"
 
-                diff_obj.append(
+                json_diff.append(
                     {
                         "name": field,
                         "before_val": before_val,
@@ -504,51 +498,59 @@ class DiffDetailView(View):
                     }
                 )
 
-        return diff_obj
+        return json_diff
 
-    def get_model(self, kwargs):
-        return ContentType.objects.get(
-            app_label=kwargs["app_label"], model=kwargs["model"]
-        ).model_class()
+    def get_objs(self, kwargs):
+        pk = kwargs["pk"]
+        from_commit = kwargs["from_commit"]
+        to_commit = kwargs["to_commit"]
+        qs = self.model.objects.all()
+        before_obj, after_obj = None, None
 
-    def display_name(self, kwargs):
-        return self.get_model(kwargs)._meta.verbose_name.capitalize()
+        from_qs = qs.using(db_for_commit(from_commit))
+        if from_qs.filter(pk=pk).exists():
+            before_obj = self.serialize_object(from_qs.get(pk=pk))
+        to_qs = qs.using(db_for_commit(to_commit))
+        if to_qs.filter(pk=pk).exists():
+            after_obj = self.serialize_object(to_qs.get(pk=pk))
 
+        return before_obj, after_obj
 
-def serialize_object(obj, extra=None, exclude=None):
-    """
-    Return a generic JSON representation of an object using Django's built-in serializer. (This is used for things like
-    change logging, not the REST API.) Optionally include a dictionary to supplement the object data. A list of keys
-    can be provided to exclude them from the returned dictionary. Private fields (prefaced with an underscore) are
-    implicitly excluded.
-    """
-    json_str = serialize("json", [obj])
-    data = json.loads(json_str)[0]["fields"]
+    @staticmethod
+    def serialize_object(obj, extra=None, exclude=None):
+        """
+        Return a generic JSON representation of an object using Django's built-in serializer. (This is used for things like
+        change logging, not the REST API.) Optionally include a dictionary to supplement the object data. A list of keys
+        can be provided to exclude them from the returned dictionary. Private fields (prefaced with an underscore) are
+        implicitly excluded.
+        """
+        json_str = serialize("json", [obj])
+        data = json.loads(json_str)[0]["fields"]
 
-    # Include custom_field_data as "custom_fields"
-    if hasattr(obj, "_custom_field_data"):
-        data["custom_fields"] = data.pop("_custom_field_data")
+        # Include custom_field_data as "custom_fields"
+        if hasattr(obj, "_custom_field_data"):
+            data["custom_fields"] = data.pop("_custom_field_data")
 
-    # Include any tags. Check for tags cached on the instance; fall back to using the manager.
-    if is_taggable(obj):
-        tags = getattr(obj, "_tags", []) or obj.tags.all()
-        data["tags"] = [tag.name for tag in tags]
+        # Include any tags. Check for tags cached on the instance; fall back to using the manager.
+        if is_taggable(obj):
+            tags = getattr(obj, "_tags", []) or obj.tags.all()
+            data["tags"] = [tag.name for tag in tags]
 
-    # Append any extra data
-    if extra is not None:
-        data.update(extra)
+        # Append any extra data
+        if extra is not None:
+            data.update(extra)
 
-    # Copy keys to list to avoid 'dictionary changed size during iteration' exception
-    for key in list(data):
-        # Private fields shouldn't be logged in the object change
-        if isinstance(key, str) and key.startswith("_"):
-            data.pop(key)
+        # Copy keys to list to avoid 'dictionary changed size during iteration' exception
+        for key in list(data):
+            # Private fields shouldn't be logged in the object change
+            if isinstance(key, str) and key.startswith("_"):
+                data.pop(key)
 
-        # Explicitly excluded keys
-        if isinstance(exclude, (list, tuple)) and key in exclude:
-            data.pop(key)
+            # Explicitly excluded keys
+            if isinstance(exclude, (list, tuple)) and key in exclude:
+                data.pop(key)
 
-    return data
+        return data
 
 
 #
