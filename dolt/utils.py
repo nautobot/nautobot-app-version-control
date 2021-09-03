@@ -1,3 +1,7 @@
+class DoltError(Exception):
+    pass
+
+
 def author_from_user(usr):
     if usr and usr.username and usr.email:
         return f"{usr.username} <{usr.email}>"
@@ -5,5 +9,5 @@ def author_from_user(usr):
     return "nautobot <nautobot@ntc.com>"
 
 
-class DoltError(Exception):
-    pass
+def is_health_check(request):
+    return "/health" in request.path

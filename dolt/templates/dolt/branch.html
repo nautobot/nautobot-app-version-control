@@ -28,6 +28,11 @@
             </form>
         </div>
     </div>
+    <div class="pull-right noprint">
+       <a href="{% url 'plugins:dolt:branch_checkout' pk=object.name %}" class="btn btn-primary" title="checkout">
+           Checkout
+       </a>
+    </div>
     <h1>{% block title %}{{ object }}{% endblock %}</h1>
     {% include 'inc/created_updated.html' %}
     <div class="pull-right noprint">

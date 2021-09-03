@@ -5,6 +5,8 @@ from django.db.models.signals import m2m_changed, post_save, pre_delete
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
 
+from health_check.db.models import TestModel
+
 from nautobot.extras.models.change_logging import ObjectChange
 
 from dolt.constants import (
@@ -13,7 +15,7 @@ from dolt.constants import (
 )
 from dolt.versioning import query_on_branch
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
-from dolt.utils import DoltError
+from dolt.utils import DoltError, is_health_check
 
 
 def branch_from_request(request):
@@ -56,6 +58,9 @@ class DoltBranchMiddleware:
             return redirect(request.path)
 
     def get_branch(self, request):
+        if is_health_check(request):
+            return self.get_or_create_health_branch()
+
         # lookup the active branch in the session cookie
         requested = branch_from_request(request)
         try:
@@ -69,6 +74,16 @@ class DoltBranchMiddleware:
             )
             request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
+
+    @staticmethod
+    def get_or_create_health_branch():
+        """
+        Special case for django-health-check requests
+        """
+        hc = "xxx-health-check"
+        if not Branch.objects.filter(pk=hc).exists():
+            Branch(name=hc, starting_branch=DOLT_DEFAULT_BRANCH).save()
+        return Branch.objects.get(pk=hc)
 
 
 class DoltAutoCommitMiddleware(object):
@@ -104,6 +119,10 @@ class AutoDoltCommit(object):
         pre_delete.connect(self._handle_delete, dispatch_uid="dolt_commit_delete")
 
     def __exit__(self, type, value, traceback):
+        if is_health_check(self.request):
+            # don't autocommit django-health-checks
+            return
+
         if self.commit:
             self._commit()
 
@@ -140,6 +159,14 @@ class AutoDoltCommit(object):
         """
         self.commit = True
 
+    @staticmethod
+    def is_pr_object(instance):
+        pr_models = (
+            PullRequest,
+            PullRequestReview,
+        )
+        return type(instance) in pr_models
+
     def _commit(self):
         msg = self._get_commit_message()
         Commit(message=msg).save(
@@ -151,14 +178,6 @@ class AutoDoltCommit(object):
         if not self.changes:
             return "auto dolt commit"
         return "; ".join(self.changes)
-
-    @staticmethod
-    def is_pr_object(instance):
-        pr_models = (
-            PullRequest,
-            PullRequestReview,
-        )
-        return type(instance) in pr_models
 
     @staticmethod
     def change_msg_for_pr(instance, kwargs):
