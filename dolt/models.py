@@ -109,8 +109,8 @@ class Branch(DoltSystemTable):
             if squash:
                 cursor.execute(
                     f"""SELECT dolt_merge(
-                        '--no-ff',
-                        '{squash}'
+                        '--squash',
+                        '{merge_branch}'
                     ) FROM dual;"""
                 )
             else:
