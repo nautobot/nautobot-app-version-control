@@ -79,12 +79,20 @@ class Branch(DoltSystemTable):
 
     @property
     def ahead_behind(self):
-        merge_base = Commit.merge_base(self.name, 'main')
+        merge_base = Commit.merge_base(self.name, "main")
         merge_base_commit = Commit.objects.get(commit_hash=merge_base)
         main_hash = Branch.objects.get(name="main").hash
 
-        ahead = Commit.objects.filter(date__gt=merge_base_commit.date).using(db_for_commit(self.hash)).count()
-        behind = Commit.objects.filter(date__gt=merge_base_commit.date).using(db_for_commit(main_hash)).count()
+        ahead = (
+            Commit.objects.filter(date__gt=merge_base_commit.date)
+            .using(db_for_commit(self.hash))
+            .count()
+        )
+        behind = (
+            Commit.objects.filter(date__gt=merge_base_commit.date)
+            .using(db_for_commit(main_hash))
+            .count()
+        )
 
         return f"{ahead} ahead / {behind} behind"
 
