@@ -86,6 +86,9 @@
                 </tr>
             </table>
         </div>
+        <a href="{% url 'plugins:dolt:branch_checkout' pk=object.name %}" class="btn btn-xs btn-primary" title="checkout">
+            Checkout
+        </a>
     </div>
     <div class="col-md-3"></div>
     <div class="col-md-3">
