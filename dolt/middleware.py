@@ -59,7 +59,7 @@ class DoltBranchMiddleware:
 
     def get_branch(self, request):
         if is_health_check(request):
-            return self.get_or_create_health_branch(request)
+            return self.get_or_create_health_branch()
 
         # lookup the active branch in the session cookie
         requested = branch_from_request(request)
@@ -76,13 +76,14 @@ class DoltBranchMiddleware:
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
 
     @staticmethod
-    def get_or_create_health_branch(request):
+    def get_or_create_health_branch():
         """
         Special case for django-health-check requests
         """
-        if not Branch.objects.filter(pk="health_check").exists():
-            Branch(name="health_check", starting_branch=DOLT_DEFAULT_BRANCH).save()
-        return Branch.objects.get(pk="health_check")
+        hc = "xxx-health-check"
+        if not Branch.objects.filter(pk=hc).exists():
+            Branch(name=hc, starting_branch=DOLT_DEFAULT_BRANCH).save()
+        return Branch.objects.get(pk=hc)
 
 
 class DoltAutoCommitMiddleware(object):
