@@ -492,7 +492,7 @@ class DiffDetailView(View):
         Replace `commit` with a more semantically meaningful
         identifier, if possible
         """
-        if Branch.objects.filter(hash=str(commit)).exists():
+        if Branch.objects.filter(hash=str(commit)).count() == 1:
             b = Branch.objects.get(hash=str(commit))
             url = b.get_absolute_url()
             return mark_safe(f"<a href='{url}'>{b}</a>")
