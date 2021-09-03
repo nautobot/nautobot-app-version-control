@@ -23,6 +23,7 @@ class NautobotDolt(PluginConfig):
         "CACHEOPS_ENABLED": False,
     }
     middleware = [
+        "dolt.middleware.dolt_health_check_intercept_middleware",
         "dolt.middleware.DoltBranchMiddleware",
         "dolt.middleware.DoltAutoCommitMiddleware",
     ]
