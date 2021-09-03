@@ -685,6 +685,7 @@ class PullRequestMergeView(generic.ObjectEditView):
     queryset = PullRequest.objects.all()
     form = ConfirmationForm()
     template_name = "dolt/pull_request/confirm_merge.html"
+    squash = False
 
     def get(self, request, pk):
         pr = get_object_or_404(self.queryset, pk=pk)
@@ -694,6 +695,10 @@ class PullRequestMergeView(generic.ObjectEditView):
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
         src = Branch.objects.get(name=pr.source_branch)
         dest = Branch.objects.get(name=pr.destination_branch)
+        squash_param = request.GET.get('squash')
+        if squash_param == "true":
+            self.squash = True
+
         return render(
             request,
             self.template_name,
@@ -711,7 +716,7 @@ class PullRequestMergeView(generic.ObjectEditView):
         form = ConfirmationForm(request.POST)
 
         if form.is_valid():
-            pr.merge(user=request.user)
+            pr.merge(user=request.user, squash=self.squash)
             messages.success(
                 request,
                 mark_safe(f"""Pull Request <strong>"{pr}"</strong> has been merged."""),

@@ -25,6 +25,11 @@
                     Merge
                 </a>
             {% endif %}
+            {% if object.status == "approved" %}
+                <a href="{% url 'plugins:dolt:pull_request_merge' pk=object.pk %}?squash=true" type="button" class="btn btn-info">
+                    Squash and Merge
+                </a>
+            {% endif %}
             <a href="{% url 'plugins:dolt:pull_request_close' pk=object.pk %}" type="button" class="btn btn-danger">
                 <span class="mdi mdi-close-thick" aria-hidden="true"></span> Close
             </a>
