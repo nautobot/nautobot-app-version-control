@@ -694,7 +694,6 @@ class PullRequestMergeView(generic.ObjectEditView):
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
         src = Branch.objects.get(name=pr.source_branch)
         dest = Branch.objects.get(name=pr.destination_branch)
-
         return render(
             request,
             self.template_name,
@@ -711,7 +710,7 @@ class PullRequestMergeView(generic.ObjectEditView):
         pr = get_object_or_404(self.queryset, pk=pk)
         form = ConfirmationForm(request.POST)
         squash_param = request.POST.get("merge_squash", False)
-        if squash_param is "true":
+        if squash_param == "true":
             squash_param = True
 
         if form.is_valid():
