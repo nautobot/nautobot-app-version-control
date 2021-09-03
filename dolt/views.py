@@ -450,12 +450,15 @@ class DiffDetailView(View):
 
     def get(self, req, *args, **kwargs):
         self.model = self.get_model(kwargs)
+        before_obj, after_obj = self.get_objs(kwargs)
         return render(
             req,
             self.template_name,
             {
-                "verbose_name": self.display_name(kwargs),
-                "diff_obj": self.get_json_diff(kwargs),
+                "title": self.title(before_obj, after_obj),
+                "display_name": self.display_name(kwargs),
+                "diff_obj": self.get_json_diff(before_obj, after_obj),
+                **self.breadcrumb(kwargs),
             },
         )
 
@@ -464,11 +467,62 @@ class DiffDetailView(View):
             app_label=kwargs["app_label"], model=kwargs["model"]
         ).model_class()
 
+    @staticmethod
+    def title(before_obj, after_obj):
+        if before_obj and after_obj:
+            return f"Updated {after_obj}"
+        elif after_obj:
+            return f"Added {after_obj}"
+        else:
+            return f"Deleted {before_obj}"
+
+    def breadcrumb(self, kwargs):
+        return {
+            "breadcrumb": {
+                "app_label": kwargs["app_label"],
+                "model": self.display_name(kwargs),
+                "from": self.match_commit(kwargs["from_commit"]),
+                "to": self.match_commit(kwargs["to_commit"]),
+            }
+        }
+
+    @staticmethod
+    def match_commit(commit):
+        """
+        Replace `commit` with a more semantically meaningful
+        identifier, if possible
+        """
+        if Branch.objects.filter(hash=str(commit)).exists():
+            b = Branch.objects.get(hash=str(commit))
+            url = b.get_absolute_url()
+            return mark_safe(f"<a href='{url}'>{b}</a>")
+        elif Commit.objects.filter(commit_hash=str(commit)).exists():
+            c = Commit.objects.get(commit_hash=str(commit))
+            url = c.get_absolute_url()
+            return mark_safe(f"<a href='{url}'>{c}</a>")
+        return commit
+
     def display_name(self, kwargs):
         return self.get_model(kwargs)._meta.verbose_name.capitalize()
 
-    def get_json_diff(self, kwargs):
-        before_obj, after_obj = self.get_objs(kwargs)
+    def get_objs(self, kwargs):
+        pk = kwargs["pk"]
+        from_commit = kwargs["from_commit"]
+        to_commit = kwargs["to_commit"]
+        qs = self.model.objects.all()
+        before_obj, after_obj = None, None
+
+        from_qs = qs.using(db_for_commit(from_commit))
+        if from_qs.filter(pk=pk).exists():
+            before_obj = from_qs.get(pk=pk)
+        to_qs = qs.using(db_for_commit(to_commit))
+        if to_qs.filter(pk=pk).exists():
+            after_obj = to_qs.get(pk=pk)
+        return before_obj, after_obj
+
+    def get_json_diff(self, before_obj, after_obj):
+        before_obj = self.serialize_obj(before_obj)
+        after_obj = self.serialize_obj(after_obj)
         added = not before_obj
         removed = not after_obj
 
@@ -499,23 +553,9 @@ class DiffDetailView(View):
 
         return json_diff
 
-    def get_objs(self, kwargs):
-        pk = kwargs["pk"]
-        from_commit = kwargs["from_commit"]
-        to_commit = kwargs["to_commit"]
-        qs = self.model.objects.all()
-        before_obj, after_obj = {}, {}
-
-        from_qs = qs.using(db_for_commit(from_commit))
-        if from_qs.filter(pk=pk).exists():
-            before_obj = self.serialize_obj(from_qs.get(pk=pk))
-        to_qs = qs.using(db_for_commit(to_commit))
-        if to_qs.filter(pk=pk).exists():
-            after_obj = self.serialize_obj(to_qs.get(pk=pk))
-
-        return before_obj, after_obj
-
     def serialize_obj(self, obj):
+        if not obj:
+            return {}
         json = {}
         fields = {f.name for f in obj._meta.fields}
         fields |= set(self.model.csv_headers)

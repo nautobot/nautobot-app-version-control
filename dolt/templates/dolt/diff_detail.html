@@ -6,6 +6,23 @@
 {% load tz %}
 
 {% block header %}
+<div class="row noprint">
+    <div class="col-sm-8 col-md-9">
+        <ol class="breadcrumb">
+            <li>Diff</li>
+            <li>{{ breadcrumb.model }}</li>
+            <li>From</li>
+            <li>{{ breadcrumb.from }}</li>
+            <li>To</li>
+            <li>{{ breadcrumb.to }}</li>
+        </ol>
+    </div>
+</div>
+<h1>
+    {% block title %}
+    {{ title }}
+    {% endblock %}
+</h1>
 {% endblock %}
 
 {% block content %}
@@ -13,7 +30,7 @@
     <div class="col-md-7">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <strong>{{ verbose_name }}</strong>
+                <strong>{{ display_name }} Diff</strong>
             </div>
             <table class="table table-hover panel-body attr-table">
                 {% if diff_obj %}
