@@ -516,13 +516,18 @@ class DiffDetailView(View):
 
         return before_obj, after_obj
 
-    @staticmethod
-    def serialize_obj(obj):
-        stringify = lambda val: str(val) if val else " - "
-        return {
-            str(field.name): stringify(getattr(obj, field.name))
-            for field in obj._meta.fields
-        }
+    def serialize_obj(self, obj):
+        json = {}
+        fields = {f.name for f in obj._meta.fields}
+        fields |= set(self.model.csv_headers)
+        for field in fields:
+            try:
+                val = getattr(obj, field)
+                val = str(val) if val else "-"
+                json[field] = val
+            except AttributeError:
+                continue
+        return json
 
 
 #
