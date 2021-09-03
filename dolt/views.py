@@ -710,7 +710,7 @@ class PullRequestMergeView(generic.ObjectEditView):
     def post(self, request, pk):
         pr = get_object_or_404(self.queryset, pk=pk)
         form = ConfirmationForm(request.POST)
-        squash_param = request.POST.get('merge_squash', False)
+        squash_param = request.POST.get("merge_squash", False)
         if squash_param is "true":
             squash_param = True
 
