@@ -470,8 +470,8 @@ class DiffDetailView(View):
 
     def get_json_diff(self, kwargs):
         before_obj, after_obj = self.get_objs(kwargs)
-        added = before_obj is None
-        removed = after_obj is None
+        added = not before_obj
+        removed = not after_obj
 
         json_diff = []
         for field in self.model.csv_headers:
@@ -505,7 +505,7 @@ class DiffDetailView(View):
         from_commit = kwargs["from_commit"]
         to_commit = kwargs["to_commit"]
         qs = self.model.objects.all()
-        before_obj, after_obj = None, None
+        before_obj, after_obj = {}, {}
 
         from_qs = qs.using(db_for_commit(from_commit))
         if from_qs.filter(pk=pk).exists():
