@@ -671,12 +671,16 @@ class PullRequestEditView(generic.ObjectEditView):
         initial = {
             "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
         }
+        obj = self.get_object(kwargs)
         return render(
             req,
             self.template_name,
             {
+                "obj": obj,
                 "obj_type": self.queryset.model._meta.verbose_name,
                 "form": self.model_form(initial=initial),
+                "return_url": self.get_return_url(req, obj),
+                "editing": obj.present_in_database,
             },
         )
 
