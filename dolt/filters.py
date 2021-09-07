@@ -2,7 +2,7 @@ import django_filters
 from django.db.models import Q
 
 from nautobot.utilities.filters import BaseFilterSet
-from dolt.models import Branch, Commit, PullRequest
+from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 
 
 class BranchFilterSet(BaseFilterSet):
@@ -92,4 +92,33 @@ class PullRequestFilterSet(BaseFilterSet):
             | Q(destination_branch__icontains=value)
             | Q(description__icontains=value)
             | Q(creator__icontains=value)
+        )
+
+
+class PullRequestCommentFilterSet(BaseFilterSet):
+    q = django_filters.CharFilter(
+        method="search",
+        label="Search",
+    )
+
+    class Meta:
+        model = PullRequestReview
+        # todo: pull request id
+        fields = (
+            "pull_request",
+            "reviewer",
+            "state",
+            "reviewed_at",
+            "summary",
+        )
+
+    def search(self, queryset, name, value):
+        value = value.strip()
+        if not value:
+            return queryset
+        return queryset.filter(
+            Q(reviewer__icontains=value)
+            | Q(reviewed_at__icontains=value)
+            | Q(state__icontains=PullRequestReview.COMMENTED)
+            | Q(summary__icontains=value)
         )

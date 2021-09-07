@@ -325,7 +325,7 @@ class ConstraintViolations(DoltSystemTable):
 @extras_features(
     "webhooks",
 )
-class PullRequest(BaseModel):
+class sPullRequest(BaseModel):
     OPEN = 0
     MERGED = 1
     CLOSED = 2

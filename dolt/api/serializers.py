@@ -1,5 +1,5 @@
 from nautobot.core.api import ValidatedModelSerializer
-from dolt.models import Branch, Commit
+from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 
 
 class BranchSerializer(ValidatedModelSerializer):
@@ -25,3 +25,23 @@ class CommitSerializer(ValidatedModelSerializer):
             "date",
             "message",
         ]
+
+
+class PullRequestSerializer(ValidatedModelSerializer):
+    class Meta:
+        model = PullRequest
+        fields = [
+            "title",
+            "state",
+            "source_branch",
+            "destination_branch",
+            "description",
+            "creator",
+            "created_at",
+        ]
+
+
+class PullRequestCommentsSerializer(ValidatedModelSerializer):
+    class Meta:
+        model = PullRequestReview
+        fields = ["pull_request", "reviewer", "reviewed_at", "state", "summary"]
