@@ -88,6 +88,7 @@ class PullRequestFilterSet(BaseFilterSet):
             return queryset
         return queryset.filter(
             Q(title__icontains=value)
+            | Q(state__icontains=value)
             | Q(source_branch__icontains=value)
             | Q(destination_branch__icontains=value)
             | Q(description__icontains=value)
