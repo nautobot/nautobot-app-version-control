@@ -1,12 +1,11 @@
-from django.contrib.contenttypes.models import ContentType
 from django.contrib.sessions.backends.db import SessionStore
 from django.db import connections
 from django.utils.safestring import mark_safe
 
-from . import is_versioned_model, is_pr_model
+from . import is_versioned_model
 from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH, GLOBAL_DB
 from dolt.models import Branch
-from dolt.utils import DoltError
+from dolt.utils import DoltError, is_dolt_model
 
 
 class GlobalStateRouter:
@@ -44,15 +43,17 @@ class GlobalStateRouter:
             # to "global", even for versioned models
             return self.global_db
 
-        if is_pr_model(model):
-            # PullRequests can be created or edited from any branch.
-            # Edits will be applied to the primary branch
+        if is_dolt_model(model):
+            # Dolt models can be created or edited from any branch.
+            # Edits will be applied to the "main"
             return self.global_db
 
         if is_versioned_model(model):
             return None
 
         if self._branch_is_not_primary():
+            breakpoint()
+            # non-versioned models can only be edited on "main"
             raise DoltError(
                 mark_safe(
                     f"""Error writing <strong>{model.__name__}</strong>: non-versioned models 

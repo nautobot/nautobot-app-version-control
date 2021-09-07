@@ -135,20 +135,6 @@ def is_versioned_model(model):
     return _lookup_allowlist(model, allowlist)
 
 
-def is_pr_model(model):
-    """
-    Return True is `model` is related to PullRequests.
-    """
-    allowlist = {
-        "dolt": {
-            "pullrequest": True,
-            "pullrequestreviewcomment": True,
-            "pullrequestreview": True,
-        },
-    }
-    return _lookup_allowlist(model, allowlist)
-
-
 def _lookup_allowlist(model, allowlist):
     """
     performs a lookup on allowlists with the structure
