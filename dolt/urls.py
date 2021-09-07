@@ -66,6 +66,11 @@ urlpatterns = [
         name="pull_request",
     ),
     path(
+        "pull-request/<str:pk>/edit",
+        views.PullRequestEditView.as_view(),
+        name="pull_request_edit",
+    ),
+    path(
         "pull-request/<str:pk>/merge",
         views.PullRequestMergeView.as_view(),
         name="pull_request_merge",

@@ -668,15 +668,26 @@ class PullRequestEditView(generic.ObjectEditView):
     template_name = "dolt/pull_request/edit.html"
 
     def get(self, req, *args, **kwargs):
+        obj = self.get_object(kwargs)
         initial = {
             "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
         }
+
+        if obj.present_in_database:
+            initial["title"] = obj.title
+            initial["source_branch"] = obj.source_branch
+            initial["destination_branch"] = obj.destination_branch
+            initial["description"] = obj.description
+
         return render(
             req,
             self.template_name,
             {
+                "obj": obj,
                 "obj_type": self.queryset.model._meta.verbose_name,
                 "form": self.model_form(initial=initial),
+                "return_url": self.get_return_url(req, obj),
+                "editing": obj.present_in_database,
             },
         )
 
