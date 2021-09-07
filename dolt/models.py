@@ -120,17 +120,25 @@ class Branch(DoltSystemTable):
     def head(self):
         return Commit.objects.get(commit_hash=self.hash)
 
-    def merge(self, merge_branch, user=None):
+    def merge(self, merge_branch, user=None, squash=False):
         author = author_from_user(user)
         with connection.cursor() as cursor:
             cursor.execute("SET dolt_force_transaction_commit = 1;")
             cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
-            cursor.execute(
-                f"""SELECT dolt_merge(
-                    '--no-ff',
-                    '{merge_branch}'
-                ) FROM dual;"""
-            )
+            if squash:
+                cursor.execute(
+                    f"""SELECT dolt_merge(
+                        '--squash',
+                        '{merge_branch}'
+                    ) FROM dual;"""
+                )
+            else:
+                cursor.execute(
+                    f"""SELECT dolt_merge(
+                        '--no-ff',
+                        '{merge_branch}'
+                    ) FROM dual;"""
+                )
             success = cursor.fetchone()[0] == 1
             if success:
                 # only commit merged data on success
@@ -421,11 +429,11 @@ class PullRequest(BaseModel):
     def get_merge_candidate(self):
         pass
 
-    def merge(self, user=None):
+    def merge(self, user=None, squash=False):
         try:
             src = Branch.objects.get(name=self.source_branch)
             dest = Branch.objects.get(name=self.destination_branch)
-            dest.merge(src, user=user)
+            dest.merge(src, user=user, squash=squash)
         except ObjectDoesNotExist as e:
             raise DoltError(f"error merging Pull Request {self}: {e}")
         self.state = PullRequest.MERGED

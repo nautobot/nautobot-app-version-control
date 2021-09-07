@@ -759,9 +759,12 @@ class PullRequestMergeView(generic.ObjectEditView):
     def post(self, request, pk):
         pr = get_object_or_404(self.queryset, pk=pk)
         form = ConfirmationForm(request.POST)
+        squash_param = request.POST.get("merge_squash", False)
+        if squash_param == "true":
+            squash_param = True
 
         if form.is_valid():
-            pr.merge(user=request.user)
+            pr.merge(user=request.user, squash=squash_param)
             messages.success(
                 request,
                 mark_safe(f"""Pull Request <strong>"{pr}"</strong> has been merged."""),
