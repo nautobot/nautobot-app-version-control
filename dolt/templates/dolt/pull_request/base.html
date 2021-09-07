@@ -48,6 +48,11 @@
         <span class="label label-danger">Unknown</span>
         {% endif %}
     </h1>
+    <div class="pull-right noprint">
+        <a href="{% url 'plugins:dolt:pull_request_edit' pk=object.pk %}" type="button" class="btn btn-warning">
+            <span class="mdi mdi-close-thick" aria-hidden="true"></span> Edit
+        </a>
+    </div>
     {% include 'inc/created_updated.html' %}
     <ul class="nav nav-tabs">
         <li role="presentation" {% if active_tab == 'diffs' %} class="active"{% endif %}>

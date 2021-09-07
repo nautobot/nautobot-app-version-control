@@ -95,4 +95,9 @@ urlpatterns = [
         views.PullRequestCommitListView.as_view(),
         name="pull_request_commits",
     ),
+    path(
+        "pull-request/<str:pk>/edit",
+        views.PullRequestEditView.as_view(),
+        name="pull_request_edit",
+    )
 ]
