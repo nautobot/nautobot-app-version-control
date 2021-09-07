@@ -674,10 +674,10 @@ class PullRequestEditView(generic.ObjectEditView):
         }
 
         if obj.present_in_database:
-            initial['title'] = obj.title
-            initial['source_branch'] = obj.source_branch
-            initial['destination_branch'] = obj.destination_branch
-            initial['description'] = obj.description
+            initial["title"] = obj.title
+            initial["source_branch"] = obj.source_branch
+            initial["destination_branch"] = obj.destination_branch
+            initial["description"] = obj.description
 
         return render(
             req,
