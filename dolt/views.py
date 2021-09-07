@@ -76,6 +76,7 @@ class BranchEditView(generic.ObjectEditView):
     def get(self, req, *args, **kwargs):
         initial = {
             "starting_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
+            "creator": req.user,
         }
         return render(
             req,

@@ -175,7 +175,7 @@ class Branch(DoltSystemTable):
             )
             meta, _ = BranchMeta.objects.get_or_create(branch=self.name)
             meta.source_branch = str(self.starting_branch)
-            # meta.author = self.creator
+            meta.author = self.creator
             meta.created = datetime.now()
             meta.save()
 

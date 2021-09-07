@@ -18,6 +18,12 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
     starting_branch = forms.ModelChoiceField(
         queryset=Branch.objects.all(), to_field_name="name", required=True
     )
+    creator = forms.ModelChoiceField(
+        queryset=User.objects.all(),
+        to_field_name="username",
+        required=True,
+        widget=forms.HiddenInput(),
+    )
 
     class Meta:
         model = Branch
@@ -31,8 +37,8 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
         super().__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        # self.instance.user = self.user
         self.instance.starting_branch = self.cleaned_data["starting_branch"]
+        self.instance.creator = self.cleaned_data["creator"]
         return super().save(*args, **kwargs)
 
 
