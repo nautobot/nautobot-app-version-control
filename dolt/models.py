@@ -196,7 +196,8 @@ class Commit(DoltSystemTable):
 
     @property
     def short_message(self):
-        return self.message.split(";")[0]
+        split = self.message.split(";")
+        return split[0] + f". Total number of changes: {len(split)}"
 
     @property
     def present_in_database(self):
