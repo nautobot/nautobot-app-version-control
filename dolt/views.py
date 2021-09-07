@@ -690,7 +690,7 @@ class PullRequestAddView(generic.ObjectEditView):
 class PullRequestEditView(generic.ObjectEditView):
     queryset = PullRequest.objects.all()
     model_form = forms.PullRequestForm
-    template_name = "dolt/pull_request/add.html"
+    template_name = "dolt/pull_request/edit.html"
 
     def get(self, req, pk):
         pr = get_object_or_404(self.queryset, pk=pk)
@@ -706,6 +706,7 @@ class PullRequestEditView(generic.ObjectEditView):
             {
                 "obj_type": self.queryset.model._meta.verbose_name,
                 "form": self.model_form(initial=initial),
+                "pk": pr.pk,
             },
         )
 
@@ -714,6 +715,7 @@ class PullRequestEditView(generic.ObjectEditView):
         form = forms.PullRequestForm(req.POST, instance=pr)
 
         if form.is_valid():
+            pr = form.save()
             pr.save()
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
 

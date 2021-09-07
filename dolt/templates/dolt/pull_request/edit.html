@@ -1,0 +1,20 @@
+{% extends 'generic/object_edit.html' %}
+{% load form_helpers %}
+
+{% block form %}
+<div class="panel panel-default">
+    <div class="panel-heading"><strong>Edit Pull Request</strong></div>
+    <div class="panel-body">
+        {% render_field form.title %}
+        {% render_field form.source_branch %}
+        {% render_field form.destination_branch %}
+        {% render_field form.description %}
+    </div>
+</div>
+<div class="pull-right">
+    <a href="{% url 'plugins:dolt:pull_request_edit' pk=pk %}">
+        <button type="submit" name="_confirm" class="btn btn-primary">Save</button>
+    </a>
+</div>
+
+{% endblock %}
