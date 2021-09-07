@@ -662,10 +662,10 @@ class PullRequestCommitListView(PullRequestBase):
         return ctx
 
 
-class PullRequestEditView(generic.ObjectEditView):
+class PullRequestAddView(generic.ObjectEditView):
     queryset = PullRequest.objects.all()
     model_form = forms.PullRequestForm
-    template_name = "dolt/pull_request/edit.html"
+    template_name = "dolt/pull_request/add.html"
 
     def get(self, req, *args, **kwargs):
         initial = {
@@ -686,6 +686,36 @@ class PullRequestEditView(generic.ObjectEditView):
         obj.creator = request.user
         return obj
 
+
+class PullRequestEditView(generic.ObjectEditView):
+    queryset = PullRequest.objects.all()
+    model_form = forms.PullRequestForm
+    template_name = "dolt/pull_request/add.html"
+
+    def get(self, req, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        initial = {
+            "title": pr.title,
+            "source_branch": pr.source_branch,
+            "destination_branch": pr.destination_branch,
+            "description": pr.description
+        }
+        return render(
+            req,
+            self.template_name,
+            {
+                "obj_type": self.queryset.model._meta.verbose_name,
+                "form": self.model_form(initial=initial),
+            },
+        )
+
+    def post(self, req, pk):
+        pr = get_object_or_404(self.queryset, pk=pk)
+        form = forms.PullRequestForm(req.POST, instance=pr)
+
+        if form.is_valid():
+            pr.save()
+            return redirect("plugins:dolt:pull_request", pk=pr.pk)
 
 class PullRequestReviewEditView(generic.ObjectEditView):
     queryset = PullRequestReview.objects.all()

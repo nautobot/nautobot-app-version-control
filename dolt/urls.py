@@ -57,7 +57,7 @@ urlpatterns = [
     ),
     path(
         "pull-request/add/",
-        views.PullRequestEditView.as_view(),
+        views.PullRequestAddView.as_view(),
         name="pull_request_add",
     ),
     path(
