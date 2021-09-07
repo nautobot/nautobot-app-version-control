@@ -22,7 +22,7 @@ from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequired
 
 from dolt import diffs, filters, forms, merge, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
-from dolt.versioning import db_for_commit, query_on_branch, change_branches
+from dolt.versioning import db_for_commit, query_on_branch, alter_session_branch
 from dolt.diffs import content_type_has_diff_view_table
 from dolt.models import (
     Branch,
@@ -64,7 +64,7 @@ class BranchCheckoutView(View):
 
     def get(self, req, *args, **kwargs):
         # new branch will be checked out on redirect
-        change_branches(sess=req.session, branch=kwargs["pk"])
+        alter_session_branch(sess=req.session, branch=kwargs["pk"])
         return redirect("/")
 
 
@@ -90,7 +90,7 @@ class BranchEditView(generic.ObjectEditView):
         form = self.model_form(data=req.POST, files=req.FILES)
         response = super().post(req, *args, **kwargs)
         if self._is_success_response(response):
-            change_branches(sess=req.session, branch=form.data.get("name"))
+            alter_session_branch(sess=req.session, branch=form.data.get("name"))
         return response
 
     def _is_success_response(self, response):
@@ -266,7 +266,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
         messages.info(
             req, mark_safe(f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>")
         )
-        change_branches(sess=req.session, branch=dest)
+        alter_session_branch(sess=req.session, branch=dest)
         return redirect(f"/")
 
     def get_extra_context(self, req, src, dest):

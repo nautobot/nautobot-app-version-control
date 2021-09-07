@@ -10,7 +10,7 @@ from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
 
-from dolt.versioning import db_for_commit, query_on_main_branch
+from dolt.versioning import db_for_commit
 from dolt.utils import author_from_user, DoltError
 
 
@@ -67,12 +67,6 @@ class Branch(DoltSystemTable):
         # determines `editing` flag in forms
         return Branch.objects.filter(name=self.name).exists()
 
-    @staticmethod
-    def active_branch():
-        # query must have a primary key in result schema
-        q = "SELECT name FROM dolt_branches WHERE name = active_branch();"
-        return Branch.objects.raw(q)[0].name
-
     @property
     def active(self):
         return self.name == self.active_branch()
@@ -111,6 +105,16 @@ class Branch(DoltSystemTable):
         m = self._branch_meta()
         return m.source_branch if m else None
 
+    @staticmethod
+    def active_branch():
+        # query must have a primary key in result schema
+        q = "SELECT name FROM dolt_branches WHERE name = active_branch();"
+        return Branch.objects.raw(q)[0].name
+
+    def checkout(self):
+        with connection.cursor() as cursor:
+            cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
+
     def _branch_meta(self):
         try:
             return BranchMeta.objects.get(branch=self.name)
@@ -122,9 +126,9 @@ class Branch(DoltSystemTable):
 
     def merge(self, merge_branch, user=None, squash=False):
         author = author_from_user(user)
+        self.checkout()
         with connection.cursor() as cursor:
             cursor.execute("SET dolt_force_transaction_commit = 1;")
-            cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
             if squash:
                 cursor.execute(
                     f"""SELECT dolt_merge(
@@ -245,7 +249,6 @@ class Commit(DoltSystemTable):
         author = author_from_user(user)
         conn = connections[using]
         with conn.cursor() as cursor:
-            cursor.execute(f"""SELECT dolt_checkout("{branch}") FROM dual;""")
             cursor.execute(
                 f"""
             SELECT dolt_commit(
@@ -256,12 +259,7 @@ class Commit(DoltSystemTable):
             FROM dual;"""
             )
             hash = cursor.fetchone()[0]
-        commit = Commit.objects.get(pk=hash)
-        self.commit_hash = commit.commit_hash
-        self.committer = commit.committer
-        self.email = commit.email
-        self.date = commit.date
-        self.message = commit.message
+        return Commit.objects.get(pk=hash)
 
 
 class CommitAncestor(DoltSystemTable):

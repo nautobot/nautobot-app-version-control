@@ -20,13 +20,7 @@ def query_on_branch(branch):
         cursor.execute(f"""SELECT dolt_checkout("{prev}") FROM dual;""")
 
 
-@contextmanager
-def query_on_main_branch():
-    with query_on_branch(DOLT_DEFAULT_BRANCH):
-        yield
-
-
-def change_branches(sess=None, branch=None):
+def alter_session_branch(sess=None, branch=None):
     if sess is None or branch is None:
         raise ValueError("invalid args to change_branches()")
     sess[DOLT_BRANCH_KEYWORD] = branch

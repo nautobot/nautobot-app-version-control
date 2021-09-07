@@ -43,8 +43,7 @@ class DoltBranchMiddleware:
     def process_view(self, request, view_func, view_args, view_kwargs):
         branch = self.get_branch(request)
         try:
-            with connection.cursor() as cursor:
-                cursor.execute(f"""SELECT dolt_checkout("{branch}") FROM dual;""")
+            branch.checkout()
         except Exception as e:
             msg = f"could not checkout branch {branch}: {str(e)}"
             messages.error(request, mark_safe(msg))
