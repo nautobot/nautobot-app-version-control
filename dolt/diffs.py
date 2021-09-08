@@ -14,7 +14,7 @@ from nautobot.utilities.tables import BaseTable
 from dolt.dynamic.diff_factory import DiffModelFactory, DiffListViewFactory
 from dolt.dynamic.model_view_map import content_type_has_diff_view_table
 from dolt.models import Commit
-from dolt.versioning import db_for_commit
+from dolt.utils import db_for_commit
 from dolt.functions import JSONObject
 
 

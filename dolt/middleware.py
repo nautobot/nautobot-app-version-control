@@ -15,7 +15,6 @@ from dolt.constants import (
     DOLT_BRANCH_KEYWORD,
     DOLT_DEFAULT_BRANCH,
 )
-from dolt.versioning import query_on_branch
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 from dolt.utils import DoltError, is_dolt_model
 

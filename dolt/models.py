@@ -11,9 +11,7 @@ from nautobot.extras.utils import extras_features
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
-
-from dolt.versioning import db_for_commit
-from dolt.utils import author_from_user, DoltError
+from dolt.utils import author_from_user, DoltError, db_for_commit
 
 
 class DoltSystemTable(models.Model):

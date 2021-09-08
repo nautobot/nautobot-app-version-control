@@ -11,13 +11,13 @@ from dolt.models import (
     ConstraintViolations,
     Commit,
 )
-from dolt.utils import author_from_user
+from dolt.utils import author_from_user, query_on_branch
 from dolt.tables import (
     ConflictsSummaryTable,
     ConflictsTable,
     ConstraintViolationsTable,
 )
-from dolt.versioning import query_on_branch
+
 
 # TODO: this file should be named "conflicts.py"
 
