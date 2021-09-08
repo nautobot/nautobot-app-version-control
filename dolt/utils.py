@@ -33,6 +33,12 @@ def alter_session_branch(sess=None, branch=None):
     sess[DOLT_BRANCH_KEYWORD] = branch
 
 
+def active_branch():
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT active_branch() FROM dual;")
+        return cursor.fetchone()[0]
+
+
 def db_for_commit(commit):
     """
     Uses "database-revision" syntax
@@ -52,8 +58,7 @@ def db_for_commit(commit):
 def query_on_branch(branch):
     # TODO: remove in favor of db_for_commit
     with connection.cursor() as cursor:
-        cursor.execute("SELECT active_branch() FROM dual;")
-        prev = cursor.fetchone()[0]
+        prev = active_branch()
         cursor.execute(f"""SELECT dolt_checkout("{branch}") FROM dual;""")
         yield
         cursor.execute(f"""SELECT dolt_checkout("{prev}") FROM dual;""")

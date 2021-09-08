@@ -1,6 +1,7 @@
 from django.test import TestCase
 
 from dolt.models import Branch
+from dolt.utils import active_branch
 from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
@@ -10,7 +11,7 @@ class TestBranches(TestCase):
 
     def test_default_branch(self):
         self.assertEqual(Branch.objects.filter(name=DOLT_DEFAULT_BRANCH).count(), 1)
-        self.assertEqual(Branch.active_branch(), DOLT_DEFAULT_BRANCH)
+        self.assertEqual(active_branch(), DOLT_DEFAULT_BRANCH)
 
     def test_create_branch(self):
         Branch(name="another", starting_branch=DOLT_DEFAULT_BRANCH).save()

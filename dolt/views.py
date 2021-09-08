@@ -22,7 +22,7 @@ from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequired
 
 from dolt import diffs, filters, forms, merge, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH, DOLT_BRANCH_KEYWORD
-from dolt.utils import alter_session_branch, db_for_commit
+from dolt.utils import alter_session_branch, db_for_commit, active_branch
 from dolt.diffs import content_type_has_diff_view_table
 from dolt.models import (
     Branch,
@@ -325,17 +325,15 @@ class CommitListView(generic.ObjectListView):
     action_buttons = None
 
     def alter_queryset(self, req):
-        if Branch.active_branch() != DOLT_DEFAULT_BRANCH:
+        if active_branch() != DOLT_DEFAULT_BRANCH:
             # only list commits on the current branch since the merge-base
-            merge_base_hash = Commit.merge_base(
-                DOLT_DEFAULT_BRANCH, Branch.active_branch()
-            )
+            merge_base_hash = Commit.merge_base(DOLT_DEFAULT_BRANCH, active_branch())
             merge_base = Commit.objects.get(commit_hash=merge_base_hash)
             self.queryset = self.queryset.filter(date__gt=merge_base.date)
         return self.queryset
 
     def extra_context(self):
-        return {"active_branch": Branch.active_branch()}
+        return {"active_branch": active_branch()}
 
 
 class CommitEditView(generic.ObjectEditView):
@@ -368,7 +366,6 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
         model = self.queryset.model
         pk_list = request.POST.getlist("pk")
         commits = self.queryset.filter(commit_hash__in=pk_list)
-        branch = Branch.active_branch()
 
         if commits.count() != len(pk_list):
             found = set([c.commit_hash for c in commits])
@@ -377,14 +374,15 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
                 request,
                 mark_safe(
                     f"""Cannot revert commit(s) {", ".join(missing)},
-                    commits were not found on branch <strong>{branch}</strong>"""
+                        commits were not found on branch 
+                        <strong>{active_branch()}</strong>"""
                 ),
             )
             return redirect(self.get_return_url(request))
 
         context = {
             "pk": pk_list,
-            "active_branch": branch,
+            "active_branch": active_branch(),
             "obj_type_plural": model._meta.verbose_name_plural,
             "content_type": ContentType.objects.get_for_model(model),
             "return_url": self.get_return_url(request),
@@ -437,7 +435,7 @@ class ActiveBranchDiffs(View):
             reverse(
                 "plugins:dolt:branch",
                 kwargs={
-                    "pk": Branch.active_branch(),
+                    "pk": active_branch(),
                 },
             )
         )

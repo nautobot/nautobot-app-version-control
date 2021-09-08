@@ -16,7 +16,7 @@ from dolt.constants import (
     DOLT_DEFAULT_BRANCH,
 )
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
-from dolt.utils import DoltError, is_dolt_model
+from dolt.utils import DoltError, is_dolt_model, active_branch
 
 
 def dolt_health_check_intercept_middleware(get_response):
@@ -52,7 +52,7 @@ class DoltBranchMiddleware:
             # inject the "active branch" banner
             msg = f"""
                 <div class="text-center">
-                    Active Branch: {Branch.active_branch()}
+                    Active Branch: {active_branch()}
                 </div>
             """
             messages.info(request, mark_safe(msg))

@@ -5,7 +5,7 @@ from django.utils.safestring import mark_safe
 from . import is_versioned_model
 from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH, GLOBAL_DB
 from dolt.models import Branch
-from dolt.utils import DoltError, is_dolt_model
+from dolt.utils import DoltError, is_dolt_model, active_branch
 
 
 class GlobalStateRouter:
@@ -21,7 +21,7 @@ class GlobalStateRouter:
         Versioned models use the 'default' database and the Dolt branch that
         was checked out in `DoltBranchMiddleware`.
         """
-        if Branch.active_branch == DOLT_DEFAULT_BRANCH:
+        if active_branch() == DOLT_DEFAULT_BRANCH:
             # If primary branch is active, send all queries
             # to "global", even for versioned models
             return self.global_db
@@ -38,7 +38,7 @@ class GlobalStateRouter:
         was checked out in `DoltBranchMiddleware`.
         Prevents writes of non-versioned models on non-primary branches.
         """
-        if Branch.active_branch == DOLT_DEFAULT_BRANCH:
+        if active_branch() == DOLT_DEFAULT_BRANCH:
             # If primary branch is active, send all queries
             # to "global", even for versioned models
             return self.global_db
@@ -68,4 +68,4 @@ class GlobalStateRouter:
 
     @staticmethod
     def _branch_is_not_primary():
-        return Branch.active_branch() != DOLT_DEFAULT_BRANCH
+        return active_branch() != DOLT_DEFAULT_BRANCH

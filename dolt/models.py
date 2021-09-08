@@ -11,7 +11,7 @@ from nautobot.extras.utils import extras_features
 from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
-from dolt.utils import author_from_user, DoltError, db_for_commit
+from dolt.utils import author_from_user, DoltError, db_for_commit, active_branch
 
 
 class DoltSystemTable(models.Model):
@@ -70,7 +70,7 @@ class Branch(DoltSystemTable):
 
     @property
     def active(self):
-        return self.name == self.active_branch()
+        return self.name == active_branch()
 
     @property
     def ahead_behind(self):
@@ -105,12 +105,6 @@ class Branch(DoltSystemTable):
     def source_branch(self):
         m = self._branch_meta()
         return m.source_branch if m else None
-
-    @staticmethod
-    def active_branch():
-        # query must have a primary key in result schema
-        q = "SELECT name FROM dolt_branches WHERE name = active_branch();"
-        return Branch.objects.raw(q)[0].name
 
     def checkout(self):
         with connection.cursor() as cursor:

@@ -5,6 +5,7 @@ from nautobot.users.models import User
 from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
 
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
+from dolt.utils import active_branch
 from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
@@ -92,9 +93,10 @@ class BranchBulkDeleteForm(ConfirmationForm):
     def clean_pk(self):
         # TODO: log error messages
         deletes = [str(b) for b in self.cleaned_data["pk"]]
-        active = Branch.active_branch()
-        if active in deletes:
-            raise forms.ValidationError(f"Cannot delete active branch: {active}")
+        if active_branch() in deletes:
+            raise forms.ValidationError(
+                f"Cannot delete active branch: {active_branch()}"
+            )
         if DOLT_DEFAULT_BRANCH in deletes:
             raise forms.ValidationError(
                 f"Cannot delete primary branch: {DOLT_DEFAULT_BRANCH}"

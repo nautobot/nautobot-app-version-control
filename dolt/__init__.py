@@ -50,10 +50,10 @@ __MODELS_UNDER_VERSION_CONTROL__ = {
         "pullrequestreviewcomments": False,
         "pullrequestreviews": False,
         "branchmeta": False,
+        "branch": False,
         # todo: calling the following "versioned" is odd.
         #   their contents are parameterized by branch
         #   changes, but they are not under VCS.
-        "branch": True,
         "commit": True,
         "commitancestor": True,
         "conflicts": True,
