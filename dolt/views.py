@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 import logging
 
@@ -96,22 +97,20 @@ class BranchEditView(generic.ObjectEditView):
         form = self.model_form(data=req.POST, files=req.FILES)
         response = super().post(req, *args, **kwargs)
         if self._is_success_response(response):
+            self.create_branch_meta(req, form)
             alter_session_branch(sess=req.session, branch=form.data.get("name"))
         return response
 
     def _is_success_response(self, response):
         return (response.status_code // 100) in (2, 3)
 
-    # TODO: create branch meta on branch creation
-    # def _create_branch_meta(self, form, user):
-    #     branch = Branch.objects.get(name=form.data.get("name"))
-    #     with query_on_branch(branch):
-    #         # branch meta needs to live on the branch it describes
-    #         BranchMeta(
-    #             branch=branch.name,
-    #             source_branch=form.data.get("starting_branch"),
-    #             author=user,
-    #         ).save()
+    @staticmethod
+    def create_branch_meta(req, form):
+        meta, _ = BranchMeta.objects.get_or_create(branch=form.data.get("name"))
+        meta.source_branch = form.data.get("starting_branch")
+        meta.author = req.user
+        meta.created = datetime.now()
+        meta.save()
 
 
 class BranchBulkEditView(generic.BulkEditView):

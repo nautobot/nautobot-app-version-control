@@ -165,11 +165,6 @@ class Branch(DoltSystemTable):
                 f"""INSERT INTO dolt_branches (name,hash) 
                     VALUES ('{self.name}',hashof('{self.starting_branch}'));"""
             )
-            meta, _ = BranchMeta.objects.get_or_create(branch=self.name)
-            meta.source_branch = str(self.starting_branch)
-            meta.author = self.creator
-            meta.created = datetime.now()
-            meta.save()
 
 
 class BranchMeta(models.Model):
