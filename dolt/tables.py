@@ -1,5 +1,6 @@
 import django_tables2 as tables
-from django_tables2 import A, TemplateColumn, Column
+from django_tables2 import A, TemplateColumn
+from dolt.constants import DOLT_DEFAULT_BRANCH
 
 from dolt.models import (
     Branch,
@@ -23,8 +24,11 @@ BRANCH_TABLE_BADGES = """
     <a href="{% url 'plugins:dolt:branch_checkout' pk=record.pk %}" class="btn btn-xs btn-primary" title="checkout">
         Checkout
     </a>
-    <a href="{% url 'plugins:dolt:branch_merge' src=record.pk %}" class="btn btn-xs btn-warning" title="merge">
-        Merge
+    <a href="{% url 'plugins:dolt:pull_request_add' %}?source_branch={{ record.pk }}" class="btn btn-xs btn-primary" title="pull_request">
+        Pull Request
+    </a>
+    <a href="{% url 'plugins:dolt:pull_request_add' %}?source_branch={{ default_branch }}&destination_branch={{ record.pk }}" class="btn btn-xs btn-primary" title="catch_up">
+        Catchup
     </a>
 </div>
 """
@@ -37,6 +41,7 @@ ACTIVE_BRANCH_BADGE = """
     </div>
 {% endif %}
 """
+
 
 class BranchTable(BaseTable):
     pk = ToggleColumn()
