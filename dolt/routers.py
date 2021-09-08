@@ -21,11 +21,6 @@ class GlobalStateRouter:
         Versioned models use the 'default' database and the Dolt branch that
         was checked out in `DoltBranchMiddleware`.
         """
-        if active_branch() == DOLT_DEFAULT_BRANCH:
-            # If primary branch is active, send all queries
-            # to "global", even for versioned models
-            return self.global_db
-
         if is_versioned_model(model):
             return None
 
@@ -38,21 +33,15 @@ class GlobalStateRouter:
         was checked out in `DoltBranchMiddleware`.
         Prevents writes of non-versioned models on non-primary branches.
         """
-        if active_branch() == DOLT_DEFAULT_BRANCH:
-            # If primary branch is active, send all queries
-            # to "global", even for versioned models
-            return self.global_db
+        if is_versioned_model(model):
+            return None
 
         if is_dolt_model(model):
             # Dolt models can be created or edited from any branch.
             # Edits will be applied to the "main"
             return self.global_db
 
-        if is_versioned_model(model):
-            return None
-
         if self.branch_is_not_primary():
-            breakpoint()
             # non-versioned models can only be edited on "main"
             raise DoltError(
                 mark_safe(
@@ -69,17 +58,3 @@ class GlobalStateRouter:
     @staticmethod
     def branch_is_not_primary():
         return active_branch() != DOLT_DEFAULT_BRANCH
-
-    @staticmethod
-    def is_pr_model(model):
-        """
-        Return True is `model` is related to PullRequests.
-        """
-        pr_models = {
-            "dolt": {
-                "pullrequest": True,
-                "pullrequestreviewcomment": True,
-                "pullrequestreview": True,
-            },
-        }
-        return bool(query_registry(model, pr_models))

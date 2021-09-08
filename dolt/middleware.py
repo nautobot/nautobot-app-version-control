@@ -26,7 +26,7 @@ def dolt_health_check_intercept_middleware(get_response):
     """
 
     def middleware(request):
-        if is_health_check(request):
+        if "/health" in request.path:
             return HttpResponse(status=201)
         return get_response(request)
 
@@ -101,10 +101,8 @@ class AutoDoltCommit(object):
 
     def __init__(self, request, branch):
         self.request = request
-        self.branch = branch
         self.commit = False
-        self.changes = []
-        self.instances = []
+        self.changes_for_db = {}
 
     def __enter__(self):
         # Connect our receivers to the post_save and post_delete signals.
@@ -113,12 +111,8 @@ class AutoDoltCommit(object):
         pre_delete.connect(self._handle_delete, dispatch_uid="dolt_commit_delete")
 
     def __exit__(self, type, value, traceback):
-        if is_health_check(self.request):
-            # don't autocommit django-health-checks
-            return
-
         if self.commit:
-            self._commit()
+            self.make_commits()
 
         # Disconnect change logging signals. This is necessary to avoid recording any errant
         # changes during test cleanup.
@@ -130,50 +124,59 @@ class AutoDoltCommit(object):
         """
         Fires when an object is created or updated.
         """
-
-        if is_dolt_model(type(instance)):
-            # Dolt plugin objects are always written to "main"
-            self.branch = DOLT_DEFAULT_BRANCH
-            self.changes.append(self.change_msg_for_dolt_obj(instance, kwargs))
-
         if type(instance) == ObjectChange:
-            self.changes.append(str(instance))
+            # ignore ObjectChange instances
+            return
 
-        if "created" in kwargs:
-            self.commit = True
-        elif kwargs.get("action") in ["post_add", "post_remove"] and kwargs["pk_set"]:
-            # m2m_changed with objects added or removed
-            self.commit = True
+        msg = self.change_msg_for_update(instance, kwargs)
+        self.collect_change(instance, msg)
+        self.commit = True
 
     def _handle_delete(self, sender, instance, **kwargs):
         """
         Fires when an object is deleted.
         """
+        if type(instance) == ObjectChange:
+            # ignore ObjectChange instances
+            return
+
+        msg = self.change_msg_for_delete(instance)
+        self.collect_change(instance, msg)
         self.commit = True
 
-    def _commit(self):
-        msg = self._get_commit_message()
-        Commit(message=msg).save(
-            branch=self.branch,
-            user=self.request.user,
-        )
+    def make_commits(self):
+        for db, msgs in self.changes_for_db.items():
+            msg = "; ".join(msgs)
+            Commit(message=msg).save(
+                user=self.request.user,
+                using=db,
+            )
 
-    def _get_commit_message(self):
-        if self.changes:
-            return "; ".join(self.changes)
-        elif self.instances:
-            return "; ".join([str(i) for i in self.instances])
-        return "auto dolt commit"
+    def collect_change(self, instance, msg):
+        db = self.database_from_instance(instance)
+        if db not in self.changes_for_db:
+            self.changes_for_db[db] = []
+        self.changes_for_db[db].append(msg)
 
     @staticmethod
-    def change_msg_for_dolt_obj(instance, kwargs):
+    def database_from_instance(instance):
+        return instance._state.db
+
+    @staticmethod
+    def change_msg_for_update(instance, kwargs):
         """
-        Dolt objects are not ChangeLogged objects,
-        so we generate a change messeage here instead.
+        Generates a commit message for create or update.
         """
         created = "created" in kwargs and kwargs["created"]
         verb = "Created" if created else "Updated"
         return f"""{verb} {instance._meta.verbose_name} "{instance}" """
+
+    @staticmethod
+    def change_msg_for_delete(instance):
+        """
+        Generates a commit message for delete
+        """
+        return f"""Deleted {instance._meta.verbose_name} "{instance}" """
 
 
 def branch_from_request(request):
@@ -182,7 +185,3 @@ def branch_from_request(request):
     if DOLT_BRANCH_KEYWORD in request.headers:
         return request.headers.get(DOLT_BRANCH_KEYWORD)
     return DOLT_DEFAULT_BRANCH
-
-
-def is_health_check(request):
-    return "/health" in request.path
