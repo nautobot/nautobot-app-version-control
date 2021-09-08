@@ -12,6 +12,7 @@ from nautobot.users.models import User
 from nautobot.utilities.querysets import RestrictedQuerySet
 
 from dolt.utils import author_from_user, DoltError, db_for_commit, active_branch
+from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
 class DoltSystemTable(models.Model):
@@ -74,9 +75,9 @@ class Branch(DoltSystemTable):
 
     @property
     def ahead_behind(self):
-        merge_base = Commit.merge_base(self.name, "main")
+        merge_base = Commit.merge_base(self.name, DOLT_DEFAULT_BRANCH)
         merge_base_commit = Commit.objects.get(commit_hash=merge_base)
-        main_hash = Branch.objects.get(name="main").hash
+        main_hash = Branch.objects.get(name=DOLT_DEFAULT_BRANCH).hash
 
         ahead = (
             Commit.objects.filter(date__gt=merge_base_commit.date)
