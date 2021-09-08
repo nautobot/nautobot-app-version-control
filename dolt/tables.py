@@ -25,8 +25,8 @@ BRANCH_TABLE_BADGES = """
         Active
     </div>
 {% endif %}
-    <a href="{% url 'plugins:dolt:branch_checkout' pk=record.pk %}" class="btn btn-xs btn-primary" title="checkout">
-        Checkout
+    <a href="{% url 'plugins:dolt:branch_checkout' pk=record.pk %}" class="btn btn-xs btn-primary" title="activate">
+        Activate
     </a>
     <a href="{% url 'plugins:dolt:branch_merge' src=record.pk %}" class="btn btn-xs btn-warning" title="merge">
         Merge
