@@ -1,5 +1,5 @@
 import django_tables2 as tables
-from django_tables2 import A
+from django_tables2 import A, TemplateColumn, Column
 
 from dolt.models import (
     Branch,
@@ -20,11 +20,6 @@ __all__ = ("BranchTable", "ConflictsSummaryTable", "CommitTable", "PullRequestTa
 
 BRANCH_TABLE_BADGES = """
 <div>
-{% if record.active %}
-    <div class="btn btn-xs btn-success" title="active">
-        Active
-    </div>
-{% endif %}
     <a href="{% url 'plugins:dolt:branch_checkout' pk=record.pk %}" class="btn btn-xs btn-primary" title="checkout">
         Checkout
     </a>
@@ -35,9 +30,18 @@ BRANCH_TABLE_BADGES = """
 """
 
 
+ACTIVE_BRANCH_BADGE = """
+{% if record.active %}
+    <div class="btn btn-xs btn-success" title="active">
+        Active
+    </div>
+{% endif %}
+"""
+
 class BranchTable(BaseTable):
     pk = ToggleColumn()
     name = tables.LinkColumn()
+    active = tables.TemplateColumn(ACTIVE_BRANCH_BADGE)
     hash = tables.LinkColumn("plugins:dolt:commit", args=[A("hash")])
     actions = ButtonsColumn(
         Branch,
@@ -52,6 +56,7 @@ class BranchTable(BaseTable):
             "pk",
             "name",
             "hash",
+            "active",
             "ahead_behind",
             "created_by",
             "latest_committer",
@@ -62,6 +67,7 @@ class BranchTable(BaseTable):
         )
         default_columns = (
             "name",
+            "active",
             "ahead_behind",
             "created_by",
             "latest_committer",
