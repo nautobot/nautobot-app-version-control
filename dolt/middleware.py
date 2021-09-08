@@ -1,4 +1,5 @@
 from django.contrib import messages
+from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 from django.db.models.signals import m2m_changed, post_save, pre_delete
@@ -16,7 +17,7 @@ from dolt.constants import (
 )
 from dolt.versioning import query_on_branch
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
-from dolt.utils import DoltError, is_health_check
+from dolt.utils import DoltError, is_dolt_model
 
 
 def dolt_health_check_intercept_middleware(get_response):
@@ -131,17 +132,13 @@ class AutoDoltCommit(object):
         Fires when an object is created or updated.
         """
 
-        if self.is_pr_object(instance):
-            # pull request related objects are always
-            # written to "main"
+        if is_dolt_model(type(instance)):
+            # Dolt plugin objects are always written to "main"
             self.branch = DOLT_DEFAULT_BRANCH
-            msg = self.change_msg_for_pr(instance, kwargs)
-            self.changes.append(msg)
+            self.changes.append(self.change_msg_for_dolt_obj(instance, kwargs))
 
         if type(instance) == ObjectChange:
             self.changes.append(str(instance))
-        else:
-            self.instances.append(instance)
 
         if "created" in kwargs:
             self.commit = True
@@ -154,14 +151,6 @@ class AutoDoltCommit(object):
         Fires when an object is deleted.
         """
         self.commit = True
-
-    @staticmethod
-    def is_pr_object(instance):
-        pr_models = (
-            PullRequest,
-            PullRequestReview,
-        )
-        return type(instance) in pr_models
 
     def _commit(self):
         msg = self._get_commit_message()
@@ -178,7 +167,11 @@ class AutoDoltCommit(object):
         return "auto dolt commit"
 
     @staticmethod
-    def change_msg_for_pr(instance, kwargs):
+    def change_msg_for_dolt_obj(instance, kwargs):
+        """
+        Dolt objects are not ChangeLogged objects,
+        so we generate a change messeage here instead.
+        """
         created = "created" in kwargs and kwargs["created"]
         verb = "Created" if created else "Updated"
         return f"""{verb} {instance._meta.verbose_name} "{instance}" """
@@ -190,3 +183,7 @@ def branch_from_request(request):
     if DOLT_BRANCH_KEYWORD in request.headers:
         return request.headers.get(DOLT_BRANCH_KEYWORD)
     return DOLT_DEFAULT_BRANCH
+
+
+def is_health_check(request):
+    return "/health" in request.path

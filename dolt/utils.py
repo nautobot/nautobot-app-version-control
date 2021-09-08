@@ -1,3 +1,6 @@
+from django.contrib.contenttypes.models import ContentType
+
+
 class DoltError(Exception):
     pass
 
@@ -9,5 +12,10 @@ def author_from_user(usr):
     return "nautobot <nautobot@ntc.com>"
 
 
-def is_health_check(request):
-    return "/health" in request.path
+def is_dolt_model(model):
+    """
+    Returns `True` if `instance` is an instance of
+    a model from the Dolt plugin. Generally,
+    """
+    ct = ContentType.objects.get_for_model(model)
+    return ct.app_label == "dolt"

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, connections
 from django.db.models.deletion import CASCADE, SET_NULL
@@ -52,9 +54,10 @@ class Branch(DoltSystemTable):
         db_table = "dolt_branches"
         verbose_name_plural = "branches"
 
-    def __init__(self, *args, starting_branch=None, **kwargs):
+    def __init__(self, *args, starting_branch=None, creator=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.starting_branch = starting_branch
+        self.creator = creator
 
     def __str__(self):
         return self.name
@@ -167,8 +170,14 @@ class Branch(DoltSystemTable):
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
             cursor.execute(
-                f"INSERT INTO dolt_branches (name,hash) VALUES ('{self.name}',hashof('{self.starting_branch}'));"
+                f"""INSERT INTO dolt_branches (name,hash) 
+                    VALUES ('{self.name}',hashof('{self.starting_branch}'));"""
             )
+            meta, _ = BranchMeta.objects.get_or_create(branch=self.name)
+            meta.source_branch = str(self.starting_branch)
+            meta.author = self.creator
+            meta.created = datetime.now()
+            meta.save()
 
 
 class BranchMeta(models.Model):

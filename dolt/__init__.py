@@ -49,11 +49,11 @@ __MODELS_UNDER_VERSION_CONTROL__ = {
         "pullrequest": False,
         "pullrequestreviewcomments": False,
         "pullrequestreviews": False,
+        "branchmeta": False,
         # todo: calling the following "versioned" is odd.
         #   their contents are parameterized by branch
         #   changes, but they are not under VCS.
         "branch": True,
-        "branchmeta": True,
         "commit": True,
         "commitancestor": True,
         "conflicts": True,
@@ -132,20 +132,6 @@ def is_versioned_model(model):
     See __MODELS_UNDER_VERSION_CONTROL__ for more info.
     """
     allowlist = __MODELS_UNDER_VERSION_CONTROL__
-    return _lookup_allowlist(model, allowlist)
-
-
-def is_pr_model(model):
-    """
-    Return True is `model` is related to PullRequests.
-    """
-    allowlist = {
-        "dolt": {
-            "pullrequest": True,
-            "pullrequestreviewcomment": True,
-            "pullrequestreview": True,
-        },
-    }
     return _lookup_allowlist(model, allowlist)
 
 
