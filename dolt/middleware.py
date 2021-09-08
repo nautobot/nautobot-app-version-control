@@ -168,6 +168,10 @@ class AutoDoltCommit(object):
 
     @staticmethod
     def change_msg_for_dolt_obj(instance, kwargs):
+        """
+        Dolt objects are not ChangeLogged objects,
+        so we generate a change messeage here instead.
+        """
         created = "created" in kwargs and kwargs["created"]
         verb = "Created" if created else "Updated"
         return f"""{verb} {instance._meta.verbose_name} "{instance}" """
