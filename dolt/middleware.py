@@ -61,7 +61,7 @@ class DoltBranchMiddleware:
                     const btn = document.getElementById("share-button");
                     btn.addEventListener('click', ()=>{{
                         const currLink = window.location.href;
-                        const copiedLink = currLink + "?active_branch={active_branch()}";
+                        const copiedLink = currLink + "?{DOLT_BRANCH_KEYWORD}={active_branch()}";
                         navigator.clipboard.writeText(copiedLink);
                         btn.textContent = "Copied!"
                     }});
@@ -78,6 +78,12 @@ class DoltBranchMiddleware:
     def get_branch(self, request):
         # lookup the active branch in the session cookie
         requested = branch_from_request(request)
+
+        # override if the query string exists
+        getRequest = request.GET.get(DOLT_BRANCH_KEYWORD, None)
+        if getRequest is not None:
+            requested = getRequest
+
         try:
             return Branch.objects.get(pk=requested)
         except ObjectDoesNotExist:
