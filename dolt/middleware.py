@@ -54,6 +54,18 @@ class DoltBranchMiddleware:
                 <div class="text-center">
                     Active Branch: {active_branch()}
                 </div>
+                <div class="btn btn-xs btn-success" id="share-button">
+                    Share
+                </div>
+                <script> 
+                    const btn = document.getElementById("share-button");
+                    btn.addEventListener('click', ()=>{{
+                        const currLink = window.location.href;
+                        const copiedLink = currLink + "?active_branch={active_branch()}";
+                        navigator.clipboard.writeText(copiedLink);
+                        btn.textContent = "Copied!"
+                    }});
+                </script>
             """
             messages.info(request, mark_safe(msg))
 
