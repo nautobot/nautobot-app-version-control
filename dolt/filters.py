@@ -104,7 +104,6 @@ class PullRequestCommentFilterSet(BaseFilterSet):
 
     class Meta:
         model = PullRequestReview
-        # todo: pull request id
         fields = (
             "pull_request",
             "reviewer",
