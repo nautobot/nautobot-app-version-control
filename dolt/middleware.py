@@ -54,7 +54,7 @@ class DoltBranchMiddleware:
                 <div class="text-center">
                     Active Branch: {active_branch()}
                     <div class = "pull-right">
-                        <div class="btn btn-xs btn-primary id="share-button">
+                        <div class="btn btn-xs btn-primary" id="share-button">
                             Share
                         </div>
                     </div>
@@ -82,9 +82,9 @@ class DoltBranchMiddleware:
         requested = branch_from_request(request)
 
         # override if the query string exists
-        getRequest = request.GET.get(DOLT_BRANCH_KEYWORD, None)
-        if getRequest is not None:
-            requested = getRequest
+        queryStringBranch = request.GET.get(DOLT_BRANCH_KEYWORD, None)
+        if queryStringBranch is not None:
+            requested = queryStringBranch
 
         try:
             return Branch.objects.get(pk=requested)
