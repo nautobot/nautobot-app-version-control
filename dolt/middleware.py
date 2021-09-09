@@ -53,9 +53,11 @@ class DoltBranchMiddleware:
             msg = f"""
                 <div class="text-center">
                     Active Branch: {active_branch()}
-                </div>
-                <div class="btn btn-xs btn-success" id="share-button">
-                    Share
+                    <div class = "pull-right">
+                        <div class="btn btn-xs btn-primary id="share-button">
+                            Share
+                        </div>
+                    </div>
                 </div>
                 <script> 
                     const btn = document.getElementById("share-button");
