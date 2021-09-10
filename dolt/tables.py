@@ -21,9 +21,11 @@ __all__ = ("BranchTable", "ConflictsSummaryTable", "CommitTable", "PullRequestTa
 
 BRANCH_TABLE_BADGES = """
 <div>
-   <a href="{% url 'plugins:dolt:branch_checkout' pk=record.pk %}" class="btn btn-xs btn-primary" title="activate">
-        Activate
-   </a>
+   {% if not record.active %}
+        <a href="{% url 'plugins:dolt:branch_checkout' pk=record.pk %}" class="btn btn-xs btn-primary" title="activate">
+            Activate
+        </a>
+   {% endif %}
     <a href="{% url 'plugins:dolt:pull_request_add' %}?source_branch={{ record.pk }}" class="btn btn-xs btn-info" title="pull_request">
         Pull Request
     </a>
@@ -46,7 +48,7 @@ ACTIVE_BRANCH_BADGE = """
 class BranchTable(BaseTable):
     pk = ToggleColumn()
     name = tables.LinkColumn()
-    active = tables.TemplateColumn(ACTIVE_BRANCH_BADGE)
+    status = tables.TemplateColumn(ACTIVE_BRANCH_BADGE)
     hash = tables.LinkColumn("plugins:dolt:commit", args=[A("hash")])
     actions = ButtonsColumn(
         Branch,
@@ -61,7 +63,7 @@ class BranchTable(BaseTable):
             "pk",
             "name",
             "hash",
-            "active",
+            "status",
             "ahead_behind",
             "created_by",
             "latest_committer",
@@ -72,7 +74,7 @@ class BranchTable(BaseTable):
         )
         default_columns = (
             "name",
-            "active",
+            "status",
             "ahead_behind",
             "created_by",
             "latest_committer",
