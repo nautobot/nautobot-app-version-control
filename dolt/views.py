@@ -5,7 +5,7 @@ import logging
 from django.forms import ValidationError
 from django.contrib import messages
 from django.db import models, connections
-from django.db.models import Q, F, Subquery, OuterRef, Value
+from django.db.models import Q, F, Subquery, OuterRef, Value, ProtectedError
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.serializers import serialize
@@ -156,11 +156,9 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
                 queryset = self.queryset.filter(pk__in=pk_list)
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
-                except ProtectedError as e:
-                    logger.info(
-                        "Caught ProtectedError while attempting to delete objects"
-                    )
-                    handle_protectederror(queryset, request, e)
+                except Exception as e:
+                    logger.info("Caught errpr while attempting to delete objects")
+                    messages.error(request, mark_safe(e))
                     return redirect(self.get_return_url(request))
 
                 msg = "Deleted {} {}".format(
