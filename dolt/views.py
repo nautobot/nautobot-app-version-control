@@ -673,6 +673,7 @@ class PullRequestEditView(generic.ObjectEditView):
         obj = self.get_object(kwargs)
         initial = {
             "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
+            "source_branch": active_branch(),
         }
 
         if obj.present_in_database:
