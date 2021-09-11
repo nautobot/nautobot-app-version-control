@@ -45,8 +45,10 @@ class GlobalStateRouter:
             # non-versioned models can only be edited on "main"
             raise DoltError(
                 mark_safe(
-                    f"""Error writing <strong>{model.__name__}</strong>: non-versioned models 
-                    must be written on branch <strong>"{DOLT_DEFAULT_BRANCH}"</strong>."""
+                    f"""Error writing model <strong>{model.__name__}</strong> 
+                        on branch <strong>"{active_branch()}"</strong>: 
+                        non-versioned models must be written on branch 
+                        <strong>"{DOLT_DEFAULT_BRANCH}"</strong>."""
                 )
             )
 
