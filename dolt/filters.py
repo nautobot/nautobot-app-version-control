@@ -69,6 +69,7 @@ class PullRequestFilterSet(BaseFilterSet):
     q = django_filters.CharFilter(
         method="search",
         label="Search",
+        # arg for a widget for the entry
     )
 
     class Meta:
