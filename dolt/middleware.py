@@ -58,7 +58,8 @@ class DoltBranchMiddleware:
             messages.error(request, mark_safe(msg))
 
         if request.user.is_authenticated:
-            # inject the "active branch" banner
+            # Inject the "active branch" banner. Use a random number for the button id to ensure button listeners do not
+            # clash
             msg = self.get_active_branch_banner(random.randint(0, 10000))
             messages.info(request, mark_safe(msg))
 
@@ -71,7 +72,6 @@ class DoltBranchMiddleware:
     def get_branch(self, request):
         # lookup the active branch in the session cookie
         requested = branch_from_request(request)
-
         try:
             return Branch.objects.get(pk=requested)
         except ObjectDoesNotExist:
