@@ -5,8 +5,10 @@ RUN apt update && apt install -y curl
 
 RUN mkdir -p /var/lib/nautobot
 
-ARG DOLT_RELEASE=latest
-RUN curl -L https://github.com/dolthub/dolt/releases/${DOLT_RELEASE}/download/install.sh | bash
+# ARG DOLT_RELEASE=latest
+# RUN curl -L https://github.com/dolthub/dolt/releases/${DOLT_RELEASE}/download/install.sh | bash
+
+COPY dolt_linux_arm64 /usr/local/bin/dolt
 
 RUN dolt config --global --add user.name nautobot
 RUN dolt config --global --add user.email opensource@networktocode.COM
