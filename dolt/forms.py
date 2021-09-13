@@ -165,6 +165,7 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
             "description",
         ]
 
+
 class PullRequestDeleteForm(ConfirmationForm):
     pk = forms.ModelMultipleChoiceField(
         queryset=PullRequest.objects.all(), widget=forms.MultipleHiddenInput
@@ -178,6 +179,7 @@ class PullRequestDeleteForm(ConfirmationForm):
         fields = [
             "pk",
         ]
+
 
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
     model = PullRequest

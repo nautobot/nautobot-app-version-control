@@ -841,6 +841,7 @@ class PullRequestCloseView(generic.ObjectEditView):
             },
         )
 
+
 class PullRequestBulkDeleteView(generic.BulkDeleteView):
     queryset = PullRequest.objects.all()
     table = tables.PullRequestTable
@@ -850,7 +851,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
     def get(self, request):
         return redirect(self.get_return_url(request))
 
-    def post(self, request,  *args, **kwargs):
+    def post(self, request, *args, **kwargs):
         logger = logging.getLogger("nautobot.views.BulkDeleteView")
         model = self.queryset.model
 
