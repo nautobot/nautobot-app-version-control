@@ -62,6 +62,9 @@ class BranchListView(generic.ObjectListView):
     action_buttons = ("add",)
     template_name = "dolt/branch_list.html"
 
+    def extra_context(self):
+        return {"default_branch": DOLT_DEFAULT_BRANCH}
+
 
 class BranchCheckoutView(View):
     queryset = Branch.objects.all()
@@ -674,6 +677,7 @@ class PullRequestEditView(generic.ObjectEditView):
         obj = self.get_object(kwargs)
         initial = {
             "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
+            "source_branch": active_branch(),
         }
 
         if obj.present_in_database:
@@ -681,6 +685,15 @@ class PullRequestEditView(generic.ObjectEditView):
             initial["source_branch"] = obj.source_branch
             initial["destination_branch"] = obj.destination_branch
             initial["description"] = obj.description
+
+        # overwrite with any query strings
+        query_string_source = req.GET.get("source_branch", "")
+        if query_string_source != "":
+            initial["source_branch"] = query_string_source
+
+        query_string_destination = req.GET.get("destination_branch", "")
+        if query_string_destination != "":
+            initial["destination_branch"] = query_string_destination
 
         return render(
             req,

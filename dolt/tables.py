@@ -1,5 +1,6 @@
 import django_tables2 as tables
-from django_tables2 import A
+from django_tables2 import A, TemplateColumn
+from dolt.constants import DOLT_DEFAULT_BRANCH
 
 from dolt.models import (
     Branch,
@@ -20,24 +21,34 @@ __all__ = ("BranchTable", "ConflictsSummaryTable", "CommitTable", "PullRequestTa
 
 BRANCH_TABLE_BADGES = """
 <div>
+   {% if not record.active %}
+        <a href="{% url 'plugins:dolt:branch_checkout' pk=record.pk %}" class="btn btn-xs btn-primary" title="activate">
+            Activate
+        </a>
+   {% endif %}
+    <a href="{% url 'plugins:dolt:pull_request_add' %}?source_branch={{ record.pk }}" class="btn btn-xs btn-info" title="pull_request">
+        Pull Request
+    </a>
+    <a href="{% url 'plugins:dolt:pull_request_add' %}?source_branch={{ default_branch }}&destination_branch={{ record.pk }}" class="btn btn-xs btn-info" title="catch_up">
+        Catchup
+    </a>
+</div>
+"""
+
+
+ACTIVE_BRANCH_BADGE = """
 {% if record.active %}
     <div class="btn btn-xs btn-success" title="active">
         Active
     </div>
 {% endif %}
-    <a href="{% url 'plugins:dolt:branch_checkout' pk=record.pk %}" class="btn btn-xs btn-primary" title="checkout">
-        Checkout
-    </a>
-    <a href="{% url 'plugins:dolt:branch_merge' src=record.pk %}" class="btn btn-xs btn-warning" title="merge">
-        Merge
-    </a>
-</div>
 """
 
 
 class BranchTable(BaseTable):
     pk = ToggleColumn()
     name = tables.LinkColumn()
+    status = tables.TemplateColumn(ACTIVE_BRANCH_BADGE)
     hash = tables.LinkColumn("plugins:dolt:commit", args=[A("hash")])
     actions = ButtonsColumn(
         Branch,
@@ -52,6 +63,7 @@ class BranchTable(BaseTable):
             "pk",
             "name",
             "hash",
+            "status",
             "ahead_behind",
             "created_by",
             "latest_committer",
@@ -62,6 +74,7 @@ class BranchTable(BaseTable):
         )
         default_columns = (
             "name",
+            "status",
             "ahead_behind",
             "created_by",
             "latest_committer",
