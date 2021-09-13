@@ -4,6 +4,7 @@ from django.db.models import ProtectedError
 from nautobot.users.models import User
 from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
 
+
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 from dolt.utils import active_branch
 from dolt.constants import DOLT_DEFAULT_BRANCH
@@ -131,6 +132,13 @@ class CommitFilterForm(forms.Form, BootstrapMixin):
     model = Commit
     field_order = ["q"]
     q = forms.CharField(required=False, label="Search")
+    committer = forms.ChoiceField(choices=[], required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(CommitFilterForm, self).__init__(*args, **kwargs)
+        self.fields["committer"].choices = (
+            Commit.objects.all().values_list("committer", "committer").distinct()
+        )
 
 
 class CommitBulkRevertForm(forms.Form, BootstrapMixin):
