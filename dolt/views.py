@@ -869,9 +869,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
                 except Exception as e:
-                    logger.info(
-                        "Caught error while attempting to delete objects"
-                    )
+                    logger.info("Caught error while attempting to delete objects")
                     return redirect(self.get_return_url(request))
 
                 msg = "Deleted {} {}".format(
