@@ -4,7 +4,6 @@ from django.db.models import ProtectedError
 from nautobot.users.models import User
 from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
 
-
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 from dolt.utils import active_branch
 from dolt.constants import DOLT_DEFAULT_BRANCH
@@ -177,7 +176,7 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
     model = PullRequest
     q = forms.CharField(required=False, label="Search")
-    state = forms.MultipleChoiceField(choices=PullRequest.PR_STATE_CHOICES)
+    state = forms.MultipleChoiceField(required=False, choices=PullRequest.PR_STATE_CHOICES)
     creator = forms.ModelChoiceField(
         required=False, queryset=User.objects.all(), empty_label=None
     )
