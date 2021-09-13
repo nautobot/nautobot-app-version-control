@@ -856,17 +856,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
         model = self.queryset.model
 
         # Are we deleting *all* objects in the queryset or just a selected subset?
-        if request.POST.get("_all"):
-            if self.filterset is not None:
-                pk_list = [
-                    obj.pk
-                    for obj in self.filterset(request.GET, model.objects.only("pk")).qs
-                ]
-            else:
-                pk_list = model.objects.values_list("pk", flat=True)
-        else:
-            pk_list = request.POST.getlist("pk")
-
+        pk_list = request.POST.getlist("pk")
         form_cls = self.get_form()
 
         if "_confirm" in request.POST:
@@ -878,11 +868,10 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
                 queryset = self.queryset.filter(pk__in=pk_list)
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
-                except ProtectedError as e:
+                except Exception as e:
                     logger.info(
-                        "Caught ProtectedError while attempting to delete objects"
+                        "Caught error while attempting to delete objects"
                     )
-                    handle_protectederror(queryset, request, e)
                     return redirect(self.get_return_url(request))
 
                 msg = "Deleted {} {}".format(
