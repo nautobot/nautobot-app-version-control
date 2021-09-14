@@ -69,6 +69,9 @@ DATABASES = {
         "HOST": os.getenv("DOLT_HOST", "localhost"),  # Database server
         "PORT": os.getenv("DOLT_PORT", ""),  # Database port (leave blank for default)
         "ENGINE": "django.db.backends.mysql",
+        "TEST": {
+            "MIRROR": "default",
+        },
     },
 }
 

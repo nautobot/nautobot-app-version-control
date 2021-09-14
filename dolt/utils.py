@@ -23,8 +23,8 @@ def is_dolt_model(model):
     Returns `True` if `instance` is an instance of
     a model from the Dolt plugin. Generally,
     """
-    ct = ContentType.objects.get_for_model(model)
-    return ct.app_label == "dolt"
+    app_label = model._meta.app_label
+    return app_label == "dolt"
 
 
 def alter_session_branch(sess=None, branch=None):
