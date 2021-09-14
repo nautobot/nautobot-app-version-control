@@ -12,6 +12,7 @@ COPY dolt_linux_arm64 /usr/local/bin/dolt
 
 RUN dolt config --global --add user.name nautobot
 RUN dolt config --global --add user.email opensource@networktocode.COM
+RUN dolt config --global --add init.default_branch main
 
 WORKDIR /var/lib/nautobot
 
@@ -21,6 +22,3 @@ EXPOSE 3306
 ENV DOLT_ENABLE_DB_REVISIONS=true
 
 RUN dolt init
-
-# rename default branch to "main"
-RUN dolt branch -m master main
