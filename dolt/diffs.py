@@ -3,8 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 from django.db import models
-from django.db.models.expressions import RawSQL
 from django.db.models import F, OuterRef, Q, Subquery, Value
+from django.db.models.expressions import RawSQL
 
 from nautobot.dcim.tables import cables, devices, devicetypes, power, racks, sites
 from nautobot.circuits import tables as circuits_tables
@@ -59,8 +59,10 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                 diff=RawSQL(
                     f"""SELECT JSON_OBJECT("root", "to", {json_diff_fields(tbl_name)})
                         FROM dolt_commit_diff_{tbl_name} 
-                        WHERE to_commit = %s AND from_commit = %s AND from_id = %s """,
-                    (to_commit, from_commit, OuterRef("id")),
+                        WHERE to_commit = %s AND from_commit = %s 
+                        AND to_id = {tbl_name}.id """,
+                    (to_commit, from_commit),
+                    output_field=models.JSONField(),
                 )
             )
             # "time-travel" query the database at `to_commit`
@@ -83,8 +85,10 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                 diff=RawSQL(
                     f"""SELECT JSON_OBJECT("root", "from", {json_diff_fields(tbl_name)})
                         FROM dolt_commit_diff_{tbl_name} 
-                        WHERE to_commit = %s AND from_commit = %s AND from_id = %s """,
-                    (to_commit, from_commit, OuterRef("id")),
+                        WHERE to_commit = %s AND from_commit = %s 
+                        AND from_id = {tbl_name}.id """,
+                    (to_commit, from_commit),
+                    output_field=models.JSONField(),
                 )
             )
             # "time-travel" query the database at `from_commit`
@@ -111,9 +115,9 @@ def two_dot_diffs(from_commit=None, to_commit=None):
 
 def json_diff_fields(tbl_name):
     with connection.cursor() as cursor:
-        cursor.execute(f"DESCRIBE {tbl_name}")
+        cursor.execute(f"DESCRIBE dolt_commit_diff_{tbl_name}")
         cols = cursor.fetchall()
-    pairs = [f"'{c[0]}', {tbl_name}.{c[0]}" for c in cols]
+    pairs = [f"'{c[0]}', dolt_commit_diff_{tbl_name}.{c[0]}" for c in cols]
     return ", ".join(pairs)
 
 

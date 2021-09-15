@@ -143,6 +143,8 @@ class DiffListViewFactory:
 
 
 def row_attrs_for_record(record):
+    if not record.diff:
+        return ""
     if record.diff["diff_type"] == "added":
         return "bg-success"
     if record.diff["diff_type"] == "removed":
@@ -254,7 +256,7 @@ class DiffListViewBase(tables.Table):
                 # the branch, leading to referential integrity errors.
                 return value
 
-            if record.diff["diff_type"] != "modified":
+            if not record.diff or record.diff["diff_type"] != "modified":
                 # only render before/after diff styling
                 # for 'modified' rows
                 return cell
