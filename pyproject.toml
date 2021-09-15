@@ -9,6 +9,7 @@ license = "LICENSE.txt"
 python = "^3.6"
 nautobot = "^1.1.0"
 mysqlclient = "^2.0.3"
+django-debug-toolbar = "^3.2.2"
 
 [tool.poetry.dev-dependencies]
 
