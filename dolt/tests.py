@@ -20,6 +20,21 @@ class TestBranches(TestCase):
         Branch(name="another", starting_branch=DOLT_DEFAULT_BRANCH).save()
         self.assertEqual(Branch.objects.all().count(), 6)
 
+    def test_delete_with_pull_requests(self):
+        User.objects.create(username="branch-test", is_superuser=True)
+        PullRequest.objects.create(
+            title="Review 1",
+            state=0,
+            source_branch="other",
+            destination_branch=DOLT_DEFAULT_BRANCH,
+            description="review1",
+            creator=User.objects.get(username="branch-test"),
+        )
+
+        # Try to delete the branch
+        Branch.objects.filter(name="other").delete()    
+        self.assertEqual(Branch.objects.filter(name="other").count(), 1)
+
 
 class TestApp(APITestCase):  # pylint: disable=too-many-ancestors
     def test_root(self):
