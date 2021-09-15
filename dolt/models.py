@@ -2,9 +2,12 @@ from datetime import datetime
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import models, connection, connections
+from django.db.models import Q
 from django.db.models.deletion import CASCADE, SET_NULL
 from django.urls import reverse
 from django.utils.safestring import mark_safe
+from django.dispatch import receiver
+from django.db.models.signals import pre_delete
 
 from nautobot.core.models import BaseModel
 from nautobot.extras.utils import extras_features
@@ -166,6 +169,26 @@ class Branch(DoltSystemTable):
                 f"""INSERT INTO dolt_branches (name,hash) 
                     VALUES ('{self.name}',hashof('{self.starting_branch}'));"""
             )
+
+
+"""
+delete_branch_pre_hook intercepts the pre_delete signal for a branch. It returns an error if a branch that is about 
+to be delete has pull requests that have not been deleted before.
+"""
+
+
+@receiver(pre_delete, sender=Branch)
+def delete_branch_pre_hook(sender, instance, using, **kwargs):
+    # search the pull requests models for the same branch
+    obj = PullRequest.objects.filter(
+        Q(source_branch=instance.name) | Q(destination_branch=instance.name)
+    )
+
+    if len(obj) > 0:
+        prs = ",".join([str(i.pk) for i in obj])
+        raise DoltError(
+            f"Must delete existing pull request(s): {prs} before deleting branch {instance.name}"
+        )
 
 
 class BranchMeta(models.Model):
