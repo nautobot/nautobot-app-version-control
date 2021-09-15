@@ -87,7 +87,6 @@ class TestBranchesApi(APITestCase, APIViewTestCases):
 
 
 class TestPullRequestApi(APITestCase, APIViewTestCases):
-    User.objects.create(username="pr-reviewer", is_superuser=True)
     model = PullRequest
     brief_fields = [
         "title",
@@ -99,12 +98,27 @@ class TestPullRequestApi(APITestCase, APIViewTestCases):
         "created_at",
     ]
     create_data = [
-        {"title": "Review 4", "state": "b1", "source_branch": "b1", "destination_branch": "b2", description: "", creator: User.objects.get(username="pr-reviewer")},
-        {"title": "Review 5", "state": "b1", "source_branch": "b1", "destination_branch": "b2", description: "", creator: User.objects.get(username="pr-reviewer")},
+        {
+            "title": "Review 4",
+            "state": 0,
+            "source_branch": "b1",
+            "destination_branch": "b2",
+            "description": "",
+            "creator": User.objects.get(username="pr-reviewer"),
+        },
+        {
+            "title": "Review 5",
+            "state": 1,
+            "source_branch": "b1",
+            "destination_branch": "b3",
+            "description": "",
+            "creator": User.objects.get(username="pr-reviewer"),
+        },
     ]
 
     @classmethod
     def setUpTestData(cls):
+        User.objects.create(username="pr-reviewer", is_superuser=True)
         PullRequest.objects.create(
             title="Review 1",
             state=0,
