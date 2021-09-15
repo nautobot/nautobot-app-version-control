@@ -1,11 +1,12 @@
 from django.test import TestCase
 
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
-from dolt.utils import active_branch
+from dolt.utils import active_branch, DoltError
 from dolt.constants import DOLT_DEFAULT_BRANCH
 from django.urls import reverse
 from nautobot.utilities.testing import APITestCase, APIViewTestCases
 from nautobot.users.models import User
+from django.db import transaction
 
 
 class TestBranches(TestCase):
@@ -22,18 +23,29 @@ class TestBranches(TestCase):
 
     def test_delete_with_pull_requests(self):
         User.objects.create(username="branch-test", is_superuser=True)
+        Branch(name="todelete", starting_branch=DOLT_DEFAULT_BRANCH).save()
         PullRequest.objects.create(
-            title="Review 1",
+            title="My Review",
             state=0,
-            source_branch="other",
+            source_branch="todelete",
             destination_branch=DOLT_DEFAULT_BRANCH,
             description="review1",
             creator=User.objects.get(username="branch-test"),
         )
 
         # Try to delete the branch
-        Branch.objects.filter(name="other").delete()    
-        self.assertEqual(Branch.objects.filter(name="other").count(), 1)
+        try:
+            # Need to ensure failed delete doesn't break subsequent queries
+            with transaction.atomic():
+                Branch.objects.filter(name="todelete").delete()
+            self.fail("the branch delete should've failed")
+        except:
+            pass
+
+        # Delete the pr and try again
+        PullRequest.objects.filter(title="My Review").delete()
+        Branch.objects.filter(name="todelete").delete()
+        self.assertEqual(Branch.objects.filter(name="todelete").count(), 0)
 
 
 class TestApp(APITestCase):  # pylint: disable=too-many-ancestors
