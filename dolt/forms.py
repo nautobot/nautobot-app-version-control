@@ -131,6 +131,13 @@ class CommitFilterForm(forms.Form, BootstrapMixin):
     model = Commit
     field_order = ["q"]
     q = forms.CharField(required=False, label="Search")
+    committer = forms.ChoiceField(choices=[], required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(CommitFilterForm, self).__init__(*args, **kwargs)
+        self.fields["committer"].choices = (
+            Commit.objects.all().values_list("committer", "committer").distinct()
+        )
 
 
 class CommitBulkRevertForm(forms.Form, BootstrapMixin):
@@ -166,11 +173,31 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
         ]
 
 
+class PullRequestDeleteForm(ConfirmationForm):
+    pk = forms.ModelMultipleChoiceField(
+        queryset=PullRequest.objects.all(), widget=forms.MultipleHiddenInput
+    )
+
+    def clean_pk(self):
+        return self.cleaned_data["pk"]
+
+    class Meta:
+        model = PullRequest
+        fields = [
+            "pk",
+        ]
+
+
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
     model = PullRequest
     q = forms.CharField(required=False, label="Search")
-    state = forms.ChoiceField(required=False, choices=PullRequest.PR_STATE_CHOICES)
+    state = forms.MultipleChoiceField(
+        required=False, choices=PullRequest.PR_STATE_CHOICES
+    )
     creator = forms.ModelChoiceField(
+        required=False, queryset=User.objects.all(), empty_label=None
+    )
+    reviewer = forms.ModelChoiceField(
         required=False, queryset=User.objects.all(), empty_label=None
     )
 

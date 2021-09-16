@@ -1,4 +1,4 @@
-from django.test import TestCase, TransactionTestCase
+from django.test import override_settings, TestCase, TransactionTestCase
 
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 from dolt.merge import get_conflicts_count_for_merge, get_merge_candidate
@@ -11,19 +11,28 @@ from django.db import transaction, connection
 from nautobot.dcim.models import Manufacturer
 
 
-class TestBranches(TransactionTestCase):
+class DoltTestCase(TransactionTestCase):
+    databases = ["default", "global"]
+
+
+class TestBranches(DoltTestCase):
+    default = DOLT_DEFAULT_BRANCH
+
     def setUp(self):
-        with transaction.atomic():
-            try:
-                self.user = User.objects.get_or_create(
-                    username="branch-test", is_superuser=True
-                )[0]
-            except:
-                pass
+        self.user = User.objects.get_or_create(
+            username="branch-test", is_superuser=True
+        )[0]
+
+    def tearDown(self):
+        Branch.objects.exclude(name=self.default).delete()
 
     def test_default_branch(self):
-        self.assertEqual(Branch.objects.filter(name=DOLT_DEFAULT_BRANCH).count(), 1)
-        self.assertEqual(active_branch(), DOLT_DEFAULT_BRANCH)
+        self.assertEqual(Branch.objects.filter(name=self.default).count(), 1)
+        self.assertEqual(active_branch(), self.default)
+
+    def test_create_branch(self):
+        Branch(name="another", starting_branch=self.default).save()
+        self.assertEqual(Branch.objects.filter(name="another").count(), 1)
 
     def test_delete_with_pull_requests(self):
         Branch(name="todelete", starting_branch=DOLT_DEFAULT_BRANCH).save()
@@ -55,15 +64,13 @@ class TestBranches(TransactionTestCase):
         main = Branch.objects.get(name=DOLT_DEFAULT_BRANCH)
         other = Branch.objects.get(name="ff")
 
-        c0 = Commit(message="commit any changes")
-        c0.save(user=self.user)
+        Commit(message="commit any changes").save(user=self.user)
 
         # Checkout to the other branch and make a change
         other.checkout()
         Manufacturer.objects.all().delete()
         Manufacturer.objects.create(name="m1", slug="m-1")
-        c1 = Commit(message="added a manufacturer")
-        c1.save(user=self.user)
+        Commit(message="added a manufacturer").save(user=self.user)
 
         # Now do a merge
         main.checkout()
@@ -84,14 +91,12 @@ class TestBranches(TransactionTestCase):
 
         # # Create a change on main
         Manufacturer.objects.create(name="m2", slug="m-2")
-        c0 = Commit(message="commit m2")
-        c0.save(user=self.user)
+        Commit(message="commit m2").save(user=self.user)
 
         # Checkout to the other branch and make a change
         other.checkout()
         Manufacturer.objects.create(name="m3", slug="m-3")
-        c1 = Commit(message="commit m3")
-        c1.save(user=self.user)
+        Commit(message="commit m3").save(user=self.user)
 
         # Now do a merge
         main.checkout()
@@ -122,7 +127,7 @@ class TestBranches(TransactionTestCase):
         Manufacturer.objects.filter(name="m2", slug="m-2").update(slug="m-16")
         Commit(message="commit m2 with slug m-16").save(user=self.user)
 
-        # Now do a merge
+        # Now do a merge. It should throw an exception due to conflicts
         main.checkout()
         try:
             main.merge(other, user=self.user)
