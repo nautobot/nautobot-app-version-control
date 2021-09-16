@@ -18,6 +18,8 @@ from dolt.constants import (
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 from dolt.utils import DoltError, is_dolt_model, active_branch
 
+import random
+
 
 def dolt_health_check_intercept_middleware(get_response):
     """
@@ -41,6 +43,13 @@ class DoltBranchMiddleware:
         return self.get_response(request)
 
     def process_view(self, request, view_func, view_args, view_kwargs):
+        # Check whether the desired branch was passed in as a querystring
+        queryStringBranch = request.GET.get(DOLT_BRANCH_KEYWORD, None)
+        if queryStringBranch is not None:
+            # update the session Cookie
+            request.session[DOLT_BRANCH_KEYWORD] = queryStringBranch
+            return redirect(request.path)
+
         branch = self.get_branch(request)
         try:
             branch.checkout()
@@ -49,12 +58,9 @@ class DoltBranchMiddleware:
             messages.error(request, mark_safe(msg))
 
         if request.user.is_authenticated:
-            # inject the "active branch" banner
-            msg = f"""
-                <div class="text-center">
-                    Active Branch: {active_branch()}
-                </div>
-            """
+            # Inject the "active branch" banner. Use a random number for the button id to ensure button listeners do not
+            # clash
+            msg = self.get_active_branch_banner(random.randint(0, 10000))
             messages.info(request, mark_safe(msg))
 
         try:
@@ -77,6 +83,27 @@ class DoltBranchMiddleware:
             )
             request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
+
+    def get_active_branch_banner(self, id):
+        return f"""
+                    <div class="text-center">
+                        Active Branch: {active_branch()}
+                        <div class = "pull-right">
+                            <div class="btn btn-xs btn-primary" id="share-button-{id}">
+                                Share
+                            </div>
+                        </div>
+                    </div>
+                    <script> 
+                        const btn{id} = document.getElementById("share-button-{id}");
+                        btn{id}.addEventListener('click', ()=>{{
+                            const currLink = window.location.href;
+                            const copiedLink = currLink + "?{DOLT_BRANCH_KEYWORD}={active_branch()}";
+                            navigator.clipboard.writeText(copiedLink);
+                            btn{id}.textContent = "Copied!"
+                        }});
+                    </script>
+                """
 
 
 class DoltAutoCommitMiddleware(object):

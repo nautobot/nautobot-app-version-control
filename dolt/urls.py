@@ -61,6 +61,11 @@ urlpatterns = [
         name="pull_request_add",
     ),
     path(
+        "pull-request/delete/",
+        views.PullRequestBulkDeleteView.as_view(),
+        name="pullrequest_bulk_delete",
+    ),
+    path(
         "pull-request/<str:pk>/",
         views.PullRequestDiffView.as_view(),
         name="pull_request",

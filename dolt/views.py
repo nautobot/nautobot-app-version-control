@@ -5,7 +5,7 @@ import logging
 from django.forms import ValidationError
 from django.contrib import messages
 from django.db import models, connections
-from django.db.models import Q, F, Subquery, OuterRef, Value
+from django.db.models import Q, F, Subquery, OuterRef, Value, ProtectedError
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.serializers import serialize
@@ -159,11 +159,9 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
                 queryset = self.queryset.filter(pk__in=pk_list)
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
-                except ProtectedError as e:
-                    logger.info(
-                        "Caught ProtectedError while attempting to delete objects"
-                    )
-                    handle_protectederror(queryset, request, e)
+                except Exception as e:
+                    logger.info("Caught errpr while attempting to delete objects")
+                    messages.error(request, mark_safe(e))
                     return redirect(self.get_return_url(request))
 
                 msg = "Deleted {} {}".format(
@@ -844,3 +842,72 @@ class PullRequestCloseView(generic.ObjectEditView):
                 "return_url": pr.get_absolute_url(),
             },
         )
+
+
+class PullRequestBulkDeleteView(generic.BulkDeleteView):
+    queryset = PullRequest.objects.all()
+    table = tables.PullRequestTable
+    form = forms.PullRequestDeleteForm
+    template_name = "dolt/pull_request_bulk_delete.html"
+
+    def get(self, request):
+        return redirect(self.get_return_url(request))
+
+    def post(self, request, *args, **kwargs):
+        logger = logging.getLogger("nautobot.views.BulkDeleteView")
+        model = self.queryset.model
+
+        # Are we deleting *all* objects in the queryset or just a selected subset?
+        pk_list = request.POST.getlist("pk")
+        form_cls = self.get_form()
+
+        if "_confirm" in request.POST:
+            form = form_cls(request.POST)
+            if form.is_valid():
+                logger.debug("Form validation was successful")
+
+                # Delete objects
+                queryset = self.queryset.filter(pk__in=pk_list)
+                try:
+                    deleted_count = queryset.delete()[1][model._meta.label]
+                except Exception as e:
+                    logger.info("Caught error while attempting to delete objects")
+                    return redirect(self.get_return_url(request))
+
+                msg = "Deleted {} {}".format(
+                    deleted_count, model._meta.verbose_name_plural
+                )
+                logger.info(msg)
+                messages.success(request, msg)
+                return redirect(self.get_return_url(request))
+
+            else:
+                logger.debug("Form validation failed")
+
+        else:
+            form = form_cls(
+                initial={
+                    "pk": pk_list,
+                    "return_url": self.get_return_url(request),
+                }
+            )
+
+        # Retrieve objects being deleted
+        table = self.table(self.queryset.filter(pk__in=pk_list), orderable=False)
+        if not table.rows:
+            messages.warning(
+                request,
+                "No {} were selected for deletion.".format(
+                    model._meta.verbose_name_plural
+                ),
+            )
+            return redirect(self.get_return_url(request))
+
+        context = {
+            "form": form,
+            "obj_type_plural": model._meta.verbose_name_plural,
+            "table": table,
+            "return_url": self.get_return_url(request),
+        }
+        context.update(self.extra_context())
+        return render(request, self.template_name, context)
