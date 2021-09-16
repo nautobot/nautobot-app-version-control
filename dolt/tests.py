@@ -36,12 +36,12 @@ class TestBranches(DoltTestCase):
         self.assertEqual(Branch.objects.filter(name="another").count(), 1)
 
     def test_delete_with_pull_requests(self):
-        Branch(name="todelete", starting_branch=DOLT_DEFAULT_BRANCH).save()
+        Branch(name="todelete", starting_branch=self.default).save()
         PullRequest.objects.create(
             title="My Review",
             state=0,
             source_branch="todelete",
-            destination_branch=DOLT_DEFAULT_BRANCH,
+            destination_branch=self.default,
             description="review1",
             creator=self.user,
         )
@@ -59,8 +59,8 @@ class TestBranches(DoltTestCase):
         self.assertEqual(Branch.objects.filter(name="todelete").count(), 0)
 
     def test_merge_ff(self):
-        Branch(name="ff", starting_branch=DOLT_DEFAULT_BRANCH).save()
-        main = Branch.objects.get(name=DOLT_DEFAULT_BRANCH)
+        Branch(name="ff", starting_branch=self.default).save()
+        main = Branch.objects.get(name=self.default)
         other = Branch.objects.get(name="ff")
 
         Commit(message="commit any changes").save(user=self.user)
@@ -84,8 +84,8 @@ class TestBranches(DoltTestCase):
         self.assertEqual(Manufacturer.objects.filter(name="m1", slug="m-1").count(), 1)
 
     def test_merge_no_ff(self):
-        Branch(name="noff", starting_branch=DOLT_DEFAULT_BRANCH).save()
-        main = Branch.objects.get(name=DOLT_DEFAULT_BRANCH)
+        Branch(name="noff", starting_branch=self.default).save()
+        main = Branch.objects.get(name=self.default)
         other = Branch.objects.get(name="noff")
 
         # # Create a change on main
@@ -109,12 +109,12 @@ class TestBranches(DoltTestCase):
         self.assertEqual(Manufacturer.objects.filter(name="m3", slug="m-3").count(), 1)
 
     def test_merge_conflicts(self):
-        main = Branch.objects.get(name=DOLT_DEFAULT_BRANCH)
+        main = Branch.objects.get(name=self.default)
         Manufacturer.objects.all().delete()
         Manufacturer.objects.create(name="m2", slug="m-2")
         Commit(message="commit m2 with slug m-2").save(user=self.user)
 
-        Branch(name="conflicts", starting_branch=DOLT_DEFAULT_BRANCH).save()
+        Branch(name="conflicts", starting_branch=self.default).save()
         other = Branch.objects.get(name="conflicts")
 
         # # Create a change on main
