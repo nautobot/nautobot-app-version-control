@@ -1,10 +1,11 @@
-from django.test import TestCase, TransactionTestCase
+from django.test import override_settings, TestCase, TransactionTestCase
 
 from dolt.models import Branch
 from dolt.utils import active_branch
 from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
+@override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class DoltTestCase(TransactionTestCase):
     databases = ["default", "global"]
 
