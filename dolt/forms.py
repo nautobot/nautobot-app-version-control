@@ -173,6 +173,21 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
         ]
 
 
+class PullRequestDeleteForm(ConfirmationForm):
+    pk = forms.ModelMultipleChoiceField(
+        queryset=PullRequest.objects.all(), widget=forms.MultipleHiddenInput
+    )
+
+    def clean_pk(self):
+        return self.cleaned_data["pk"]
+
+    class Meta:
+        model = PullRequest
+        fields = [
+            "pk",
+        ]
+
+
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
     model = PullRequest
     q = forms.CharField(required=False, label="Search")
