@@ -1,4 +1,4 @@
-from django.db.models.signals import post_migrate
+from django.db.models.signals import pre_migrate, post_migrate
 
 from nautobot.extras.plugins import PluginConfig
 
@@ -33,7 +33,11 @@ class NautobotDolt(PluginConfig):
     def ready(self):
         super().ready()
 
-        # make a Dolt commit to save database migrations
+        # disable the GlobalStateRouter during migrations.
+        pre_migrate.connect(switch_global_router_off, sender=self)
+        post_migrate.connect(switch_global_router_on, sender=self)
+
+        # make a Dolt commit to save database migrations.
         post_migrate.connect(auto_dolt_commit_migration, sender=self)
 
 
@@ -211,3 +215,21 @@ def register_diff_tables(registry):
                 # v must be Table
                 raise err
     __DIFF_TABLE_REGISTRY__.update(registry)
+
+
+__GLOBAL_ROUTER_SWITCH__ = False
+
+
+def is_global_router_enabled():
+    global __GLOBAL_ROUTER_SWITCH__
+    return __GLOBAL_ROUTER_SWITCH__
+
+
+def switch_global_router_on(sender, **kwargs):
+    global __GLOBAL_ROUTER_SWITCH__
+    __GLOBAL_ROUTER_SWITCH__ = True
+
+
+def switch_global_router_off(sender, **kwargs):
+    global __GLOBAL_ROUTER_SWITCH__
+    __GLOBAL_ROUTER_SWITCH__ = False

@@ -232,7 +232,6 @@ def migrate(context):
     compose_files = [
         "docker-compose.requirements.yml",
         "docker-compose.base.yml",
-        "docker-compose.migrate.yml",
     ]
 
     if is_truthy(context.nautobot_dolt.local):
@@ -272,7 +271,6 @@ def load_data(context):
     compose_files = [
         "docker-compose.requirements.yml",
         "docker-compose.base.yml",
-        "docker-compose.migrate.yml",
     ]
 
     for command in commands:
@@ -352,7 +350,7 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(context, keepdb=False, label="dolt", failfast=False, buffer=True):
+def unittest(context, keepdb=False, label="dolt", failfast=False, buffer=True, verbose=False):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
@@ -362,7 +360,23 @@ def unittest(context, keepdb=False, label="dolt", failfast=False, buffer=True):
         command += " --failfast"
     if buffer:
         command += " --buffer"
-    run_command(context, command)
+    if verbose:
+        command += " --verbosity 2"
+
+    # Check if Nautobot is running, no need to start another Nautobot container to run a command
+    docker_compose_status = "ps --services --filter status=running"
+    results = docker_compose(context, docker_compose_status, hide="out")
+    if "nautobot" in results.stdout:
+        compose_command = f"exec nautobot {command}"
+    else:
+        compose_command = f"run --entrypoint '{command}' nautobot"
+
+    compose_files = [
+        "docker-compose.requirements.yml",
+        "docker-compose.base.yml",
+        "docker-compose.test.yml",
+    ]
+    docker_compose(context, compose_command, pty=True, compose_files=compose_files)
 
 
 @task
