@@ -11,6 +11,7 @@ from django.db import transaction, connection
 from nautobot.dcim.models import Manufacturer
 
 
+@override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class DoltTestCase(TransactionTestCase):
     databases = ["default", "global"]
 
@@ -47,9 +48,7 @@ class TestBranches(DoltTestCase):
 
         # Try to delete the branch
         try:
-            # Need to ensure failed delete doesn't break subsequent queries
-            with transaction.atomic():
-                Branch.objects.filter(name="todelete").delete()
+            Branch.objects.filter(name="todelete").delete()
             self.fail("the branch delete should've failed")
         except:
             pass
@@ -135,6 +134,7 @@ class TestBranches(DoltTestCase):
         except:
             pass
 
+        # Validate that any potential conflicts actually exist
         self.assertEquals(get_conflicts_count_for_merge(other, main), 1)
         main.checkout()  # need this because of post truncate action with TransactionTests
 
@@ -162,7 +162,7 @@ class TestBranchesApi(APITestCase, APIViewTestCases):
         Branch.objects.create(name="b2", starting_branch=DOLT_DEFAULT_BRANCH)
         Branch.objects.create(name="b3", starting_branch=DOLT_DEFAULT_BRANCH)
 
-    # The ApiViewTestCase mixin handles get,create, etc. thoroughly but it's a useful exercise for readers to understand
+    # The ApiViewTestCase mixin handles get, create, etc. thoroughly but it's a useful exercise for readers to understand
     # what is happening in the background
     def test_get(self):
         url = reverse("plugins-api:dolt-api:branch-list")
