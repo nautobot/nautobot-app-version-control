@@ -248,6 +248,41 @@ class TestPullRequestApi(APITestCase, APIViewTestCases):
         self.assertEqual(data["count"], 3)
 
 
+class TestPullRequests(DoltTestCase):
+    default = DOLT_DEFAULT_BRANCH
+
+    def setUp(self):
+        self.user = User.objects.get_or_create(
+            username="branch-test", is_superuser=True
+        )[0]
+        self.main = Branch.objects.get(name=self.default)
+
+    def tearDown(self):
+        Branch.objects.exclude(name=self.default).delete()
+        PullRequest.objects.all().delete()
+
+    def test_pull_requests_write_to_main(self):
+        Branch(name="test", starting_branch=self.default).save()
+        Branch(name="test2", starting_branch=self.default).save()
+        test_branch = Branch.objects.get(name="test")
+
+        # Create a PR from the test branch
+        test_branch.checkout()
+        PullRequest.objects.create(
+            title="MyPr",
+            state=0,
+            source_branch=test_branch.name,
+            destination_branch=self.default,
+            description="Can I get a review",
+            creator=self.user,
+        )
+        Commit(message="commit any changes").save(user=self.user)
+
+        # Checkout to the main branch and verify that the pull request exists
+        self.main.checkout()
+        self.assertEqual(1, PullRequest.objects.filter(source_branch=test_branch.name, destination_branch=self.default).count())
+
+
 class TestPullRequestCommentsApi(APITestCase, APIViewTestCases):
     model = PullRequestReview
     brief_fields = ["pull_request", "reviewer", "reviewed_at", "state", "summary"]
