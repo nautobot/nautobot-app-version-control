@@ -160,7 +160,7 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
                 except Exception as e:
-                    logger.info("Caught errpr while attempting to delete objects")
+                    logger.info("Caught error while attempting to delete objects")
                     messages.error(request, mark_safe(e))
                     return redirect(self.get_return_url(request))
 
