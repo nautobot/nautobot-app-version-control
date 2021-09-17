@@ -139,7 +139,9 @@ class TestBranches(DoltTestCase):
         main.checkout()  # need this because of post truncate action with TransactionTests
 
 
-class TestApp(APITestCase):  # pylint: disable=too-many-ancestors
+@override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
+class TestApp(APITestCase):
+    databases = ["default", "global"]
     def test_root(self):
         url = reverse("plugins-api:dolt-api:api-root")
         response = self.client.get("{}?format=api".format(url), **self.header)
@@ -147,7 +149,9 @@ class TestApp(APITestCase):  # pylint: disable=too-many-ancestors
         self.assertEqual(response.status_code, 200)
 
 
+@override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestBranchesApi(APITestCase, APIViewTestCases):
+    databases = ["default", "global"]
     model = Branch
     brief_fields = ["name", "starting_branch"]
     create_data = [
@@ -178,6 +182,7 @@ class TestBranchesApi(APITestCase, APIViewTestCases):
 
 
 class TestPullRequestApi(APITestCase, APIViewTestCases):
+    databases = ["default", "global"]
     model = PullRequest
     brief_fields = [
         "title",
@@ -188,28 +193,33 @@ class TestPullRequestApi(APITestCase, APIViewTestCases):
         "creator",
         "created_at",
     ]
-    create_data = [
-        {
-            "title": "Review 4",
-            "state": 0,
-            "source_branch": "b1",
-            "destination_branch": "b2",
-            "description": "",
-            "creator": User.objects.get(username="pr-reviewer"),
-        },
-        {
-            "title": "Review 5",
-            "state": 1,
-            "source_branch": "b1",
-            "destination_branch": "b3",
-            "description": "",
-            "creator": User.objects.get(username="pr-reviewer"),
-        },
-    ]
+    # create_data = [
+    #     {
+    #         "title": "Review 4",
+    #         "state": 0,
+    #         "source_branch": "b1",
+    #         "destination_branch": "b2",
+    #         "description": "",
+    #         "creator": User.objects.get(username="pr-reviewer"),
+    #     },
+    #     {
+    #         "title": "Review 5",
+    #         "state": 1,
+    #         "source_branch": "b1",
+    #         "destination_branch": "b3",
+    #         "description": "",
+    #         "creator": User.objects.get(username="pr-reviewer"),
+    #     },
+    # ]
+
+    def setUp(self):
+        self.user = User.objects.get_or_create(
+            username="branch-test", is_superuser=True
+        )[0] 
 
     @classmethod
     def setUpTestData(cls):
-        User.objects.create(username="pr-reviewer", is_superuser=True)
+
         PullRequest.objects.create(
             title="Review 1",
             state=0,
@@ -248,6 +258,7 @@ class TestPullRequestApi(APITestCase, APIViewTestCases):
         self.assertEqual(data["count"], 3)
 
 
+@override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestPullRequests(DoltTestCase):
     default = DOLT_DEFAULT_BRANCH
 
@@ -258,8 +269,8 @@ class TestPullRequests(DoltTestCase):
         self.main = Branch.objects.get(name=self.default)
 
     def tearDown(self):
-        Branch.objects.exclude(name=self.default).delete()
         PullRequest.objects.all().delete()
+        Branch.objects.exclude(name=self.default).delete()
 
     def test_pull_requests_write_to_main(self):
         Branch(name="test", starting_branch=self.default).save()
@@ -282,8 +293,9 @@ class TestPullRequests(DoltTestCase):
         self.main.checkout()
         self.assertEqual(1, PullRequest.objects.filter(source_branch=test_branch.name, destination_branch=self.default).count())
 
-
+@override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestPullRequestCommentsApi(APITestCase, APIViewTestCases):
+    databases = ["default", "global"]
     model = PullRequestReview
     brief_fields = ["pull_request", "reviewer", "reviewed_at", "state", "summary"]
 
@@ -317,7 +329,9 @@ class TestPullRequestCommentsApi(APITestCase, APIViewTestCases):
         self.assertEqual(data["count"], 1)
 
 
+@override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestCommitsApi(APITestCase, APIViewTestCases):
+    databases = ["default", "global"]
     model = Commit
 
     def test_root(self):

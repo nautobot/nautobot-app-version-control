@@ -2,7 +2,7 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.db import connections
 from django.utils.safestring import mark_safe
 
-from . import is_global_router_enabled, is_versioned_model
+from . import is_global_router_enabled, is_versioned_model, switch_global_router_on
 from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH, GLOBAL_DB
 from dolt.models import Branch
 from dolt.utils import DoltError, is_dolt_model, active_branch
