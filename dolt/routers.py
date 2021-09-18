@@ -39,13 +39,13 @@ class GlobalStateRouter:
         if not is_global_router_enabled():
             return None
 
+        if is_versioned_model(model):
+            return None
+
         if is_dolt_model(model):
             # Dolt models can be created or edited from any branch.
             # Edits will be applied to the "main"
             return self.global_db
-
-        if is_versioned_model(model):
-            return None
 
         if self.branch_is_not_primary():
             # non-versioned models can only be edited on "main"
