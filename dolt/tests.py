@@ -142,6 +142,7 @@ class TestBranches(DoltTestCase):
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestApp(APITestCase):
     databases = ["default", "global"]
+
     def test_root(self):
         url = reverse("plugins-api:dolt-api:api-root")
         response = self.client.get("{}?format=api".format(url), **self.header)
@@ -193,33 +194,10 @@ class TestPullRequestApi(APITestCase, APIViewTestCases):
         "creator",
         "created_at",
     ]
-    # create_data = [
-    #     {
-    #         "title": "Review 4",
-    #         "state": 0,
-    #         "source_branch": "b1",
-    #         "destination_branch": "b2",
-    #         "description": "",
-    #         "creator": User.objects.get(username="pr-reviewer"),
-    #     },
-    #     {
-    #         "title": "Review 5",
-    #         "state": 1,
-    #         "source_branch": "b1",
-    #         "destination_branch": "b3",
-    #         "description": "",
-    #         "creator": User.objects.get(username="pr-reviewer"),
-    #     },
-    # ]
-
-    def setUp(self):
-        self.user = User.objects.get_or_create(
-            username="branch-test", is_superuser=True
-        )[0] 
 
     @classmethod
     def setUpTestData(cls):
-
+        User.objects.get_or_create(username="pr-reviewer", is_superuser=True)[0]
         PullRequest.objects.create(
             title="Review 1",
             state=0,
@@ -291,7 +269,13 @@ class TestPullRequests(DoltTestCase):
 
         # Checkout to the main branch and verify that the pull request exists
         self.main.checkout()
-        self.assertEqual(1, PullRequest.objects.filter(source_branch=test_branch.name, destination_branch=self.default).count())
+        self.assertEqual(
+            1,
+            PullRequest.objects.filter(
+                source_branch=test_branch.name, destination_branch=self.default
+            ).count(),
+        )
+
 
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestPullRequestCommentsApi(APITestCase, APIViewTestCases):
