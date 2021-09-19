@@ -1,5 +1,5 @@
 from django import forms
-from django.db.models import ProtectedError
+from django.db.models import ProtectedError, Q
 
 from nautobot.users.models import User
 from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
@@ -23,7 +23,6 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
         queryset=User.objects.all(),
         to_field_name="username",
         required=True,
-        widget=forms.HiddenInput(),
     )
 
     class Meta:
@@ -115,6 +114,17 @@ class BranchFilterForm(forms.Form, BootstrapMixin):
     field_order = ["q"]
     q = forms.CharField(required=False, label="Search")
 
+    created_by = forms.ModelChoiceField(
+        required=False, queryset=User.objects.all())
+    latest_committer = forms.ChoiceField(choices=[], required=False)
+    starting_branch =  forms.ModelChoiceField(required=False, queryset=Branch.objects.all().exclude(Q(name__icontains="xxx-merge")), to_field_name="source_branch")
+
+    def __init__(self, *args, **kwargs):
+        super(BranchFilterForm, self).__init__(*args, **kwargs)
+        self.fields["latest_committer"].choices = (
+            Branch.objects.all().values_list("latest_committer", "latest_committer").distinct()
+        )
+        self.fields["latest_committer"].choices.insert(0, ('', '-------')) # empty option
 
 #
 # Commits
