@@ -17,9 +17,9 @@ black = "*"
 yamllint = "*"
 bandit = "*"
 pylint = "*"
-pylint-django = "*"
 pydocstyle = "*"
 flake8 = "*"
+pylint-django = "*"
 
 [tool.black]
 line-length = 120
