@@ -96,6 +96,14 @@ class PullRequestFilterSet(BaseFilterSet):
         )
 
 
+class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
+    def __init__(self, data, *args, **kwargs):
+        if not data.get('state'):
+            data = data.copy()
+            data['state'] = PullRequest.OPEN
+        super().__init__(data, *args, **kwargs)
+
+
 class PullRequestCommentFilterSet(BaseFilterSet):
     q = django_filters.CharFilter(
         method="search",

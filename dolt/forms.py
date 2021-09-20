@@ -201,6 +201,10 @@ class PullRequestFilterForm(forms.Form, BootstrapMixin):
         required=False, queryset=User.objects.all(), empty_label=None
     )
 
+    def __init__(self, *args, **kwargs):
+        super(PullRequestFilterForm, self).__init__(*args, **kwargs)
+        self.initial['state'] = PullRequest.OPEN
+
     class Meta:
         fields = [
             "state",

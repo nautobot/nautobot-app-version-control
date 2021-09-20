@@ -580,12 +580,16 @@ class DiffDetailView(View):
 
 class PullRequestListView(generic.ObjectListView):
     queryset = PullRequest.objects.all().order_by("-created_at")
-    filterset = filters.PullRequestFilterSet
+    filterset = filters.PullRequestDefaultOpenFilterSet
     filterset_form = forms.PullRequestFilterForm
     table = tables.PullRequestTable
     action_buttons = ()
     template_name = "dolt/pull_request_list.html"
 
+    def extra_context(self):
+        return {
+            "filter_form": forms.PullRequestFilterForm(initial={"state": PullRequest.OPEN})
+        }
 
 class PullRequestBase(generic.ObjectView):
     queryset = PullRequest.objects.all()
