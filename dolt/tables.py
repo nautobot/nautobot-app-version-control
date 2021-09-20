@@ -26,10 +26,10 @@ BRANCH_TABLE_BADGES = """
             Activate
         </a>
    {% endif %}
-    <a href="{% url 'plugins:dolt:pull_request_add' %}?source_branch={{ record.pk }}" class="btn btn-xs btn-info" title="pull_request">
+    <a href="{% url 'plugins:dolt:pull_request_add' %}?source_branch={{ record.pk }}" class="btn btn-xs btn-success" title="pull_request">
         Pull Request
     </a>
-    <a href="{% url 'plugins:dolt:pull_request_add' %}?source_branch={{ default_branch }}&destination_branch={{ record.pk }}" class="btn btn-xs btn-info" title="catch_up">
+    <a href="{% url 'plugins:dolt:pull_request_add' %}?source_branch={{ default_branch }}&destination_branch={{ record.pk }}" class="btn btn-xs btn-warning" title="catch_up">
         Catchup
     </a>
 </div>
@@ -55,6 +55,9 @@ class BranchTable(BaseTable):
         pk_field="name",
         buttons=("checkout",),
         prepend_template=BRANCH_TABLE_BADGES,
+    )
+    ahead_behind = tables.Column(
+        accessor=A("ahead_behind"), verbose_name="Ahead / Behind"
     )
     starting_branch = tables.Column(
         accessor=A("source_branch"), verbose_name="Starting Branch"
