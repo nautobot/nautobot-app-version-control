@@ -586,10 +586,6 @@ class PullRequestListView(generic.ObjectListView):
     action_buttons = ()
     template_name = "dolt/pull_request_list.html"
 
-    def extra_context(self):
-        return {
-            "filter_form": forms.PullRequestFilterForm(initial={"state": PullRequest.OPEN})
-        }
 
 class PullRequestBase(generic.ObjectView):
     queryset = PullRequest.objects.all()

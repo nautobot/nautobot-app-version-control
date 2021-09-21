@@ -98,9 +98,9 @@ class PullRequestFilterSet(BaseFilterSet):
 
 class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
     def __init__(self, data, *args, **kwargs):
-        if not data.get('state'):
+        if not data.get("state"):
             data = data.copy()
-            data['state'] = PullRequest.OPEN
+            data["state"] = PullRequest.OPEN
         super().__init__(data, *args, **kwargs)
 
 
