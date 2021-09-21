@@ -1,7 +1,7 @@
 import django_filters
 from django.db.models import Q
 
-from nautobot.utilities.filters import BaseFilterSet
+from nautobot.utilities.filters import BaseFilterSet, TreeNodeMultipleChoiceFilter
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 
 
@@ -83,6 +83,7 @@ class PullRequestFilterSet(BaseFilterSet):
         )
 
     def search(self, queryset, name, value):
+        print(queryset)
         value = value.strip()
         if not value:
             return queryset
@@ -97,6 +98,8 @@ class PullRequestFilterSet(BaseFilterSet):
 
 
 class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
+    state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
+
     def __init__(self, data, *args, **kwargs):
         if not data.get("state"):
             data = data.copy()
@@ -109,6 +112,7 @@ class PullRequestCommentFilterSet(BaseFilterSet):
         method="search",
         label="Search",
     )
+    state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
 
     class Meta:
         model = PullRequestReview
