@@ -48,11 +48,11 @@ class PullRequestViewSet(CustomFieldModelViewSet):
 
 
 #
-# Pull Request Comments
+# Pull Request Reviews
 #
 
 
-class PullRequestCommentsViewSet(CustomFieldModelViewSet):
-    queryset = PullRequestReview.objects.filter(state=PullRequestReview.COMMENTED)
-    serializer_class = serializers.PullRequestCommentsSerializer
-    filterset_class = filters.PullRequestCommentFilterSet
+class PullRequestReviewViewSet(CustomFieldModelViewSet):
+    queryset = PullRequestReview.objects.all()
+    serializer_class = serializers.PullRequestReviewSerializer
+    filterset_class = filters.PullRequestRequestFilterSet

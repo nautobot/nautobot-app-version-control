@@ -278,7 +278,7 @@ class TestPullRequests(DoltTestCase):
 
 
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
-class TestPullRequestCommentsApi(APITestCase, APIViewTestCases):
+class TestPullRequestReviewsApi(APITestCase, APIViewTestCases):
     databases = ["default", "global"]
     model = PullRequestReview
     brief_fields = ["pull_request", "reviewer", "reviewed_at", "state", "summary"]
@@ -310,7 +310,7 @@ class TestPullRequestCommentsApi(APITestCase, APIViewTestCases):
         self.assertEqual(response.status_code, 200)
 
         data = response.json()
-        self.assertEqual(data["count"], 1)
+        self.assertEqual(data["count"], 2)
 
 
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
