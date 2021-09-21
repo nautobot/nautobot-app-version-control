@@ -200,8 +200,7 @@ class PullRequestFilterForm(forms.Form, BootstrapMixin):
     def __init__(self, *args, **kwargs):
         super(PullRequestFilterForm, self).__init__(*args, **kwargs)
         if args is not None:
-            ret = args[0].get("state", None)
-            if ret is None:
+            if not args[0].get("state", None):
                 newArgs = args[0].copy()
                 newArgs.update({"state": PullRequest.OPEN})
                 super(PullRequestFilterForm, self).__init__(newArgs, **kwargs)
