@@ -83,7 +83,6 @@ class PullRequestFilterSet(BaseFilterSet):
         )
 
     def search(self, queryset, name, value):
-        print(queryset)
         value = value.strip()
         if not value:
             return queryset
