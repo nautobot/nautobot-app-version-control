@@ -1,7 +1,7 @@
 name: GitHub Actions Demo
 on: [push]
 jobs:
-  lint-the-repo:
+  lint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -11,3 +11,16 @@ jobs:
       - uses: lgeiger/black-action@master
         with:
           args: '. --line-length 100 --check'
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+      - name: Install Python Deps
+        run: |
+          pip install invoke
+      - name: Run unittests
+        run: |
+          invoke unittest
