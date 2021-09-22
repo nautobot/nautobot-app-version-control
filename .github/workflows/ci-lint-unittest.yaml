@@ -1,0 +1,27 @@
+name: Lint and Run Unittests
+on: [push]
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+      - uses: lgeiger/black-action@master
+        with:
+          args: '. --line-length 100 --check'
+  unittest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.6'
+      - name: Install Python Deps
+        run: |
+          pip install invoke
+      - name: Run unittests
+        run: |
+          cp development/creds.example.env development/creds.env
+          invoke unittest
