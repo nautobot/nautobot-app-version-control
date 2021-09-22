@@ -1,8 +1,7 @@
 from django import forms
-from django.db.models import ProtectedError
 
 from nautobot.users.models import User
-from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
+from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm, add_blank_choice
 
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 from dolt.utils import active_branch, DoltError
@@ -23,7 +22,6 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
         queryset=User.objects.all(),
         to_field_name="username",
         required=True,
-        widget=forms.HiddenInput(),
     )
 
     class Meta:
@@ -110,6 +108,16 @@ class BranchFilterForm(forms.Form, BootstrapMixin):
     model = Branch
     field_order = ["q"]
     q = forms.CharField(required=False, label="Search")
+
+    latest_committer = forms.ChoiceField(choices=[], required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(BranchFilterForm, self).__init__(*args, **kwargs)
+        self.fields["latest_committer"].choices = add_blank_choice(
+            Branch.objects.all()
+            .values_list("latest_committer", "latest_committer")
+            .distinct()
+        )
 
 
 #
