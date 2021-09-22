@@ -24,3 +24,4 @@ jobs:
       - name: Run unittests
         run: |
           invoke unittest
+        working-directory: './nautobot-plugin-workflow-dolt'
