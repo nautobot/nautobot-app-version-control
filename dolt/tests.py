@@ -48,7 +48,7 @@ class TestBranches(DoltTestCase):
         try:
             Branch.objects.filter(name="todelete").delete()
             self.fail("the branch delete should've failed")
-        except:
+        except:  # nosec
             pass
 
         # Delete the pr and try again
@@ -73,7 +73,7 @@ class TestBranches(DoltTestCase):
         main.checkout()
         main.merge(other, user=self.user)
         with connection.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM dolt_log where message='added a manufacturer'")
+            cursor.execute("SELECT * FROM dolt_log where message=%s", ["added a manufacturer"])
             self.assertFalse(cursor.fetchone()[0] == None)
 
         # Verify the the main branch has the data
@@ -97,7 +97,7 @@ class TestBranches(DoltTestCase):
         main.checkout()
         main.merge(other, user=self.user)
         with connection.cursor() as cursor:
-            cursor.execute(f"SELECT * FROM dolt_log where message='commit m3'")
+            cursor.execute("SELECT * FROM dolt_log where message=%s", ["commit m3"])
             self.assertFalse(cursor.fetchone()[0] == None)
 
         # Verify the the main branch has the data
@@ -127,7 +127,7 @@ class TestBranches(DoltTestCase):
         try:
             main.merge(other, user=self.user)
             self.fail("this should error for conflicts")
-        except:
+        except:  # nosec
             pass
 
         # Validate that any potential conflicts actually exist

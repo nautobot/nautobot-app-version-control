@@ -105,9 +105,9 @@ def make_merge_candidate(src, dest):
     Branch(name=name, starting_branch=dest).save()
     with connection.cursor() as cursor:
         cursor.execute("SET @@dolt_force_transaction_commit = 1;")
-        cursor.execute(f"""SELECT dolt_checkout("{name}") FROM dual;""")
-        cursor.execute(f"""SELECT dolt_merge("{src}") FROM dual;""")
-        cursor.execute(f"""SELECT dolt_add("-A") FROM dual;""")
+        cursor.execute("""SELECT dolt_checkout(%s) FROM dual;""", [name])
+        cursor.execute("""SELECT dolt_merge(%s) FROM dual;""", [src])
+        cursor.execute("""SELECT dolt_add("-A") FROM dual;""")
         msg = f"""creating merge candidate with src: "{src}" and dest: "{dest}"."""
         cursor.execute(
             f"""SELECT dolt_commit(
@@ -228,8 +228,10 @@ class MergeConflicts:
             rows = []
             model_name = self._model_from_table(violation.table)
             cursor.execute(
-                f"""SELECT id, violation_type, violation_info
+                mark_safe(
+                    """SELECT id, violation_type, violation_info
                     FROM dolt_constraint_violations_{violation.table};"""
+                )
             )
             for v_row in cursor.fetchall():
                 obj_name = self._object_name_from_id(violation.table, v_row[0])

@@ -5,7 +5,7 @@ from django.db import models, connection, connections
 from django.db.models import Q
 from django.db.models.deletion import CASCADE, SET_NULL
 from django.urls import reverse
-from django.utils.safestring import mark_safe
+from django.utils.html import mark_safe, format_html
 from django.dispatch import receiver
 from django.db.models.signals import pre_delete
 
@@ -147,19 +147,20 @@ class Branch(DoltSystemTable):
                     ) FROM dual;"""
                 )
             else:
-                cursor.execute(f"SELECT dolt_merge('--abort') FROM dual;")
+                cursor.execute(f"SELECT dolt_merge('--abort') FROM dual;")  # nosec
                 raise DoltError(
-                    mark_safe(
-                        f"""Merging <strong>{merge_branch}</strong> into <strong>{self}</strong> 
-                            created merge conflicts. Resolve merge conflicts to reattempt the merge."""
-                    )
+                    format_html(
+                        "{}",
+                        mark_safe(
+                            f"""Merging <strong>{merge_branch}</strong> into <strong>{self}</strong> created merge conflicts. Resolve merge conflicts to reattempt the merge."""
+                        ),
+                    )  # nosec
                 )
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
             cursor.execute(
-                f"""INSERT INTO dolt_branches (name,hash) 
-                    VALUES ('{self.name}',hashof('{self.starting_branch}'));"""
+                """INSERT INTO dolt_branches (name,hash) VALUES (%s, hashof(%s));""", [self.name, self.starting_branch]
             )
 
 
