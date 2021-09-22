@@ -41,7 +41,7 @@ class PullRequestSerializer(ValidatedModelSerializer):
         ]
 
 
-class PullRequestCommentsSerializer(ValidatedModelSerializer):
+class PullRequestReviewSerializer(ValidatedModelSerializer):
     class Meta:
         model = PullRequestReview
         fields = ["pull_request", "reviewer", "reviewed_at", "state", "summary"]
