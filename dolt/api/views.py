@@ -55,4 +55,4 @@ class PullRequestViewSet(CustomFieldModelViewSet):
 class PullRequestReviewViewSet(CustomFieldModelViewSet):
     queryset = PullRequestReview.objects.all()
     serializer_class = serializers.PullRequestReviewSerializer
-    filterset_class = filters.PullRequestRequestFilterSet
+    filterset_class = filters.PullRequestReviewFilterSet

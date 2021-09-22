@@ -198,12 +198,16 @@ class PullRequestFilterForm(forms.Form, BootstrapMixin):
     state = forms.MultipleChoiceField(
         required=False, choices=PullRequest.PR_STATE_CHOICES
     )
-    creator = forms.ModelChoiceField(
-        required=False, queryset=User.objects.all(), empty_label=None
-    )
-    reviewer = forms.ModelChoiceField(
-        required=False, queryset=User.objects.all(), empty_label=None
-    )
+    creator = forms.ModelChoiceField(required=False, queryset=User.objects.all())
+    reviewer = forms.ModelChoiceField(required=False, queryset=User.objects.all())
+
+    def __init__(self, *args, **kwargs):
+        super(PullRequestFilterForm, self).__init__(*args, **kwargs)
+        if args is not None:
+            if not args[0].get("state", None):
+                newArgs = args[0].copy()
+                newArgs.update({"state": PullRequest.OPEN})
+                super(PullRequestFilterForm, self).__init__(newArgs, **kwargs)
 
     class Meta:
         fields = [

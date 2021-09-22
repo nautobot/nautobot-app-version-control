@@ -580,7 +580,7 @@ class DiffDetailView(View):
 
 class PullRequestListView(generic.ObjectListView):
     queryset = PullRequest.objects.all().order_by("-created_at")
-    filterset = filters.PullRequestFilterSet
+    filterset = filters.PullRequestDefaultOpenFilterSet
     filterset_form = forms.PullRequestFilterForm
     table = tables.PullRequestTable
     action_buttons = ()
