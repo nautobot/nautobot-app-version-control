@@ -76,27 +76,6 @@ class DoltBranchMiddleware:
             request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
 
-    def get_active_branch_banner(self, id):
-        return f"""
-                    <div class="text-center">
-                        Active Branch: {active_branch()}
-                        <div class = "pull-right">
-                            <div class="btn btn-xs btn-primary" id="share-button-{id}">
-                                Share
-                            </div>
-                        </div>
-                    </div>
-                    <script> 
-                        const btn{id} = document.getElementById("share-button-{id}");
-                        btn{id}.addEventListener('click', ()=>{{
-                            const currLink = window.location.href;
-                            const copiedLink = currLink + "?{DOLT_BRANCH_KEYWORD}={active_branch()}";
-                            navigator.clipboard.writeText(copiedLink);
-                            btn{id}.textContent = "Copied!"
-                        }});
-                    </script>
-                """
-
 
 class DoltAutoCommitMiddleware(object):
     """
