@@ -140,8 +140,7 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
         if request.POST.get("_all"):
             if self.filterset is not None:
                 pk_list = [
-                    obj.pk
-                    for obj in self.filterset(request.GET, model.objects.only("pk")).qs
+                    obj.pk for obj in self.filterset(request.GET, model.objects.only("pk")).qs
                 ]
             else:
                 pk_list = model.objects.values_list("pk", flat=True)
@@ -164,9 +163,7 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
                     messages.error(request, mark_safe(e))
                     return redirect(self.get_return_url(request))
 
-                msg = "Deleted {} {}".format(
-                    deleted_count, model._meta.verbose_name_plural
-                )
+                msg = "Deleted {} {}".format(deleted_count, model._meta.verbose_name_plural)
                 logger.info(msg)
                 messages.success(request, msg)
                 return redirect(self.get_return_url(request))
@@ -187,9 +184,7 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
         if not table.rows:
             messages.warning(
                 request,
-                "No {} were selected for deletion.".format(
-                    model._meta.verbose_name_plural
-                ),
+                "No {} were selected for deletion.".format(model._meta.verbose_name_plural),
             )
             return redirect(self.get_return_url(request))
 
@@ -269,9 +264,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
     def post(self, req, *args, **kwargs):
         src, dest = kwargs["src"], kwargs["dest"]
         Branch.objects.get(name=dest).merge(src, user=req.user)
-        messages.info(
-            req, mark_safe(f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>")
-        )
+        messages.info(req, mark_safe(f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"))
         alter_session_branch(sess=req.session, branch=dest)
         return redirect(f"/")
 
@@ -279,9 +272,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
         merge_base = Commit.merge_base(src, dest)
         source_head = src.hash
         return {
-            "results": diffs.two_dot_diffs(
-                from_commit=merge_base, to_commit=source_head
-            ),
+            "results": diffs.two_dot_diffs(from_commit=merge_base, to_commit=source_head),
             "conflicts": merge.get_conflicts_for_merge(src, dest),
             "back_btn_url": reverse("plugins:dolt:branch_merge", args=[src.name]),
         }
@@ -413,17 +404,13 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
                     # catch database error
                     messages.error(
                         request,
-                        mark_safe(
-                            f"""Error reverting commits {", ".join(msgs)}: {e}"""
-                        ),
+                        mark_safe(f"""Error reverting commits {", ".join(msgs)}: {e}"""),
                     )
                     return redirect(self.get_return_url(request))
                 else:
                     messages.success(
                         request,
-                        mark_safe(
-                            f"""Successfully reverted commits {", ".join(msgs)}"""
-                        ),
+                        mark_safe(f"""Successfully reverted commits {", ".join(msgs)}"""),
                     )
 
         return redirect(self.get_return_url(request))
@@ -639,9 +626,7 @@ class PullRequestReviewListView(PullRequestBase):
 
     def get_extra_context(self, req, obj, **kwargs):
         ctx = super().get_extra_context(req, obj, **kwargs)
-        reviews = PullRequestReview.objects.filter(pull_request=obj.pk).order_by(
-            "reviewed_at"
-        )
+        reviews = PullRequestReview.objects.filter(pull_request=obj.pk).order_by("reviewed_at")
         ctx.update(
             {
                 "active_tab": "reviews",
@@ -827,9 +812,7 @@ class PullRequestCloseView(generic.ObjectEditView):
         if form.is_valid():
             pr.state = PullRequest.CLOSED
             pr.save()
-            msg = mark_safe(
-                f"""<strong>Pull Request "{pr}" has been closed.</strong>"""
-            )
+            msg = mark_safe(f"""<strong>Pull Request "{pr}" has been closed.</strong>""")
             messages.success(request, msg)
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
 
@@ -874,9 +857,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
                     logger.info("Caught error while attempting to delete objects")
                     return redirect(self.get_return_url(request))
 
-                msg = "Deleted {} {}".format(
-                    deleted_count, model._meta.verbose_name_plural
-                )
+                msg = "Deleted {} {}".format(deleted_count, model._meta.verbose_name_plural)
                 logger.info(msg)
                 messages.success(request, msg)
                 return redirect(self.get_return_url(request))
@@ -897,9 +878,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
         if not table.rows:
             messages.warning(
                 request,
-                "No {} were selected for deletion.".format(
-                    model._meta.verbose_name_plural
-                ),
+                "No {} were selected for deletion.".format(model._meta.verbose_name_plural),
             )
             return redirect(self.get_return_url(request))
 

@@ -20,9 +20,7 @@ class TestBranches(DoltTestCase):
     default = DOLT_DEFAULT_BRANCH
 
     def setUp(self):
-        self.user = User.objects.get_or_create(
-            username="branch-test", is_superuser=True
-        )[0]
+        self.user = User.objects.get_or_create(username="branch-test", is_superuser=True)[0]
 
     def tearDown(self):
         Branch.objects.exclude(name=self.default).delete()
@@ -75,9 +73,7 @@ class TestBranches(DoltTestCase):
         main.checkout()
         main.merge(other, user=self.user)
         with connection.cursor() as cursor:
-            cursor.execute(
-                f"SELECT * FROM dolt_log where message='added a manufacturer'"
-            )
+            cursor.execute(f"SELECT * FROM dolt_log where message='added a manufacturer'")
             self.assertFalse(cursor.fetchone()[0] == None)
 
         # Verify the the main branch has the data
@@ -166,9 +162,7 @@ class TestBranchesApi(APITestCase, APIViewTestCases):
     # what is happening in the background
     def test_get(self):
         url = reverse("plugins-api:dolt-api:branch-list")
-        self.add_permissions(
-            f"{self.model._meta.app_label}.view_{self.model._meta.model_name}"
-        )
+        self.add_permissions(f"{self.model._meta.app_label}.view_{self.model._meta.model_name}")
         response = self.client.get("{}?format=json".format(url), **self.header)
 
         self.assertEqual(response.status_code, 200)
@@ -237,9 +231,7 @@ class TestPullRequestApi(APITestCase, APIViewTestCases):
 
     def test_get(self):
         url = reverse("plugins-api:dolt-api:pullrequest-list")
-        self.add_permissions(
-            f"{self.model._meta.app_label}.view_{self.model._meta.model_name}"
-        )
+        self.add_permissions(f"{self.model._meta.app_label}.view_{self.model._meta.model_name}")
         response = self.client.get("{}?format=json".format(url), **self.header)
 
         self.assertEqual(response.status_code, 200)
@@ -271,9 +263,7 @@ class TestPullRequestCommentsApi(APITestCase, APIViewTestCases):
 
     def test_get(self):
         url = reverse("plugins-api:dolt-api:pullrequestreview-list")
-        self.add_permissions(
-            f"{self.model._meta.app_label}.view_{self.model._meta.model_name}"
-        )
+        self.add_permissions(f"{self.model._meta.app_label}.view_{self.model._meta.model_name}")
         response = self.client.get("{}?format=json".format(url), **self.header)
 
         self.assertEqual(response.status_code, 200)
@@ -287,9 +277,7 @@ class TestCommitsApi(APITestCase, APIViewTestCases):
 
     def test_root(self):
         url = reverse("plugins-api:dolt-api:commit-list")
-        self.add_permissions(
-            f"{self.model._meta.app_label}.view_{self.model._meta.model_name}"
-        )
+        self.add_permissions(f"{self.model._meta.app_label}.view_{self.model._meta.model_name}")
         response = self.client.get("{}?format=api".format(url), **self.header)
 
         self.assertEqual(response.status_code, 200)

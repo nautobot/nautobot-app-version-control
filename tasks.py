@@ -81,9 +81,7 @@ def docker_compose(context, command, **kwargs):
         compose_files = context.nautobot_dolt.compose_files
 
     for compose_file in compose_files:
-        compose_file_path = os.path.join(
-            context.nautobot_dolt.compose_dir, compose_file
-        )
+        compose_file_path = os.path.join(context.nautobot_dolt.compose_dir, compose_file)
         compose_command += f' -f "{compose_file_path}"'
     compose_command += f" {command}"
     print(f'Running docker-compose command "{command}"')
@@ -350,9 +348,7 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(
-    context, keepdb=False, label="dolt", failfast=False, buffer=True, verbose=False
-):
+def unittest(context, keepdb=False, label="dolt", failfast=False, buffer=True, verbose=False):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
@@ -384,9 +380,7 @@ def unittest(
 @task
 def unittest_coverage(context):
     """Report on code test coverage as measured by 'invoke unittest'."""
-    command = (
-        "coverage report --skip-covered --include 'nautobot_dolt/*' --omit *migrations*"
-    )
+    command = "coverage report --skip-covered --include 'nautobot_dolt/*' --omit *migrations*"
 
     run_command(context, command)
 

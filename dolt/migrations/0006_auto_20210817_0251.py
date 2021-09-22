@@ -16,9 +16,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="pullrequest",
             name="creator",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="users.user"
-            ),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="users.user"),
         ),
         migrations.AlterField(
             model_name="pullrequest",
@@ -28,9 +26,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name="pullrequestreview",
             name="reviewer",
-            field=models.ForeignKey(
-                on_delete=django.db.models.deletion.CASCADE, to="users.user"
-            ),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to="users.user"),
         ),
         migrations.AlterField(
             model_name="pullrequestreview",

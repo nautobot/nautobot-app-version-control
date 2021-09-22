@@ -407,9 +407,7 @@ class PullRequest(BaseModel):
 
         # get the most recent review that approved or blocked
         decision = (
-            pr_reviews.exclude(state=PullRequestReview.COMMENTED)
-            .order_by("-reviewed_at")
-            .first()
+            pr_reviews.exclude(state=PullRequestReview.COMMENTED).order_by("-reviewed_at").first()
         )
         if not decision:
             # all PRs are "comments"

@@ -94,13 +94,9 @@ class BranchBulkDeleteForm(ConfirmationForm):
         # TODO: log error messages
         deletes = [str(b) for b in self.cleaned_data["pk"]]
         if active_branch() in deletes:
-            raise forms.ValidationError(
-                f"Cannot delete active branch: {active_branch()}"
-            )
+            raise forms.ValidationError(f"Cannot delete active branch: {active_branch()}")
         if DOLT_DEFAULT_BRANCH in deletes:
-            raise forms.ValidationError(
-                f"Cannot delete primary branch: {DOLT_DEFAULT_BRANCH}"
-            )
+            raise forms.ValidationError(f"Cannot delete primary branch: {DOLT_DEFAULT_BRANCH}")
         return self.cleaned_data["pk"]
 
     class Meta:
@@ -156,12 +152,8 @@ class CommitBulkRevertForm(forms.Form, BootstrapMixin):
 
 class PullRequestForm(forms.ModelForm, BootstrapMixin):
     qs = Branch.objects.exclude(name__startswith="xxx")
-    source_branch = forms.ModelChoiceField(
-        queryset=qs, to_field_name="name", required=True
-    )
-    destination_branch = forms.ModelChoiceField(
-        queryset=qs, to_field_name="name", required=True
-    )
+    source_branch = forms.ModelChoiceField(queryset=qs, to_field_name="name", required=True)
+    destination_branch = forms.ModelChoiceField(queryset=qs, to_field_name="name", required=True)
 
     class Meta:
         model = PullRequest
@@ -191,15 +183,9 @@ class PullRequestDeleteForm(ConfirmationForm):
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
     model = PullRequest
     q = forms.CharField(required=False, label="Search")
-    state = forms.MultipleChoiceField(
-        required=False, choices=PullRequest.PR_STATE_CHOICES
-    )
-    creator = forms.ModelChoiceField(
-        required=False, queryset=User.objects.all(), empty_label=None
-    )
-    reviewer = forms.ModelChoiceField(
-        required=False, queryset=User.objects.all(), empty_label=None
-    )
+    state = forms.MultipleChoiceField(required=False, choices=PullRequest.PR_STATE_CHOICES)
+    creator = forms.ModelChoiceField(required=False, queryset=User.objects.all(), empty_label=None)
+    reviewer = forms.ModelChoiceField(required=False, queryset=User.objects.all(), empty_label=None)
 
     class Meta:
         fields = [

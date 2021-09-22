@@ -77,9 +77,7 @@ class DoltBranchMiddleware:
         except ObjectDoesNotExist:
             messages.warning(
                 request,
-                mark_safe(
-                    f"""<div class="text-center">branch not found: {requested}</div>"""
-                ),
+                mark_safe(f"""<div class="text-center">branch not found: {requested}</div>"""),
             )
             request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)

@@ -56,9 +56,7 @@ class BranchTable(BaseTable):
         buttons=("checkout",),
         prepend_template=BRANCH_TABLE_BADGES,
     )
-    starting_branch = tables.Column(
-        accessor=A("source_branch"), verbose_name="Starting Branch"
-    )
+    starting_branch = tables.Column(accessor=A("source_branch"), verbose_name="Starting Branch")
 
     class Meta(BaseTable.Meta):
         model = Branch

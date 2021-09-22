@@ -38,9 +38,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             continue
 
         factory = DiffModelFactory(content_type)
-        diffs = factory.get_model().objects.filter(
-            from_commit=from_commit, to_commit=to_commit
-        )
+        diffs = factory.get_model().objects.filter(from_commit=from_commit, to_commit=to_commit)
         to_queryset = (
             content_type.model_class()
             .objects.filter(pk__in=diffs.values_list("to_id", flat=True))
@@ -65,9 +63,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             .objects.filter(
                 # we only want deleted rows in this queryset
                 # modified rows come from `to_queryset`
-                pk__in=diffs.filter(diff_type="removed").values_list(
-                    "from_id", flat=True
-                )
+                pk__in=diffs.filter(diff_type="removed").values_list("from_id", flat=True)
             )
             .annotate(
                 diff=Subquery(
