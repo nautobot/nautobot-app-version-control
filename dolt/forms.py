@@ -22,6 +22,7 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
         queryset=User.objects.all(),
         to_field_name="username",
         required=True,
+        widget=forms.HiddenInput(),
     )
 
     class Meta:
