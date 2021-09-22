@@ -10,4 +10,4 @@ jobs:
           python-version: '3.6'
       - uses: lgeiger/black-action@master
         with:
-          args: '. --check'
+          args: '. --line-length 100 --check'
