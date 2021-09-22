@@ -15,9 +15,7 @@ from dolt.constants import DOLT_DEFAULT_BRANCH
 
 class BranchForm(forms.ModelForm, BootstrapMixin):
     name = forms.SlugField()
-    starting_branch = forms.ModelChoiceField(
-        queryset=Branch.objects.all(), to_field_name="name", required=True
-    )
+    starting_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
     creator = forms.ModelChoiceField(
         queryset=User.objects.all(),
         to_field_name="username",
@@ -42,12 +40,8 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
 
 
 class MergeForm(forms.Form, BootstrapMixin):
-    source_branch = forms.ModelChoiceField(
-        queryset=Branch.objects.all(), to_field_name="name", required=True
-    )
-    destination_branch = forms.ModelChoiceField(
-        queryset=Branch.objects.all(), to_field_name="name", required=True
-    )
+    source_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
+    destination_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
 
     class Meta:
         fields = [
@@ -84,9 +78,7 @@ class BranchBulkEditForm(forms.Form, BootstrapMixin):
 
 
 class BranchBulkDeleteForm(ConfirmationForm):
-    pk = forms.ModelMultipleChoiceField(
-        queryset=Branch.objects.all(), widget=forms.MultipleHiddenInput
-    )
+    pk = forms.ModelMultipleChoiceField(queryset=Branch.objects.all(), widget=forms.MultipleHiddenInput)
 
     def clean_pk(self):
         # TODO: log error messages
@@ -114,9 +106,7 @@ class BranchFilterForm(forms.Form, BootstrapMixin):
     def __init__(self, *args, **kwargs):
         super(BranchFilterForm, self).__init__(*args, **kwargs)
         self.fields["latest_committer"].choices = add_blank_choice(
-            Branch.objects.all()
-            .values_list("latest_committer", "latest_committer")
-            .distinct()
+            Branch.objects.all().values_list("latest_committer", "latest_committer").distinct()
         )
 
 
@@ -139,15 +129,11 @@ class CommitFilterForm(forms.Form, BootstrapMixin):
 
     def __init__(self, *args, **kwargs):
         super(CommitFilterForm, self).__init__(*args, **kwargs)
-        self.fields["committer"].choices = (
-            Commit.objects.all().values_list("committer", "committer").distinct()
-        )
+        self.fields["committer"].choices = Commit.objects.all().values_list("committer", "committer").distinct()
 
 
 class CommitBulkRevertForm(forms.Form, BootstrapMixin):
-    pk = forms.ModelMultipleChoiceField(
-        queryset=Commit.objects.all(), widget=forms.MultipleHiddenInput()
-    )
+    pk = forms.ModelMultipleChoiceField(queryset=Commit.objects.all(), widget=forms.MultipleHiddenInput())
 
     class Meta:
         fields = ["branch"]
@@ -160,12 +146,8 @@ class CommitBulkRevertForm(forms.Form, BootstrapMixin):
 
 class PullRequestForm(forms.ModelForm, BootstrapMixin):
     qs = Branch.objects.exclude(name__startswith="xxx")
-    source_branch = forms.ModelChoiceField(
-        queryset=qs, to_field_name="name", required=True
-    )
-    destination_branch = forms.ModelChoiceField(
-        queryset=qs, to_field_name="name", required=True
-    )
+    source_branch = forms.ModelChoiceField(queryset=qs, to_field_name="name", required=True)
+    destination_branch = forms.ModelChoiceField(queryset=qs, to_field_name="name", required=True)
 
     class Meta:
         model = PullRequest
@@ -178,9 +160,7 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
 
 
 class PullRequestDeleteForm(ConfirmationForm):
-    pk = forms.ModelMultipleChoiceField(
-        queryset=PullRequest.objects.all(), widget=forms.MultipleHiddenInput
-    )
+    pk = forms.ModelMultipleChoiceField(queryset=PullRequest.objects.all(), widget=forms.MultipleHiddenInput)
 
     def clean_pk(self):
         return self.cleaned_data["pk"]
@@ -195,9 +175,7 @@ class PullRequestDeleteForm(ConfirmationForm):
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
     model = PullRequest
     q = forms.CharField(required=False, label="Search")
-    state = forms.MultipleChoiceField(
-        required=False, choices=PullRequest.PR_STATE_CHOICES
-    )
+    state = forms.MultipleChoiceField(required=False, choices=PullRequest.PR_STATE_CHOICES)
     creator = forms.ModelChoiceField(required=False, queryset=User.objects.all())
     reviewer = forms.ModelChoiceField(required=False, queryset=User.objects.all())
 

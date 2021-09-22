@@ -82,16 +82,8 @@ class Branch(DoltSystemTable):
         merge_base_commit = Commit.objects.using(db_for_commit(self.hash)).get(commit_hash=merge_base)
         main_hash = Branch.objects.get(name=DOLT_DEFAULT_BRANCH).hash
 
-        ahead = (
-            Commit.objects.filter(date__gt=merge_base_commit.date)
-            .using(db_for_commit(self.hash))
-            .count()
-        )
-        behind = (
-            Commit.objects.filter(date__gt=merge_base_commit.date)
-            .using(db_for_commit(main_hash))
-            .count()
-        )
+        ahead = Commit.objects.filter(date__gt=merge_base_commit.date).using(db_for_commit(self.hash)).count()
+        behind = Commit.objects.filter(date__gt=merge_base_commit.date).using(db_for_commit(main_hash)).count()
 
         return f"{ahead} ahead / {behind} behind"
 
@@ -180,15 +172,11 @@ to be delete has pull requests that have not been deleted before.
 @receiver(pre_delete, sender=Branch)
 def delete_branch_pre_hook(sender, instance, using, **kwargs):
     # search the pull requests models for the same branch
-    obj = PullRequest.objects.filter(
-        Q(source_branch=instance.name) | Q(destination_branch=instance.name)
-    )
+    obj = PullRequest.objects.filter(Q(source_branch=instance.name) | Q(destination_branch=instance.name))
 
     if len(obj) > 0:
         prs = ",".join([str(i.pk) for i in obj])
-        raise DoltError(
-            f"Must delete existing pull request(s): {prs} before deleting branch {instance.name}"
-        )
+        raise DoltError(f"Must delete existing pull request(s): {prs} before deleting branch {instance.name}")
 
 
 class BranchMeta(models.Model):
@@ -257,9 +245,7 @@ class Commit(DoltSystemTable):
 
     @property
     def parent_commits(self):
-        return CommitAncestor.objects.filter(commit_hash=self.commit_hash).values_list(
-            "parent_hash", flat=True
-        )
+        return CommitAncestor.objects.filter(commit_hash=self.commit_hash).values_list("parent_hash", flat=True)
 
     def save(self, *args, using="default", user=None, **kwargs):
         """"""
@@ -406,11 +392,7 @@ class PullRequest(BaseModel):
             return "open"
 
         # get the most recent review that approved or blocked
-        decision = (
-            pr_reviews.exclude(state=PullRequestReview.COMMENTED)
-            .order_by("-reviewed_at")
-            .first()
-        )
+        decision = pr_reviews.exclude(state=PullRequestReview.COMMENTED).order_by("-reviewed_at").first()
         if not decision:
             # all PRs are "comments"
             return "in-review"
@@ -422,9 +404,7 @@ class PullRequest(BaseModel):
 
     @property
     def commits(self):
-        merge_base = Commit.objects.get(
-            commit_hash=Commit.merge_base(self.source_branch, self.destination_branch)
-        )
+        merge_base = Commit.objects.get(commit_hash=Commit.merge_base(self.source_branch, self.destination_branch))
         db = db_for_commit(Branch.objects.get(name=self.source_branch).hash)
         return Commit.objects.filter(date__gt=merge_base.date).using(db)
 

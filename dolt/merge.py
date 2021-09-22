@@ -143,10 +143,7 @@ class MergeConflicts:
 
     @staticmethod
     def _model_map():
-        return {
-            ct.model_class()._meta.db_table: ct.model_class()
-            for ct in ContentType.objects.all()
-        }
+        return {ct.model_class()._meta.db_table: ct.model_class() for ct in ContentType.objects.all()}
 
     def conflicts_exist(self):
         conflicts = Conflicts.objects.count() != 0
