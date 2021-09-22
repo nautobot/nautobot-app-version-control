@@ -217,7 +217,7 @@ def register_diff_tables(registry):
     __DIFF_TABLE_REGISTRY__.update(registry)
 
 
-__GLOBAL_ROUTER_SWITCH__ = False
+__GLOBAL_ROUTER_SWITCH__ = True
 
 
 def is_global_router_enabled():

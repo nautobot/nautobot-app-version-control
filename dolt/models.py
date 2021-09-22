@@ -79,7 +79,7 @@ class Branch(DoltSystemTable):
     @property
     def ahead_behind(self):
         merge_base = Commit.merge_base(self.name, DOLT_DEFAULT_BRANCH)
-        merge_base_commit = Commit.objects.get(commit_hash=merge_base)
+        merge_base_commit = Commit.objects.using(db_for_commit(self.hash)).get(commit_hash=merge_base)
         main_hash = Branch.objects.get(name=DOLT_DEFAULT_BRANCH).hash
 
         ahead = (

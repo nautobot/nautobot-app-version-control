@@ -106,7 +106,7 @@ class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
         super().__init__(data, *args, **kwargs)
 
 
-class PullRequestCommentFilterSet(BaseFilterSet):
+class PullRequestReviewFilterSet(BaseFilterSet):
     q = django_filters.CharFilter(
         method="search",
         label="Search",
@@ -130,6 +130,6 @@ class PullRequestCommentFilterSet(BaseFilterSet):
         return queryset.filter(
             Q(reviewer__icontains=value)
             | Q(reviewed_at__icontains=value)
-            | Q(state__icontains=PullRequestReview.COMMENTED)
+            | Q(state__icontains=value)
             | Q(summary__icontains=value)
         )

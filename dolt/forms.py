@@ -1,11 +1,10 @@
 from django import forms
-from django.db.models import ProtectedError
 
 from nautobot.users.models import User
-from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm
+from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm, add_blank_choice
 
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
-from dolt.utils import active_branch
+from dolt.utils import active_branch, DoltError
 from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
@@ -23,7 +22,6 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
         queryset=User.objects.all(),
         to_field_name="username",
         required=True,
-        widget=forms.HiddenInput(),
     )
 
     class Meta:
@@ -94,13 +92,9 @@ class BranchBulkDeleteForm(ConfirmationForm):
         # TODO: log error messages
         deletes = [str(b) for b in self.cleaned_data["pk"]]
         if active_branch() in deletes:
-            raise forms.ValidationError(
-                f"Cannot delete active branch: {active_branch()}"
-            )
+            raise DoltError(f"Cannot delete active branch: {active_branch()}")
         if DOLT_DEFAULT_BRANCH in deletes:
-            raise forms.ValidationError(
-                f"Cannot delete primary branch: {DOLT_DEFAULT_BRANCH}"
-            )
+            raise DoltError(f"Cannot delete primary branch: {DOLT_DEFAULT_BRANCH}")
         return self.cleaned_data["pk"]
 
     class Meta:
@@ -114,6 +108,16 @@ class BranchFilterForm(forms.Form, BootstrapMixin):
     model = Branch
     field_order = ["q"]
     q = forms.CharField(required=False, label="Search")
+
+    latest_committer = forms.ChoiceField(choices=[], required=False)
+
+    def __init__(self, *args, **kwargs):
+        super(BranchFilterForm, self).__init__(*args, **kwargs)
+        self.fields["latest_committer"].choices = add_blank_choice(
+            Branch.objects.all()
+            .values_list("latest_committer", "latest_committer")
+            .distinct()
+        )
 
 
 #
