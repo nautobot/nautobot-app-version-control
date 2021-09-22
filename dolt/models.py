@@ -454,6 +454,9 @@ class PullRequest(BaseModel):
         self.save()
 
 
+@extras_features(
+    "webhooks",
+)
 class PullRequestReview(BaseModel):
     COMMENTED = 0
     APPROVED = 1
