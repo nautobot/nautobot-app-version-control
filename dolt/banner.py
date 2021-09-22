@@ -39,7 +39,7 @@ def dolt_banner(context, *args, **kwargs):
                 """,
                 active_branch(),
                 DOLT_BRANCH_KEYWORD,
-                active_branch()
+                active_branch(),
             ),
             banner_class=BannerClassChoices.CLASS_INFO,
         )
