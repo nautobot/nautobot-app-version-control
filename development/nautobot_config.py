@@ -49,7 +49,8 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 # Example: ALLOWED_HOSTS = ['nautobot.example.com', 'nautobot.internal.local']
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(" ")
 
-# PostgreSQL database configuration. See the Django documentation for a complete list of available parameters:
+# Dolt database configuration. Dolt is compatible with the MySQL database backend.
+# See the Django documentation for a complete list of available parameters:
 #   https://docs.djangoproject.com/en/stable/ref/settings/#databases
 DATABASES = {
     "default": {
