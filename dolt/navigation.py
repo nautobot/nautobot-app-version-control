@@ -5,7 +5,7 @@ from nautobot.utilities.choices import ButtonColorChoices
 
 menu_items = (
     NavMenuTab(
-        name="Dolt",
+        name="Version Control",
         weight=1000,
         groups=(
             NavMenuGroup(
