@@ -15,6 +15,7 @@ Prolly trees allow the database to maintain multiple versions of a database tabl
 Further, each of the nodes is content-addressable, meaning that Dolt can compare different versions of the database using the same performant algorithms that Git uses to compare versions of source files. 
 The result is a relational database that can branch, diff, merge, push and pull.
 
+
 # Version Control Plugin Design
 The core features of the Version Control plugin are commits and branches. 
 All database reads and writes happen on a branch. 
@@ -91,7 +92,7 @@ In the “Commits” tab there is a list of each commit in the PR.
 The “Conflicts” tab shows any problems that would prevent the PR from being merged. 
 Finally, the “Reviews” tab contains a simple forum-like interface where users can discuss and approve PRs.
 
-![pull request view](images/pull-request-view   .png)
+![pull request view](images/pull-request-view.png)
 
 Pull Request Reviews can take the form of a “comment”, an “approval”, or a “block” of the PR. 
 Comments are meant for general discussion. 
@@ -102,6 +103,27 @@ In order to be merged, the Pull Request must also be free of conflicts.
 Conflicts are created when the Dolt cannot successfully merge the data from two versions of a table. 
 Conflicts are caused by concurrent modifications of a single model field, or by referential integrity errors such as Foreign Key and Unique Key violations. 
 Within the PR view, conflicts are determined by pre-computing the merge with a “Merge Candidate”.
+Once a PR is conflict free, it can be merged into its destination branch. 
+Selecting "merge" from the pull request view will navigate the user to a confirmation page:
+
+![confirm pull request merge](images/confirm-pull-request-merge.png)
+
+Here the user can inspect the diff before choosing to merge or squash merge the changes.
+Squash merging in Dolt has the same semantic meaning as [`git merge --squash`](https://git-scm.com/docs/git-merge#Documentation/git-merge.txt---squash):
+the history of the source branch is compacted into a single commit
+
+The most common use case for pull requests is merging "feature branches" into the main branch. 
+This is consistent with a [trunk-based](https://www.atlassian.com/continuous-delivery/continuous-integration/trunk-based-development) 
+change workflow where changes are made on short-lived branches in incremental steps. 
+Each step branches off from main and merges back to main after a small number of commits.
+If ever there are long-lived feature branches, it can become difficult to merge back to main due to merge conflicts. 
+This problem can be mitigated by "catching up" a feature branch, by merge the main branh into it.
+
+![branch list view](images/branch-list-view.png)
+
+From the branch list view, we can see a "Catchup" button that will do exactly that. 
+Following this button will take us to a pull request creation form pre-populated with main as the source branch and the feature branch as destination branch.
+Creating such a pull request will allow us to inspect any conflicts between the branches and to update the feature branch if none exist.
 
 # API Documentation
 
@@ -114,6 +136,7 @@ Within the PR view, conflicts are determined by pre-computing the merge with a �
 - Conflicts available?
 ## How to Supply Versioning
 - Example
+
 
 # Implementation Details
 
