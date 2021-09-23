@@ -2,7 +2,7 @@ from django.db.models.signals import pre_migrate, post_migrate
 
 from nautobot.extras.plugins import PluginConfig
 
-import django_tables2 as tables
+import django_tables2
 
 from dolt.migrations import auto_dolt_commit_migration
 
@@ -211,7 +211,7 @@ def register_diff_tables(registry):
             if not isinstance(k, str):
                 # k must be string
                 raise err
-            if not issubclass(v, tables.Table):
+            if not issubclass(v, django_tables2.tables.Table):
                 # v must be Table
                 raise err
     __DIFF_TABLE_REGISTRY__.update(registry)
