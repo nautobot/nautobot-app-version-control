@@ -154,7 +154,7 @@ class Branch(DoltSystemTable):
                         mark_safe(
                             f"""Merging <strong>{merge_branch}</strong> into <strong>{self}</strong> created merge conflicts. Resolve merge conflicts to reattempt the merge."""
                         ),
-                    )  # nosec
+                    )
                 )
 
     def save(self, *args, **kwargs):

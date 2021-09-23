@@ -55,7 +55,7 @@ class DoltBranchMiddleware:
             branch.checkout()
         except Exception as e:
             msg = f"could not checkout branch {branch}: {str(e)}"
-            messages.error(request, mark_safe(msg))  # nosec
+            messages.error(request, mark_safe(msg))
 
         if request.user.is_authenticated:
             # Inject the "active branch" banner. Use a random number for the button id to ensure button listeners do not
@@ -63,12 +63,12 @@ class DoltBranchMiddleware:
             msg = self.get_active_branch_banner(
                 random.randint(0, 10000)  # nosec random is not being used for security purposes.
             )
-            messages.info(request, mark_safe(msg))  # nosec
+            messages.info(request, mark_safe(msg))
 
         try:
             return view_func(request, *view_args, **view_kwargs)
         except DoltError as e:
-            messages.error(request, mark_safe(e))  # nosec
+            messages.error(request, mark_safe(e))
             return redirect(request.path)
 
     def get_branch(self, request):
