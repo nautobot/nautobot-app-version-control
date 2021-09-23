@@ -26,6 +26,8 @@ The main branch represents the state of the production data model.
 Main also has a special status in that it cannot be deleted. 
 New branches are created by specifying a starting branch to start from.
 
+![create branch form](images/create-branch-form.png)
+
 All requests served through the web interface or API fetch data from a specific database branch. 
 The choice of branch is encoded in the request by the client. 
 For web requests, the branch state is stored in a cookie using Django cookie sessions. 
@@ -35,6 +37,8 @@ When the server receives a request, it looks for this state and uses it to selec
 If the branch cannot be found or if the requested branch does not exist, the main branch is used. 
 The business logic to handle branch selection is performed in middleware specifically in DoltBranchMiddleware. 
 In the web interface, a banner is displayed to notify the user of their “active” branch
+
+![active branch banner](images/active-branch-banner.png)
 
 Database versioning happens on a per-connection basis. Each connection will read from a specific branch. 
 Database connections outside of the web server, such as through nbshell are also versioned. 
@@ -55,7 +59,11 @@ A Dolt commit is made for every modification to the data model.
 Each request that writes to the database triggers a commit to be written. 
 The result is a granular change log tracking the history of changes made.
 
+![commit list](images/commit-list.png)
+
 Each commit can be individually inspected to see a diff view: a summary of the changes made within that commit.
+
+![commit diff view](images/commit-diff-view.png)
 
 The committing logic is implemented using a combination of middleware and Django signals, specifically DoltAutoCommitMiddleWare. 
 DoltAutoCommitMiddleWare wraps every server request in a AutoDoltCommit context manager which listens for and responds to database writes made while processing the request. 
@@ -63,6 +71,8 @@ AutoDoltCommit listens for signals fired by Django model updates and makes a Dol
 The message for the commit is derived from the model signals that were captured.
 
 Changes made within a commit can be undone by reverting the commit.
+
+![confirm commit revert](images/confirm-commit-revert.png)
 
 Reverting a commit causes the database to apply the “reverse patch” of the commits in the reversion, much like Git revert. 
 Reverting commits, rather than deleting them, has the benefit of keeping all changes made in change history. 
@@ -80,6 +90,8 @@ However, the PR diff view combines the changes from all of the commits in the PR
 In the “Commits” tab there is a list of each commit in the PR. 
 The “Conflicts” tab shows any problems that would prevent the PR from being merged. 
 Finally, the “Reviews” tab contains a simple forum-like interface where users can discuss and approve PRs.
+
+![pull request view](images/pull-request-view   .png)
 
 Pull Request Reviews can take the form of a “comment”, an “approval”, or a “block” of the PR. 
 Comments are meant for general discussion. 
@@ -191,6 +203,8 @@ This indicates that under testing “global” should be treated as a mirror of 
 Diff views are rendered for Commits and Branches. 
 Object changes are rendered in a list view, grouped by model, and annotated with diff information. 
 New objects are highlighted in green, deleted objects in red, and modified objects in gold.
+
+![diff table](images/diff-table.png)
 
 Diff views are derived directly from model list views in Nautobot core. 
 Each diff table in the diff view displays the same columns as the table in the associated model list view, with the addition of the “Diff Type” column.
