@@ -173,12 +173,15 @@ to be delete has pull requests that have not been deleted before.
 @receiver(pre_delete, sender=Branch)
 def delete_branch_pre_hook(sender, instance, using, **kwargs):
     # search the pull requests models for the same branch
-    obj = PullRequest.objects.filter(Q(source_branch=instance.name) | Q(destination_branch=instance.name))
+    prs = PullRequest.objects.filter(
+        Q(source_branch=instance.name) | Q(destination_branch=instance.name)
+    )
 
-    if len(obj) > 0:
-        prs = ",".join([str(i.pk) for i in obj])
-        raise DoltError(f"Must delete existing pull request(s): {prs} before deleting branch {instance.name}")
-
+    if len(prs) > 0:
+        pr_list = ",".join([f"\"{pr}\"" for pr in prs])
+        raise DoltError(
+            f"Must delete existing pull request(s): [{pr_list}] before deleting branch {instance.name}"
+        )
 
 class BranchMeta(models.Model):
     branch = models.TextField(primary_key=True)
@@ -435,6 +438,9 @@ class PullRequest(BaseModel):
         self.save()
 
 
+@extras_features(
+    "webhooks",
+)
 class PullRequestReview(BaseModel):
     COMMENTED = 0
     APPROVED = 1
