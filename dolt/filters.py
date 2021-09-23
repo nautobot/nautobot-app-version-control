@@ -26,7 +26,7 @@ class BranchFilterSet(BaseFilterSet):
             "latest_commit_message",
         )
 
-    def search(self, queryset, name, value): # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
         search performs an ORM filter on the Branch model
         :param queryset: The Branch queryset
@@ -65,7 +65,7 @@ class CommitFilterSet(BaseFilterSet):
             "message",
         )
 
-    def search(self, queryset, name, value): # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
         search performs an ORM filter on the Commit model
         :param queryset: The Commit queryset
@@ -104,7 +104,7 @@ class PullRequestFilterSet(BaseFilterSet):
             "creator",
         )
 
-    def search(self, queryset, name, value): # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
         search performs an ORM filter on the PullRequestFilterSet model
         :param queryset: The PullRequestFilterSet queryset
@@ -158,7 +158,7 @@ class PullRequestReviewFilterSet(BaseFilterSet):
             "summary",
         )
 
-    def search(self, queryset, name, value): # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
         search performs an ORM filter on the PullRequestReviewFilterSet model
         :param queryset: The PullRequestReviewFilterSet queryset
