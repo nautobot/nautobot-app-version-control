@@ -56,12 +56,8 @@ class BranchTable(BaseTable):
         buttons=("checkout",),
         prepend_template=BRANCH_TABLE_BADGES,
     )
-    ahead_behind = tables.Column(
-        accessor=A("ahead_behind"), verbose_name="Ahead / Behind"
-    )
-    starting_branch = tables.Column(
-        accessor=A("source_branch"), verbose_name="Starting Branch"
-    )
+    ahead_behind = tables.Column(accessor=A("ahead_behind"), verbose_name="Ahead / Behind")
+    starting_branch = tables.Column(accessor=A("source_branch"), verbose_name="Starting Branch")
 
     class Meta(BaseTable.Meta):
         model = Branch

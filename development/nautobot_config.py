@@ -333,11 +333,7 @@ SHORT_DATETIME_FORMAT = os.environ.get("SHORT_DATETIME_FORMAT", "Y-m-d H:i")
 
 # A list of strings designating all applications that are enabled in this Django installation. Each string should be a dotted Python path to an application configuration class (preferred), or a package containing an application.
 # https://nautobot.readthedocs.io/en/latest/configuration/optional-settings/#extra-applications
-EXTRA_INSTALLED_APPS = (
-    os.environ["EXTRA_INSTALLED_APPS"].split(",")
-    if os.environ.get("EXTRA_INSTALLED_APPS")
-    else []
-)
+EXTRA_INSTALLED_APPS = os.environ["EXTRA_INSTALLED_APPS"].split(",") if os.environ.get("EXTRA_INSTALLED_APPS") else []
 
 # Django Debug Toolbar
 DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda _request: DEBUG and not TESTING}

@@ -5,7 +5,7 @@ from django.db import models, connection, connections
 from django.db.models import Q
 from django.db.models.deletion import CASCADE, SET_NULL
 from django.urls import reverse
-from django.utils.safestring import mark_safe
+from django.utils.html import mark_safe, format_html
 from django.dispatch import receiver
 from django.db.models.signals import pre_delete
 
@@ -82,16 +82,8 @@ class Branch(DoltSystemTable):
         merge_base_commit = Commit.objects.using(db_for_commit(self.hash)).get(commit_hash=merge_base)
         main_hash = Branch.objects.get(name=DOLT_DEFAULT_BRANCH).hash
 
-        ahead = (
-            Commit.objects.filter(date__gt=merge_base_commit.date)
-            .using(db_for_commit(self.hash))
-            .count()
-        )
-        behind = (
-            Commit.objects.filter(date__gt=merge_base_commit.date)
-            .using(db_for_commit(main_hash))
-            .count()
-        )
+        ahead = Commit.objects.filter(date__gt=merge_base_commit.date).using(db_for_commit(self.hash)).count()
+        behind = Commit.objects.filter(date__gt=merge_base_commit.date).using(db_for_commit(main_hash)).count()
 
         return f"{ahead} ahead / {behind} behind"
 
@@ -155,19 +147,20 @@ class Branch(DoltSystemTable):
                     ) FROM dual;"""
                 )
             else:
-                cursor.execute(f"SELECT dolt_merge('--abort') FROM dual;")
+                cursor.execute(f"SELECT dolt_merge('--abort') FROM dual;")  # nosec
                 raise DoltError(
-                    mark_safe(
-                        f"""Merging <strong>{merge_branch}</strong> into <strong>{self}</strong> 
-                            created merge conflicts. Resolve merge conflicts to reattempt the merge."""
+                    format_html(
+                        "{}",
+                        mark_safe(
+                            f"""Merging <strong>{merge_branch}</strong> into <strong>{self}</strong> created merge conflicts. Resolve merge conflicts to reattempt the merge."""
+                        ),
                     )
                 )
 
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
             cursor.execute(
-                f"""INSERT INTO dolt_branches (name,hash) 
-                    VALUES ('{self.name}',hashof('{self.starting_branch}'));"""
+                f"""INSERT INTO dolt_branches (name,hash) VALUES ('{self.name}',hashof('{self.starting_branch}'));"""  # nosec
             )
 
 
@@ -180,15 +173,11 @@ to be delete has pull requests that have not been deleted before.
 @receiver(pre_delete, sender=Branch)
 def delete_branch_pre_hook(sender, instance, using, **kwargs):
     # search the pull requests models for the same branch
-    prs = PullRequest.objects.filter(
-        Q(source_branch=instance.name) | Q(destination_branch=instance.name)
-    )
+    prs = PullRequest.objects.filter(Q(source_branch=instance.name) | Q(destination_branch=instance.name))
 
     if len(prs) > 0:
-        pr_list = ",".join([f"\"{pr}\"" for pr in prs])
-        raise DoltError(
-            f"Must delete existing pull request(s): [{pr_list}] before deleting branch {instance.name}"
-        )
+        pr_list = ",".join([f'"{pr}"' for pr in prs])
+        raise DoltError(f"Must delete existing pull request(s): [{pr_list}] before deleting branch {instance.name}")
 
 
 class BranchMeta(models.Model):
@@ -257,9 +246,7 @@ class Commit(DoltSystemTable):
 
     @property
     def parent_commits(self):
-        return CommitAncestor.objects.filter(commit_hash=self.commit_hash).values_list(
-            "parent_hash", flat=True
-        )
+        return CommitAncestor.objects.filter(commit_hash=self.commit_hash).values_list("parent_hash", flat=True)
 
     def save(self, *args, using="default", user=None, **kwargs):
         """"""
@@ -406,11 +393,7 @@ class PullRequest(BaseModel):
             return "open"
 
         # get the most recent review that approved or blocked
-        decision = (
-            pr_reviews.exclude(state=PullRequestReview.COMMENTED)
-            .order_by("-reviewed_at")
-            .first()
-        )
+        decision = pr_reviews.exclude(state=PullRequestReview.COMMENTED).order_by("-reviewed_at").first()
         if not decision:
             # all PRs are "comments"
             return "in-review"
@@ -422,9 +405,7 @@ class PullRequest(BaseModel):
 
     @property
     def commits(self):
-        merge_base = Commit.objects.get(
-            commit_hash=Commit.merge_base(self.source_branch, self.destination_branch)
-        )
+        merge_base = Commit.objects.get(commit_hash=Commit.merge_base(self.source_branch, self.destination_branch))
         db = db_for_commit(Branch.objects.get(name=self.source_branch).hash)
         return Commit.objects.filter(date__gt=merge_base.date).using(db)
 

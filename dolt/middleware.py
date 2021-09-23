@@ -59,8 +59,10 @@ class DoltBranchMiddleware:
 
         if request.user.is_authenticated:
             # Inject the "active branch" banner. Use a random number for the button id to ensure button listeners do not
-            # clash
-            msg = self.get_active_branch_banner(random.randint(0, 10000))
+            # clash. This is safe since it is JS generated on our end and should not be modifiable by any XSS attack.
+            msg = self.get_active_branch_banner(
+                random.randint(0, 10000)  # nosec random is not being used for security purposes.
+            )
             messages.info(request, mark_safe(msg))
 
         try:
@@ -77,9 +79,7 @@ class DoltBranchMiddleware:
         except ObjectDoesNotExist:
             messages.warning(
                 request,
-                mark_safe(
-                    f"""<div class="text-center">branch not found: {requested}</div>"""
-                ),
+                mark_safe(f"""<div class="text-center">branch not found: {requested}</div>"""),  # nosec
             )
             request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
