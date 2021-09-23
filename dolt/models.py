@@ -160,7 +160,7 @@ class Branch(DoltSystemTable):
     def save(self, *args, **kwargs):
         with connection.cursor() as cursor:
             cursor.execute(
-                """INSERT INTO dolt_branches (name,hash) VALUES (%s, hashof(%s));""", [self.name, self.starting_branch]
+                f"""INSERT INTO dolt_branches (name,hash) VALUES ('{self.name}',hashof('{self.starting_branch}'));"""  # nosec
             )
 
 
