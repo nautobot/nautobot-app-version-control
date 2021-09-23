@@ -10,9 +10,12 @@ Git version files, Dolt versions database tables.
 Running Nautobot on Dolt means operators can use version-control workflows from software development when managing the network data model.
 
 Dolt is built on top of a custom storage layer that supports structural sharing and efficient diff operations. 
-At the core of Dolt’s storage are Prolly Trees, an index data-structure that combines properties of B-Trees and Merkle Trees.  
+At the core of Dolt’s storage are [Prolly Trees](https://docs.dolthub.com/reference/architecture#overview), 
+an index data-structure that combines properties of [B-Trees](https://en.wikipedia.org/wiki/B-tree) 
+and [Merkle Trees](https://en.wikipedia.org/wiki/Merkle_tree).  
 Prolly trees allow the database to maintain multiple versions of a database table without duplicating any of the tree nodes that make up the table storage. 
-Further, each of the nodes is content-addressable, meaning that Dolt can compare different versions of the database using the same performant algorithms that Git uses to compare versions of source files. 
+Further, each of the nodes is [content-addressable](https://en.wikipedia.org/wiki/Content-addressable_storage), 
+meaning that Dolt can compare different versions of the database using the same performant algorithms that Git uses to compare versions of source files. 
 The result is a relational database that can branch, diff, merge, push and pull.
 
 
@@ -36,7 +39,8 @@ For API requests, the branch state is encoded in a request header.
 
 When the server receives a request, it looks for this state and uses it to select the correct database branch to serve this request. 
 If the branch cannot be found or if the requested branch does not exist, the main branch is used. 
-The business logic to handle branch selection is performed in middleware specifically in DoltBranchMiddleware. 
+The business logic to handle branch selection is performed in [middleware](https://docs.djangoproject.com/en/3.2/topics/http/middleware/)
+specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/c9f49b8e007ca22afe0d6e3ddb5066e31b37dc64/dolt/middleware.py#L38). 
 In the web interface, a banner is displayed to notify the user of their “active” branch
 
 ![active branch banner](images/active-branch-banner.png)
@@ -66,8 +70,10 @@ Each commit can be individually inspected to see a diff view: a summary of the c
 
 ![commit diff view](images/commit-diff-view.png)
 
-The committing logic is implemented using a combination of middleware and Django signals, specifically DoltAutoCommitMiddleWare. 
-DoltAutoCommitMiddleWare wraps every server request in a AutoDoltCommit context manager which listens for and responds to database writes made while processing the request. 
+The committing logic is implemented using a combination of middleware and [Django signals](https://docs.djangoproject.com/en/3.2/topics/signals/),
+specifically [DoltAutoCommitMiddleWare](https://github.com/nautobot/nautobot-plugin-version-control/blob/c2f0bbd1680ee46c61bb22a3df5a6c5c1bcbe41a/dolt/middleware.py#L109). 
+DoltAutoCommitMiddleWare wraps every server request in a [AutoDoltCommit](https://github.com/nautobot/nautobot-plugin-version-control/blob/c2f0bbd1680ee46c61bb22a3df5a6c5c1bcbe41a/dolt/middleware.py#L124)
+context manager which listens for and responds to database writes made while processing the request. 
 AutoDoltCommit listens for signals fired by Django model updates and makes a Dolt commit if updates were made during the lifetime of the context manager. 
 The message for the commit is derived from the model signals that were captured.
 
@@ -75,7 +81,7 @@ Changes made within a commit can be undone by reverting the commit.
 
 ![confirm commit revert](images/confirm-commit-revert.png)
 
-Reverting a commit causes the database to apply the “reverse patch” of the commits in the reversion, much like Git revert. 
+Reverting a commit causes the database to apply the “reverse patch” of the commits in the reversion, much like [Git revert](https://git-scm.com/docs/git-revert). 
 Reverting commits, rather than deleting them, has the benefit of keeping all changes made in change history. 
 Commit reversion may fail if applying the reverse patch will cause an inconsistency in the data model. 
 Specifically if the reversion causes a foreign key or unique key violation in the database, the operation will fail and no changes will be applied.
@@ -173,8 +179,11 @@ $ curl -s \
 # Implementation Details
 
 ## DoltSystemTables
-DoltSystemTable is an abstract base class that forms the basis of Django models that expose Dolt system tables to the Object Relational Mapping (ORM). 
-Plugin models such as Commit and Branch that inherit from DoltSystemTable are unmanaged meaning that Django will ignore these models for the purposes of database migrations. 
+[DoltSystemTable](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21)
+is an abstract base class that forms the basis of Django models that expose Dolt [system tables](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21)
+to the Object Relational Mapping (ORM). 
+Plugin models such as Commit and Branch that inherit from DoltSystemTable are [unmanaged](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21)
+meaning that Django will ignore these models for the purposes of database migrations. 
 This is important because Dolt system tables exist from the time the database is created and cannot be modified or deleted. 
 Internally, Dolt generates system table data on-the-fly rather than reading it from a traditional database index.
 
@@ -182,7 +191,7 @@ Internally, Dolt generates system table data on-the-fly rather than reading it f
 The Branch model is one such "unmanaged" model. 
 It exposes the dolt_branches system table to the ORM. 
 System tables have a static schema, so additional object fields such as "created by" and "source branch" must be stored in another model. 
-The BranchMeta model does exactly that. 
+The [BranchMeta](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L194) model does exactly that. 
 Each Branch object has an associated BranchMeta object where the `BranchMeta.branch field` is equal to the name field of the associated branch. 
 However, this relationship is not formalized with a Foreign Key due to limitations with the dolt_branches table.
 Branch objects lookup their associated BranchMeta objects on a best-effort basis.
@@ -211,20 +220,25 @@ Non-versioned models will also always be read from the tip of the main branch, r
 Non-versioned models can’t have multiple versions. There is always a single version which is read-from, and edited on main.
 
 ## Global State Router
-The business logic for differentiating versioned and non-versioned models is implemented in a Django database router, specifically the GlobalStateRouter. 
+The business logic for differentiating versioned and non-versioned models is implemented in a Django [database router](https://docs.djangoproject.com/en/3.2/topics/db/multi-db/#automatic-database-routing), 
+specifically the [GlobalStateRouter](https://github.com/nautobot/nautobot-plugin-version-control/blob/c9f49b8e007ca22afe0d6e3ddb5066e31b37dc64/dolt/routers.py#L11). 
 The GlobalStateRouter is responsible for choosing a database connection to read an object from or write an object to, depending on its model class. 
 There are two connections to choose from when accessing the database. 
 The “default” connection will access the database on the Dolt branch that was specified in the request. 
 This connection is used to read and write versioned models. 
 The “global” connection always accesses the database on the main branch, it is used for non-versioned models.
 
-In order to choose a connection for a model, the router first references the versioned model registry to determine if the model is under version control. 
+In order to choose a connection for a model, the router first references the 
+[versioned model registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/c9f49b8e007ca22afe0d6e3ddb5066e31b37dc64/dolt/__init__.py#L83)
+to determine if the model is under version control. 
 Currently, this registry is a hardcoded mapping from ContentType to versioned/non-versioned. 
 The versioned model registry is structured as an ["allow-list"](https://help.dnsfilter.com/hc/en-us/articles/1500008111381-Allow-and-Block-Lists).
 If a model is absent from the list, it is assumed to be non-versioned.
-Future work in Nautobot core will make it possible for models to declare themselves whether they should be version controlled.
+[Future work](https://github.com/nautobot/nautobot/issues/748)
+in Nautobot core will make it possible for models to declare themselves whether they should be version controlled.
 
-Database connections for versioned and non-versioned models are defined in the nautobot_config file. 
+Database connections for versioned and non-versioned models are defined in 
+[nautobot_config.py](https://github.com/nautobot/nautobot-plugin-version-control/blob/abd12aae0f1c4a684ce89c7eaeaca81bd1d37e68/development/nautobot_config.py#L54). 
 The database configuration is as follows:
 ```python
 DATABASES = {
@@ -253,7 +267,8 @@ DATABASES = {
 These two database connections are logically separate at the Django layer, but in fact point to the same physical Dolt instance. 
 The “default” database handles versioned models, the “global” database handles non-versioned models. 
 For test purposes, the databases are configured as replicas. 
-The “TEST” entry in the config dict for the “global” database is a primary/replica configuration for testing. 
+The “TEST” entry in the config dict for the “global” database is a [primary/replica](https://docs.djangoproject.com/en/3.2/topics/testing/advanced/#testing-primary-replica-configurations)
+configuration for testing. 
 This indicates that under testing “global” should be treated as a mirror of “default”.
 
 ## Diff Tables
