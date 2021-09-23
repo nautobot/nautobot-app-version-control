@@ -61,8 +61,8 @@ class DoltBranchMiddleware:
             # Inject the "active branch" banner. Use a random number for the button id to ensure button listeners do not
             # clash. This is safe since it is JS generated on our end and should not be modifiable by any XSS attack.
             msg = self.get_active_branch_banner(
-                random.randint(0, 10000)
-            )  # nosec random is not being used for security.
+                random.randint(0, 10000)  # nosec random is not being used for security purposes.
+            )
             messages.info(request, mark_safe(msg))  # nosec
 
         try:
