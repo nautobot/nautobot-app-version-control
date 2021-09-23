@@ -125,17 +125,49 @@ From the branch list view, we can see a "Catchup" button that will do exactly th
 Following this button will take us to a pull request creation form pre-populated with main as the source branch and the feature branch as destination branch.
 Creating such a pull request will allow us to inspect any conflicts between the branches and to update the feature branch if none exist.
 
-# API Documentation
+# REST API
 
-## API EndPoints
-- Branch
-- Commit
-- Pull Request 
-- Pull Request Reviews
-- Diffs available?
-- Conflicts available?
-## How to Supply Versioning
-- Example
+The Version Control plugin extends the Nautobot's core [REST API](https://nautobot.readthedocs.io/en/stable/rest-api/overview/#rest-api-overview) with endpoints for plugin models. 
+
+## REST API EndPoints
+
+The top level API endpoint is `/api/plugins/dolt/`. 
+Below this, there are endpoints for the following models:
+
+- Branch: `api/plugins/dolt/branches`
+- Commit: `api/plugins/dolt/commits`
+- Pull Request: `api/plugins/dolt/pull_requests` 
+- Pull Request Reviews: `api/plugins/dolt/pull_requests_reviews`
+
+The Version Control API shares a common implementation with Nautobot's core API.
+Features suchs as [pagination](https://nautobot.readthedocs.io/en/stable/rest-api/overview/#pagination) and
+[filtering](https://nautobot.readthedocs.io/en/stable/rest-api/filtering/) have the same interface for both APIs.
+
+## REST API Authentication
+
+The REST API primarily employs token-based authentication using the same mechanisms as the core Nautobot API.
+See the [Nautobot docs](https://nautobot.readthedocs.io/en/stable/rest-api/authentication/#rest-api-authentication) for more detail.
+
+## Dolt Branch Header
+
+When querying the API, clients can choose a specific branch using a `dolt-branch` header. 
+For example, the following request will list all of the commits from "my-feature-branch".
+
+```bash
+$ curl -s \
+-H "Authorization: Token 90579810c8d2d2e98fb34d69025f6a1cc3fa9943" \
+-H "dolt-branch: my-feature-branch"  \
+0.0.0.0:8080/api/plugins/dolt/commits/
+```
+
+Versioning requests works with all API endpoints, not just models from the Version Control plugin: 
+
+```bash
+$ curl -s \
+-H "Authorization: Token 90579810c8d2d2e98fb34d69025f6a1cc3fa9943" \
+-H "dolt-branch: my-branch"  \
+0.0.0.0:8080/api/dcim/devices/
+```
 
 
 # Implementation Details
@@ -188,6 +220,8 @@ The “global” connection always accesses the database on the main branch, it 
 
 In order to choose a connection for a model, the router first references the versioned model registry to determine if the model is under version control. 
 Currently, this registry is a hardcoded mapping from ContentType to versioned/non-versioned. 
+The versioned model registry is structured as an ["allow-list"](https://help.dnsfilter.com/hc/en-us/articles/1500008111381-Allow-and-Block-Lists).
+If a model is absent from the list, it is assumed to be non-versioned.
 Future work in Nautobot core will make it possible for models to declare themselves whether they should be version controlled.
 
 Database connections for versioned and non-versioned models are defined in the nautobot_config file. 
@@ -223,6 +257,7 @@ The “TEST” entry in the config dict for the “global” database is a prima
 This indicates that under testing “global” should be treated as a mirror of “default”.
 
 ## Diff Tables
+
 Diff views are rendered for Commits and Branches. 
 Object changes are rendered in a list view, grouped by model, and annotated with diff information. 
 New objects are highlighted in green, deleted objects in red, and modified objects in gold.
@@ -230,6 +265,41 @@ New objects are highlighted in green, deleted objects in red, and modified objec
 ![diff table](images/diff-table.png)
 
 Diff views are derived directly from model list views in Nautobot core. 
-Each diff table in the diff view displays the same columns as the table in the associated model list view, with the addition of the “Diff Type” column.
+Each diff table in a diff view displays the same columns as the table in the associated model list view, with the addition of the “Diff Type” column.
+Diff tables are created by subclassing the table from a core model's list view. 
+Custom rendering functions are added to apply diff styling to the list view. 
 
-Diff table classes are subclasses of their associated 
+Diff table classes are created dynamically at runtime. 
+When a diff table is needed to display model changes, the core model's table is looked up from the 
+[diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/c5ca7c4467b7588b5eb925523a51ce0eab62df4e/dolt/__init__.py#L175)
+and then a new subclass is created to extend the core table.
+The diff table registry works much like the versioned model registry, it is a mapping from a models content type to its table.
+Tables in Nautobot core are all subclasses of [`django-tables2`](https://django-tables2.readthedocs.io/en/latest/).
+All entries in the diff table registry must also be subclasses of `django-tables2`.
+
+# Plugin Integration
+
+The Version Control plugin is designed to be used in coordination with other Nautobot plugins.
+By default, any models registered by other plugins will be considered non-versioned. 
+In order to make use of version control and diff features, plugins must register their models in 
+the [versioned models registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/c5ca7c4467b7588b5eb925523a51ce0eab62df4e/dolt/__init__.py#L139) 
+and the [diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/c5ca7c4467b7588b5eb925523a51ce0eab62df4e/dolt/__init__.py#L186). 
+Both of these functions take nested dictionaries as arguments:
+```python
+register_versioned_models({
+    "my-app-label": {
+        "my-model-name": True,
+        "my-other-model-name": True,
+    }
+})
+register_diff_tables({
+    "my-app-label": {
+        "my-model-name": "import.path.to.table",
+        "my-other-model-name": "import.path.to.other.table",
+    }   
+})
+```
+The dictionaries are keyed by content type (app-label, model) pairs. 
+Values for the versioned model registry are `bool`s indicating whether the model should be versioned.
+Values for the diff table registry are `string` import paths pointing to the `django-tables2` table that will be subclassed for diff views. 
+
