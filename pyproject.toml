@@ -52,12 +52,16 @@ load-plugins="pylint_django"
 # No docstrings required for private methods (Pylint default), or for test_ functions, or for inner Meta classes.
 no-docstring-rgx="^(_|test_|Meta$)"
 
+# Allow single letter variable names
+good-names="i,j,k,pk,x,y,v"
+
 [tool.pylint.messages_control]
 # Line length is enforced by Black, so pylint doesn't need to check it.
 # Pylint and Black disagree about how to format multi-line arrays; Black wins.
 disable = """,
     line-too-long,
     bad-continuation,
+    W0603
     """
 
 [tool.pylint.miscellaneous]
