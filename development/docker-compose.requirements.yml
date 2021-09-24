@@ -4,6 +4,9 @@ services:
   dolt:
     build:
       context: "../"
+      args:
+        # this must match DOLT_DEFAULT_BRANCH in dev.env
+        dolt_default_branch: "main"
       dockerfile: "development/Dockerfile-dolt"
     command: 
       - dolt
