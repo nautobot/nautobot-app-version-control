@@ -11,7 +11,8 @@ from dolt.constants import DB_NAME, DOLT_BRANCH_KEYWORD
 
 class DoltError(Exception):
     """ DoltError is a type of error to represent errors from the Dolt database custom functions """
-    pass # pylint: disable=W0107
+
+    pass  # pylint: disable=W0107
 
 
 def author_from_user(usr):
