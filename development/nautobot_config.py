@@ -15,6 +15,7 @@ from nautobot.core import settings
 for key in [
     "ALLOWED_HOSTS",
     "DOLT_DB",
+    "DOLT_DEFAULT_BRANCH",
     "DOLT_USER",
     "DOLT_HOST",
     "DOLT_PASSWORD",
@@ -52,19 +53,21 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(" ")
 # Dolt database configuration. Dolt is compatible with the MySQL database backend.
 # See the Django documentation for a complete list of available parameters:
 #   https://docs.djangoproject.com/en/stable/ref/settings/#databases
+DOLT_DB = os.getenv("DOLT_DB")
+DOLT_DEFAULT_BRANCH = os.getenv("DOLT_DEFAULT_BRANCH")
+GLOBAL_DB = "global"
+
 DATABASES = {
     "default": {
-        "NAME": "nautobot",  # Database name
+        "NAME": DOLT_DB,  # Database name
         "USER": os.getenv("DOLT_USER", ""),  # Database username
         "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Database password
         "HOST": os.getenv("DOLT_HOST", "localhost"),  # Database server
         "PORT": os.getenv("DOLT_PORT", ""),  # Database port (leave blank for default)
         "ENGINE": "django.db.backends.mysql",
     },
-    # TODO: use `dolt.constants.GLOBAL_STATE_DB`
-    "global": {
-        # TODO: use `dolt.constants.DOLT_DEFAULT_BRANCH`
-        "NAME": "nautobot",  # Database username
+    GLOBAL_DB: {
+        "NAME": DOLT_DB,  # Database username
         "USER": os.getenv("DOLT_USER", ""),  # Database username
         "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Database password
         "HOST": os.getenv("DOLT_HOST", "localhost"),  # Database server

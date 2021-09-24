@@ -8,9 +8,12 @@ RUN mkdir -p /var/lib/nautobot
 ARG DOLT_RELEASE=latest
 RUN curl -L https://github.com/dolthub/dolt/releases/${DOLT_RELEASE}/download/install.sh | bash
 
+ARG dolt_default_branch
+RUN echo "dolt default branch: dolt_default_branch"
+
 RUN dolt config --global --add user.name nautobot
 RUN dolt config --global --add user.email opensource@networktocode.COM
-RUN dolt config --global --add init.defaultbranch main
+RUN dolt config --global --add init.defaultbranch $dolt_default_branch
 
 WORKDIR /var/lib/nautobot
 
