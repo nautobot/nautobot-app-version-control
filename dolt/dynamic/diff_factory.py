@@ -59,9 +59,7 @@ class DiffModelFactory:
 
     @property
     def diff_table_name(self):
-        return (
-            f"dolt_commit_diff_{self.content_type.app_label}_{self.content_type.model}"
-        )
+        return f"dolt_commit_diff_{self.content_type.app_label}_{self.content_type.model}"
 
     @property
     def _model_fields(self):
@@ -233,9 +231,7 @@ class DiffListViewBase(tables.Table):
         Wraps an existing cell rendering function with diff styling
         """
 
-        def render_before_after_diff(
-            value, record, column, bound_column, bound_row, table
-        ):
+        def render_before_after_diff(value, record, column, bound_column, bound_row, table):
             # the previous render function may take any of the
             # following args, so provide them all
             kwargs = {
@@ -267,10 +263,7 @@ class DiffListViewBase(tables.Table):
                 return cell
 
             after_name = f"to_{bound_column.name}"
-            if (
-                after_name in record.diff
-                and record.diff[after_name] == record.diff[before_name]
-            ):
+            if after_name in record.diff and record.diff[after_name] == record.diff[before_name]:
                 # no diff
                 return cell
 

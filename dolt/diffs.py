@@ -41,9 +41,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             continue
 
         factory = DiffModelFactory(content_type)
-        diffs = factory.get_model().objects.filter(
-            from_commit=from_commit, to_commit=to_commit
-        )
+        diffs = factory.get_model().objects.filter(from_commit=from_commit, to_commit=to_commit)
         tbl_name = content_type.model_class()._meta.db_table
         to_queryset = (
             content_type.model_class()
@@ -77,8 +75,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                 pk__in=RawSQL(
                     f"""SELECT to_id FROM dolt_commit_diff_{tbl_name} 
                         WHERE to_commit = %s AND from_commit = %s AND diff_type = 'removed' """,
-                    (to_commit, from_commit),
-                )
+                    (to_commit, from_commit),)
             )
             .annotate(
                 # Annotate each row with a JSON-ified diff

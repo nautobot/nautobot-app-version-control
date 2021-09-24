@@ -49,7 +49,8 @@ TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 # Example: ALLOWED_HOSTS = ['nautobot.example.com', 'nautobot.internal.local']
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS").split(" ")
 
-# PostgreSQL database configuration. See the Django documentation for a complete list of available parameters:
+# Dolt database configuration. Dolt is compatible with the MySQL database backend.
+# See the Django documentation for a complete list of available parameters:
 #   https://docs.djangoproject.com/en/stable/ref/settings/#databases
 DATABASES = {
     "default": {
@@ -69,12 +70,15 @@ DATABASES = {
         "HOST": os.getenv("DOLT_HOST", "localhost"),  # Database server
         "PORT": os.getenv("DOLT_PORT", ""),  # Database port (leave blank for default)
         "ENGINE": "django.db.backends.mysql",
+        "TEST": {
+            "MIRROR": "default",
+        },
     },
 }
 
 
 # Redis variables
-REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+REDIS_HOST = os.getenv("REDIS_HOST")
 REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 
@@ -82,7 +86,7 @@ REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 REDIS_SCHEME = "redis"
 REDIS_SSL = is_truthy(os.environ.get("REDIS_SSL", False))
 if REDIS_SSL:
-    REDIS_SCHEME = "rediss"
+    REDIS_SCHEME = "redis"
 
 # The django-redis cache is used to establish concurrent locks using Redis. The
 # django-rq settings will use the same instance/database by default.
@@ -106,6 +110,10 @@ CACHES = {
 
 # REDIS CACHEOPS
 CACHEOPS_REDIS = f"{REDIS_SCHEME}://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/1"
+
+# Needed for Celery, should match Nautobot/Redis values above
+CELERY_BROKER_URL = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
+CELERY_RESULT_BACKEND = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
 
 # This key is used for secure generation of random numbers and strings. It must never be exposed outside of this file.
 # For optimal security, SECRET_KEY should be at least 50 characters in length and contain a mix of letters, numbers, and
@@ -326,11 +334,7 @@ SHORT_DATETIME_FORMAT = os.environ.get("SHORT_DATETIME_FORMAT", "Y-m-d H:i")
 
 # A list of strings designating all applications that are enabled in this Django installation. Each string should be a dotted Python path to an application configuration class (preferred), or a package containing an application.
 # https://nautobot.readthedocs.io/en/latest/configuration/optional-settings/#extra-applications
-EXTRA_INSTALLED_APPS = (
-    os.environ["EXTRA_INSTALLED_APPS"].split(",")
-    if os.environ.get("EXTRA_INSTALLED_APPS")
-    else []
-)
+EXTRA_INSTALLED_APPS = os.environ["EXTRA_INSTALLED_APPS"].split(",") if os.environ.get("EXTRA_INSTALLED_APPS") else []
 
 # Django Debug Toolbar
 DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda _request: DEBUG and not TESTING}

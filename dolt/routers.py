@@ -2,7 +2,7 @@ from django.contrib.sessions.backends.db import SessionStore
 from django.db import connections
 from django.utils.safestring import mark_safe
 
-from . import is_versioned_model
+from . import is_global_router_enabled, is_versioned_model
 from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH, GLOBAL_DB
 from dolt.models import Branch
 from dolt.utils import DoltError, is_dolt_model, active_branch
@@ -21,6 +21,9 @@ class GlobalStateRouter:
         Versioned models use the 'default' database and the Dolt branch that
         was checked out in `DoltBranchMiddleware`.
         """
+        if not is_global_router_enabled():
+            return None
+
         if is_versioned_model(model):
             return None
 
@@ -33,13 +36,16 @@ class GlobalStateRouter:
         was checked out in `DoltBranchMiddleware`.
         Prevents writes of non-versioned models on non-primary branches.
         """
-        if is_versioned_model(model):
+        if not is_global_router_enabled():
             return None
 
         if is_dolt_model(model):
             # Dolt models can be created or edited from any branch.
             # Edits will be applied to the "main"
             return self.global_db
+
+        if is_versioned_model(model):
+            return None
 
         if self.branch_is_not_primary():
             # non-versioned models can only be edited on "main"

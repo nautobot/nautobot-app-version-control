@@ -81,9 +81,7 @@ def docker_compose(context, command, **kwargs):
         compose_files = context.nautobot_dolt.compose_files
 
     for compose_file in compose_files:
-        compose_file_path = os.path.join(
-            context.nautobot_dolt.compose_dir, compose_file
-        )
+        compose_file_path = os.path.join(context.nautobot_dolt.compose_dir, compose_file)
         compose_command += f' -f "{compose_file_path}"'
     compose_command += f" {command}"
     print(f'Running docker-compose command "{command}"')
@@ -232,7 +230,6 @@ def migrate(context):
     compose_files = [
         "docker-compose.requirements.yml",
         "docker-compose.base.yml",
-        "docker-compose.migrate.yml",
     ]
 
     if is_truthy(context.nautobot_dolt.local):
@@ -272,7 +269,6 @@ def load_data(context):
     compose_files = [
         "docker-compose.requirements.yml",
         "docker-compose.base.yml",
-        "docker-compose.migrate.yml",
     ]
 
     for command in commands:
@@ -337,6 +333,17 @@ def bandit(context):
 
 
 @task
+def yamllint(context):
+    """Run yamllint to validate formating adheres to NTC defined YAML standards.
+
+    Args:
+        context (obj): Used to run specific commands
+    """
+    command = "yamllint . --format standard"
+    run_command(context, command)
+
+
+@task
 def check_migrations(context):
     """Check for missing migrations."""
     command = "nautobot-server makemigrations --dry-run --check"
@@ -352,7 +359,7 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(context, keepdb=False, label="dolt", failfast=False, buffer=True):
+def unittest(context, keepdb=False, label="dolt", failfast=False, buffer=True, verbose=False):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
@@ -362,15 +369,29 @@ def unittest(context, keepdb=False, label="dolt", failfast=False, buffer=True):
         command += " --failfast"
     if buffer:
         command += " --buffer"
-    run_command(context, command)
+    if verbose:
+        command += " --verbosity 2"
+
+    # Check if Nautobot is running, no need to start another Nautobot container to run a command
+    docker_compose_status = "ps --services --filter status=running"
+    results = docker_compose(context, docker_compose_status, hide="out")
+    if "nautobot" in results.stdout:
+        compose_command = f"exec nautobot {command}"
+    else:
+        compose_command = f"run --entrypoint '{command}' nautobot"
+
+    compose_files = [
+        "docker-compose.requirements.yml",
+        "docker-compose.base.yml",
+        "docker-compose.test.yml",
+    ]
+    docker_compose(context, compose_command, pty=True, compose_files=compose_files)
 
 
 @task
 def unittest_coverage(context):
     """Report on code test coverage as measured by 'invoke unittest'."""
-    command = (
-        "coverage report --skip-covered --include 'nautobot_dolt/*' --omit *migrations*"
-    )
+    command = "coverage report --skip-covered --include 'nautobot_dolt/*' --omit *migrations*"
 
     run_command(context, command)
 

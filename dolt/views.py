@@ -5,7 +5,7 @@ import logging
 from django.forms import ValidationError
 from django.contrib import messages
 from django.db import models, connections
-from django.db.models import Q, F, Subquery, OuterRef, Value
+from django.db.models import Q, F, Subquery, OuterRef, Value, ProtectedError
 from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ValidationError
 from django.core.serializers import serialize
@@ -139,10 +139,7 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
         # Are we deleting *all* objects in the queryset or just a selected subset?
         if request.POST.get("_all"):
             if self.filterset is not None:
-                pk_list = [
-                    obj.pk
-                    for obj in self.filterset(request.GET, model.objects.only("pk")).qs
-                ]
+                pk_list = [obj.pk for obj in self.filterset(request.GET, model.objects.only("pk")).qs]
             else:
                 pk_list = model.objects.values_list("pk", flat=True)
         else:
@@ -159,16 +156,12 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
                 queryset = self.queryset.filter(pk__in=pk_list)
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
-                except ProtectedError as e:
-                    logger.info(
-                        "Caught ProtectedError while attempting to delete objects"
-                    )
-                    handle_protectederror(queryset, request, e)
+                except Exception as e:
+                    logger.info("Caught error while attempting to delete objects")
+                    messages.error(request, mark_safe(e))
                     return redirect(self.get_return_url(request))
 
-                msg = "Deleted {} {}".format(
-                    deleted_count, model._meta.verbose_name_plural
-                )
+                msg = "Deleted {} {}".format(deleted_count, model._meta.verbose_name_plural)
                 logger.info(msg)
                 messages.success(request, msg)
                 return redirect(self.get_return_url(request))
@@ -189,9 +182,7 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
         if not table.rows:
             messages.warning(
                 request,
-                "No {} were selected for deletion.".format(
-                    model._meta.verbose_name_plural
-                ),
+                "No {} were selected for deletion.".format(model._meta.verbose_name_plural),
             )
             return redirect(self.get_return_url(request))
 
@@ -271,9 +262,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
     def post(self, req, *args, **kwargs):
         src, dest = kwargs["src"], kwargs["dest"]
         Branch.objects.get(name=dest).merge(src, user=req.user)
-        messages.info(
-            req, mark_safe(f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>")
-        )
+        messages.info(req, mark_safe(f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"))
         alter_session_branch(sess=req.session, branch=dest)
         return redirect(f"/")
 
@@ -281,9 +270,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
         merge_base = Commit.merge_base(src, dest)
         source_head = src.hash
         return {
-            "results": diffs.two_dot_diffs(
-                from_commit=merge_base, to_commit=source_head
-            ),
+            "results": diffs.two_dot_diffs(from_commit=merge_base, to_commit=source_head),
             "conflicts": merge.get_conflicts_for_merge(src, dest),
             "back_btn_url": reverse("plugins:dolt:branch_merge", args=[src.name]),
         }
@@ -415,17 +402,13 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
                     # catch database error
                     messages.error(
                         request,
-                        mark_safe(
-                            f"""Error reverting commits {", ".join(msgs)}: {e}"""
-                        ),
+                        mark_safe(f"""Error reverting commits {", ".join(msgs)}: {e}"""),
                     )
                     return redirect(self.get_return_url(request))
                 else:
                     messages.success(
                         request,
-                        mark_safe(
-                            f"""Successfully reverted commits {", ".join(msgs)}"""
-                        ),
+                        mark_safe(f"""Successfully reverted commits {", ".join(msgs)}"""),
                     )
 
         return redirect(self.get_return_url(request))
@@ -469,9 +452,7 @@ class DiffDetailView(View):
         )
 
     def get_model(self, kwargs):
-        return ContentType.objects.get(
-            app_label=kwargs["app_label"], model=kwargs["model"]
-        ).model_class()
+        return ContentType.objects.get(app_label=kwargs["app_label"], model=kwargs["model"]).model_class()
 
     @staticmethod
     def title(before_obj, after_obj):
@@ -582,7 +563,7 @@ class DiffDetailView(View):
 
 class PullRequestListView(generic.ObjectListView):
     queryset = PullRequest.objects.all().order_by("-created_at")
-    filterset = filters.PullRequestFilterSet
+    filterset = filters.PullRequestDefaultOpenFilterSet
     filterset_form = forms.PullRequestFilterForm
     table = tables.PullRequestTable
     action_buttons = ()
@@ -641,9 +622,7 @@ class PullRequestReviewListView(PullRequestBase):
 
     def get_extra_context(self, req, obj, **kwargs):
         ctx = super().get_extra_context(req, obj, **kwargs)
-        reviews = PullRequestReview.objects.filter(pull_request=obj.pk).order_by(
-            "reviewed_at"
-        )
+        reviews = PullRequestReview.objects.filter(pull_request=obj.pk).order_by("reviewed_at")
         ctx.update(
             {
                 "active_tab": "reviews",
@@ -829,9 +808,7 @@ class PullRequestCloseView(generic.ObjectEditView):
         if form.is_valid():
             pr.state = PullRequest.CLOSED
             pr.save()
-            msg = mark_safe(
-                f"""<strong>Pull Request "{pr}" has been closed.</strong>"""
-            )
+            msg = mark_safe(f"""<strong>Pull Request "{pr}" has been closed.</strong>""")
             messages.success(request, msg)
             return redirect("plugins:dolt:pull_request", pk=pr.pk)
 
@@ -844,3 +821,68 @@ class PullRequestCloseView(generic.ObjectEditView):
                 "return_url": pr.get_absolute_url(),
             },
         )
+
+
+class PullRequestBulkDeleteView(generic.BulkDeleteView):
+    queryset = PullRequest.objects.all()
+    table = tables.PullRequestTable
+    form = forms.PullRequestDeleteForm
+    template_name = "dolt/pull_request_bulk_delete.html"
+
+    def get(self, request):
+        return redirect(self.get_return_url(request))
+
+    def post(self, request, *args, **kwargs):
+        logger = logging.getLogger("nautobot.views.BulkDeleteView")
+        model = self.queryset.model
+
+        # Are we deleting *all* objects in the queryset or just a selected subset?
+        pk_list = request.POST.getlist("pk")
+        form_cls = self.get_form()
+
+        if "_confirm" in request.POST:
+            form = form_cls(request.POST)
+            if form.is_valid():
+                logger.debug("Form validation was successful")
+
+                # Delete objects
+                queryset = self.queryset.filter(pk__in=pk_list)
+                try:
+                    deleted_count = queryset.delete()[1][model._meta.label]
+                except Exception as e:
+                    logger.info("Caught error while attempting to delete objects")
+                    return redirect(self.get_return_url(request))
+
+                msg = "Deleted {} {}".format(deleted_count, model._meta.verbose_name_plural)
+                logger.info(msg)
+                messages.success(request, msg)
+                return redirect(self.get_return_url(request))
+
+            else:
+                logger.debug("Form validation failed")
+
+        else:
+            form = form_cls(
+                initial={
+                    "pk": pk_list,
+                    "return_url": self.get_return_url(request),
+                }
+            )
+
+        # Retrieve objects being deleted
+        table = self.table(self.queryset.filter(pk__in=pk_list), orderable=False)
+        if not table.rows:
+            messages.warning(
+                request,
+                "No {} were selected for deletion.".format(model._meta.verbose_name_plural),
+            )
+            return redirect(self.get_return_url(request))
+
+        context = {
+            "form": form,
+            "obj_type_plural": model._meta.verbose_name_plural,
+            "table": table,
+            "return_url": self.get_return_url(request),
+        }
+        context.update(self.extra_context())
+        return render(request, self.template_name, context)

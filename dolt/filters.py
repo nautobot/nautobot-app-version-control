@@ -1,7 +1,7 @@
 import django_filters
 from django.db.models import Q
 
-from nautobot.utilities.filters import BaseFilterSet
+from nautobot.utilities.filters import BaseFilterSet, TreeNodeMultipleChoiceFilter
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 
 
@@ -96,11 +96,22 @@ class PullRequestFilterSet(BaseFilterSet):
         )
 
 
-class PullRequestCommentFilterSet(BaseFilterSet):
+class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
+    state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
+
+    def __init__(self, data, *args, **kwargs):
+        if not data.get("state"):
+            data = data.copy()
+            data["state"] = PullRequest.OPEN
+        super().__init__(data, *args, **kwargs)
+
+
+class PullRequestReviewFilterSet(BaseFilterSet):
     q = django_filters.CharFilter(
         method="search",
         label="Search",
     )
+    state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
 
     class Meta:
         model = PullRequestReview
@@ -119,6 +130,6 @@ class PullRequestCommentFilterSet(BaseFilterSet):
         return queryset.filter(
             Q(reviewer__icontains=value)
             | Q(reviewed_at__icontains=value)
-            | Q(state__icontains=PullRequestReview.COMMENTED)
+            | Q(state__icontains=value)
             | Q(summary__icontains=value)
         )
