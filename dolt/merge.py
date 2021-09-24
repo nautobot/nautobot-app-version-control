@@ -1,9 +1,14 @@
+"""
+Merge.py contains utilities for the merging two branches and detecting any conflicts
+"""
+
 import json
 
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import connection
 from django.db.models import Sum
 from django.contrib.contenttypes.models import ContentType
+from django.utils.safestring import mark_safe
 
 from dolt.models import (
     Branch,
@@ -13,7 +18,6 @@ from dolt.models import (
 )
 from dolt.utils import author_from_user, query_on_branch
 from dolt.tables import (
-    ConflictsSummaryTable,
     ConflictsTable,
     ConstraintViolationsTable,
 )
@@ -71,6 +75,7 @@ def get_conflicts_for_merge(src, dest):
 
 
 def merge_candidate_exists(src, dest):
+    """ merge_candidate_exists returns true if there exist a merge_candidate branch between src and dest """
     name = _merge_candidate_name(src, dest)
     try:
         mc = Branch.objects.get(name=name)
@@ -93,6 +98,8 @@ def merge_candidate_is_fresh(mc, src, dest):
 
 
 def get_merge_candidate(src, dest):
+    """ get_merge_candidate returns a merge candidate branch if it exists """
+
     if merge_candidate_exists(src, dest):
         name = _merge_candidate_name(src, dest)
         return Branch.objects.get(name=name)
@@ -100,6 +107,8 @@ def get_merge_candidate(src, dest):
 
 
 def make_merge_candidate(src, dest):
+    """ make_merge_candidate create a merge candidate branch between src and dest """
+
     name = _merge_candidate_name(src, dest)
     # force updates the merge-candidate branch
     Branch(name=name, starting_branch=dest).save()
@@ -112,7 +121,7 @@ def make_merge_candidate(src, dest):
         cursor.execute(
             f"""SELECT dolt_commit(
                     '--force',
-                    '--all', 
+                    '--all',
                     '--allow-empty',
                     '--message', '{msg}',
                     '--author', '{author_from_user(None)}') FROM dual;"""
@@ -121,6 +130,8 @@ def make_merge_candidate(src, dest):
 
 
 def get_or_make_merge_candidate(src, dest):
+    """ Gets or creates a merge candidate branch between src and dest """
+
     mc = get_merge_candidate(src, dest)
     if not mc:
         mc = make_merge_candidate(src, dest)
@@ -128,6 +139,8 @@ def get_or_make_merge_candidate(src, dest):
 
 
 def _merge_candidate_name(src, dest):
+    """ Returns the formatted name of a merge candidate branch """
+
     return f"xxx-merge-candidate--{src}--{dest}"
 
 
@@ -145,12 +158,9 @@ class MergeConflicts:
     def _model_map():
         return {ct.model_class()._meta.db_table: ct.model_class() for ct in ContentType.objects.all()}
 
-    def conflicts_exist(self):
-        conflicts = Conflicts.objects.count() != 0
-        violations = ConstraintViolations.objects.count() != 0
-        return conflicts or violations
-
     def make_conflict_summary_table(self):
+        """ Creates the conflict summary table for merge conflicts """
+
         conflicts = Conflicts.objects.all()
         violations = ConstraintViolations.objects.all()
         summary = {
@@ -167,20 +177,24 @@ class MergeConflicts:
         return list(summary.values())
 
     def make_conflict_table(self):
+        """ Create a table that represents conflicts on a table between src and dest """
+
         rows = []
         for c in Conflicts.objects.all():
-            rows.extend(self.get_rows_level_conflicts(c, self.src, self.dest))
+            rows.extend(self.get_rows_level_conflicts(c))
         return ConflictsTable(rows)
 
     def make_constraint_violations_table(self):
+        """ make_constraint_violations_table creates a table to store constraint violations between two tables  """
+
         rows = []
         for v in ConstraintViolations.objects.all():
             rows.extend(self.get_rows_level_violations(v))
         return ConstraintViolationsTable(rows)
 
-    def get_rows_level_conflicts(self, conflict, src, dest):
+    def get_rows_level_conflicts(self, conflict):
         """
-        todo
+        get_row_level_conflicts returns each conflict row in a table as a JSON object.
         """
         with connection.cursor() as cursor:
             # introspect table schema to query conflict data as json
@@ -202,10 +216,10 @@ class MergeConflicts:
             ]
 
     def _transform_conflicts_obj(self, obj):
-        if type(obj) is str:
+        if isinstance(obj, str):
             obj = json.loads(obj)
         obj2 = {}
-        for k, v in obj.items():
+        for k, _ in obj.items():
             prefix = "our_"
             if not k.startswith(prefix):
                 continue
@@ -214,7 +228,7 @@ class MergeConflicts:
             theirs = obj[f"their_{suffix}"]
             base = obj[f"base_{suffix}"]
 
-            conflicted = ours != theirs and ours != base
+            conflicted = ours not in (theirs, base)
             if conflicted:
                 obj2[suffix] = {
                     f"{self.dest}": ours,
@@ -224,6 +238,7 @@ class MergeConflicts:
         return obj2
 
     def get_rows_level_violations(self, violation):
+        """ get_row_level_violations returns each constrain violation in a JSON row """
         with connection.cursor() as cursor:
             rows = []
             model_name = self._model_from_table(violation.table)
@@ -249,13 +264,13 @@ class MergeConflicts:
         model = self.model_map[tbl_name]
         return model._meta.verbose_name
 
-    def _object_name_from_id(self, tbl_name, id):
+    def _object_name_from_id(self, tbl_name, id_):
         try:
             model = self.model_map[tbl_name]
-            obj = model.objects.get(id=id)
+            obj = model.objects.get(id=id_)
             return str(obj)
         except ObjectDoesNotExist:
-            return id
+            return id_
 
     def _fmt_violation(self, v_row, model_name, obj_name):
         v_type = v_row[1]

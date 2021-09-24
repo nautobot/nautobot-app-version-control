@@ -1,24 +1,28 @@
-from django.apps import apps
+"""
+Diffs.py contains a set of utilities for producing Dolt diffs.
+"""
+
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
-from django.db.models import Q, F, Subquery, OuterRef, Value
+from django.db.models import F, Subquery, OuterRef, Value
 
 from nautobot.dcim.tables import cables, devices, devicetypes, power, racks, sites
 from nautobot.circuits import tables as circuits_tables
 from nautobot.ipam import tables as ipam_tables
 from nautobot.tenancy import tables as tenancy_tables
 from nautobot.virtualization import tables as virtualization_tables
-from nautobot.utilities.querysets import RestrictedQuerySet
-from nautobot.utilities.tables import BaseTable
 
-from . import diff_table_for_model, register_diff_tables
 from dolt.dynamic.diff_factory import DiffModelFactory, DiffListViewFactory
 from dolt.models import Commit
 from dolt.utils import db_for_commit
 from dolt.functions import JSONObject
 
+from . import diff_table_for_model, register_diff_tables
+
 
 def three_dot_diffs(from_commit=None, to_commit=None):
+    """ three_dot_diffs returns a diff between the ancestor of from_to_commit with to_commit """
+
     if not (from_commit and to_commit):
         raise ValueError("must specify both a to_commit and from_commit")
     merge_base = Commit.merge_base(from_commit, to_commit)
@@ -26,6 +30,8 @@ def three_dot_diffs(from_commit=None, to_commit=None):
 
 
 def two_dot_diffs(from_commit=None, to_commit=None):
+    """ two_dot_diffs returns the diff between from_commit and to_commit via the dolt diff table interface """
+
     if not (from_commit and to_commit):
         raise ValueError("must specify both a to_commit and from_commit")
 
@@ -83,7 +89,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
         )
 
         diff_rows = sorted(list(to_queryset) + list(from_queryset), key=lambda d: d.pk)
-        if not len(diff_rows):
+        if len(diff_rows) == 0:
             continue
 
         diff_view_table = DiffListViewFactory(content_type).get_table_model()
@@ -100,6 +106,8 @@ def two_dot_diffs(from_commit=None, to_commit=None):
 
 
 def diff_annotation_query_fields(model):
+    """ diff_annotation_query_fields returns all of the column names for a model and turns them into to_ and from_ fields """
+
     names = [
         f.name
         for f in model._meta.get_fields()
