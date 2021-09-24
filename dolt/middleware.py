@@ -158,7 +158,7 @@ class AutoDoltCommit:
         m2m_changed.disconnect(self._handle_update, dispatch_uid="dolt_commit_update")
         pre_delete.disconnect(self._handle_delete, dispatch_uid="dolt_commit_delete")
 
-    def _handle_update(self, _, instance, **kwargs):
+    def _handle_update(self, sender, instance, **kwargs):  # pylint: disable=W0613
         """ Fires when an object is created or updated. """
         if isinstance(instance, ObjectChange):
             # ignore ObjectChange instances
@@ -168,7 +168,7 @@ class AutoDoltCommit:
         self.collect_change(instance, msg)
         self.commit = True
 
-    def _handle_delete(self, _, instance, **kwargs):
+    def _handle_delete(self, sender, instance, **kwargs):  # pylint: disable=W0613
         """ Fires when an object is deleted. """
         if isinstance(instance, ObjectChange):
             # ignore ObjectChange instances
