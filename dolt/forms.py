@@ -1,4 +1,4 @@
-""" Forms.py defines the set of forms used for creating, deleting, editing, and searching different models """
+"""Forms.py defines the set of forms used for creating, deleting, editing, and searching different models."""
 
 from django import forms
 
@@ -16,7 +16,7 @@ from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
 class BranchForm(forms.ModelForm, BootstrapMixin):
-    """ BranchForm returns a form for the BranchCheckout and BranchEdit views """
+    """BranchForm returns a form for the BranchCheckout and BranchEdit views."""
 
     name = forms.SlugField()
     starting_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
@@ -39,13 +39,14 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
         super().__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
+        """save overrides an superclass method."""
         self.instance.starting_branch = self.cleaned_data["starting_branch"]
         self.instance.creator = self.cleaned_data["creator"]
         return super().save(*args, **kwargs)
 
 
 class MergeForm(forms.Form, BootstrapMixin):
-    """ MergeForm returns a form the merge button on the branch_merge page """
+    """MergeForm returns a form the merge button on the branch_merge page."""
 
     source_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
     destination_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
@@ -58,7 +59,7 @@ class MergeForm(forms.Form, BootstrapMixin):
 
 
 class MergePreviewForm(forms.Form, BootstrapMixin):
-    """ MergePreviewForm returns a form for previewing branch merges. """
+    """MergePreviewForm returns a form for previewing branch merges."""
 
     source_branch = forms.ModelChoiceField(
         queryset=Branch.objects.all(),
@@ -79,7 +80,7 @@ class MergePreviewForm(forms.Form, BootstrapMixin):
 
 
 class BranchBulkEditForm(forms.Form, BootstrapMixin):
-    """" BranchBulkEditForm is a small form for the branch bulk edit view. """
+    """BranchBulkEditForm is a small form for the branch bulk edit view."""
 
     class Meta:
         model = Branch
@@ -97,7 +98,7 @@ class BranchBulkDeleteForm(ConfirmationForm):
     pk = forms.ModelMultipleChoiceField(queryset=Branch.objects.all(), widget=forms.MultipleHiddenInput)
 
     def clean_pk(self):
-        """ clean_pk gets the primary key of the cleaned data and protects against active_branch and default_branch deletions """
+        """clean_pk gets the primary key of the cleaned data and protects against active_branch and default_branch deletions."""
         # TODO: log error messages
         deletes = [str(b) for b in self.cleaned_data["pk"]]
         if active_branch() in deletes:
@@ -114,7 +115,7 @@ class BranchBulkDeleteForm(ConfirmationForm):
 
 
 class BranchFilterForm(forms.Form, BootstrapMixin):
-    """ BranchFilterForm is used for filtering the branches list page. """
+    """BranchFilterForm is used for filtering the branches list page."""
 
     model = Branch
     field_order = ["q"]
@@ -135,7 +136,7 @@ class BranchFilterForm(forms.Form, BootstrapMixin):
 
 
 class CommitForm(forms.ModelForm, BootstrapMixin):
-    """ CommitForm is a form used for the CommitEdit view. """
+    """CommitForm is a form used for the CommitEdit view."""
 
     class Meta:
         model = Commit
@@ -143,7 +144,7 @@ class CommitForm(forms.ModelForm, BootstrapMixin):
 
 
 class CommitFilterForm(forms.Form, BootstrapMixin):
-    """ CommitFilterForm is used to filter the commit set. """
+    """CommitFilterForm is used to filter the commit set."""
 
     model = Commit
     field_order = ["q"]
@@ -156,7 +157,7 @@ class CommitFilterForm(forms.Form, BootstrapMixin):
 
 
 class CommitBulkRevertForm(forms.Form, BootstrapMixin):
-    """ CommitBulkRevertForm is used to confirm the deletion of a certain amount of Commits """
+    """CommitBulkRevertForm is used to confirm the deletion of a certain amount of Commits."""
 
     pk = forms.ModelMultipleChoiceField(queryset=Commit.objects.all(), widget=forms.MultipleHiddenInput())
 
@@ -170,7 +171,7 @@ class CommitBulkRevertForm(forms.Form, BootstrapMixin):
 
 
 class PullRequestForm(forms.ModelForm, BootstrapMixin):
-    """ PullRequestForms is used to confirm the creation or addition of pull requests. """
+    """PullRequestForms is used to confirm the creation or addition of pull requests."""
 
     qs = Branch.objects.exclude(name__startswith="xxx")
     source_branch = forms.ModelChoiceField(queryset=qs, to_field_name="name", required=True)
@@ -187,12 +188,12 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
 
 
 class PullRequestDeleteForm(ConfirmationForm):
-    """ PullRequestDeleteForm is used to delete selection PRs """
+    """PullRequestDeleteForm is used to delete selection PRs."""
 
     pk = forms.ModelMultipleChoiceField(queryset=PullRequest.objects.all(), widget=forms.MultipleHiddenInput)
 
     def clean_pk(self):
-        """ clean_pk returns only the pk of the cleaned data """
+        """clean_pk returns only the pk of the cleaned data"""
         return self.cleaned_data["pk"]
 
     class Meta:
@@ -203,7 +204,7 @@ class PullRequestDeleteForm(ConfirmationForm):
 
 
 class PullRequestFilterForm(forms.Form, BootstrapMixin):
-    """" PullRequestFilterForm is used to filter the complete PullRequest filter list """
+    """PullRequestFilterForm is used to filter the complete PullRequest filter list."""
 
     model = PullRequest
     q = forms.CharField(required=False, label="Search")
@@ -230,7 +231,7 @@ class PullRequestFilterForm(forms.Form, BootstrapMixin):
 
 
 class PullRequestReviewForm(forms.ModelForm, BootstrapMixin):
-    """ PullRequestReviewForm is used to review a pull request. """
+    """PullRequestReviewForm is used to review a pull request."""
 
     class Meta:
         model = PullRequestReview

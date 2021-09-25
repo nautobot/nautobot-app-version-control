@@ -1,4 +1,4 @@
-""" Filters.py defines a set of Filters needed for each model defined in models.py """
+"""Filters.py defines a set of Filters needed for each model defined in models.py."""
 
 import django_filters
 from django.db.models import Q
@@ -8,7 +8,7 @@ from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 
 
 class BranchFilterSet(BaseFilterSet):
-    """ BranchFilterSet returns a filter for the Branch model """
+    """BranchFilterSet returns a filter for the Branch model."""
 
     q = django_filters.CharFilter(
         method="search",
@@ -48,7 +48,7 @@ class BranchFilterSet(BaseFilterSet):
 
 
 class CommitFilterSet(BaseFilterSet):
-    """ CommitFilterSet returns a filter for the CommitFilterSet """
+    """CommitFilterSet returns a filter for the CommitFilterSet."""
 
     q = django_filters.CharFilter(
         method="search",
@@ -86,7 +86,7 @@ class CommitFilterSet(BaseFilterSet):
 
 
 class PullRequestFilterSet(BaseFilterSet):
-    """ PullRequestFilterSet returns a filter for the PullRequest model """
+    """PullRequestFilterSet returns a filter for the PullRequest model."""
 
     q = django_filters.CharFilter(
         method="search",
@@ -126,9 +126,7 @@ class PullRequestFilterSet(BaseFilterSet):
 
 
 class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
-    """
-    PullRequestDefaultOpenFilterSet returns a filter for the PullRequest model where the default search is state=OPEN
-    """
+    """PullRequestDefaultOpenFilterSet returns a filter for the PullRequest model where the default search is state=OPEN."""
 
     state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
 
@@ -140,7 +138,7 @@ class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
 
 
 class PullRequestReviewFilterSet(BaseFilterSet):
-    """ PullRequestReviewFilterSet returns a filter for the PullRequestReview model """
+    """PullRequestReviewFilterSet returns a filter for the PullRequestReview model."""
 
     q = django_filters.CharFilter(
         method="search",
