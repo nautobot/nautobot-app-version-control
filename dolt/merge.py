@@ -134,6 +134,7 @@ def _merge_candidate_name(src, dest):
 
 class MergeConflicts:
     """Must run under the mc branch."""
+
     def __init__(self, src, dest):
         """Inits the class vars."""
         self.src = src

@@ -26,6 +26,7 @@ class DoltSystemTable(models.Model):
 
     class Meta:
         """Meta links to a _meta table."""
+
         abstract = True
         managed = False
 
