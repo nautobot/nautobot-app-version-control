@@ -1,4 +1,4 @@
-""" diff_factory wraps a model's diff and returns a queryable DiffModel """
+"""diff_factory wraps a model's diff and returns a queryable DiffModel."""
 
 import copy
 
@@ -18,20 +18,20 @@ from dolt import diff_table_for_model
 
 
 class DiffModelFactory:
-    """ DiffModelFactory wraps a DiffModel to query the dolt_diff_tablename table """
+    """DiffModelFactory wraps a DiffModel to query the dolt_diff_tablename table."""
 
     def __init__(self, content_type):
         self.content_type = content_type
 
     def get_model(self):
-        """ get_model returns the underlying model """
+        """get_model returns the underlying model."""
         try:
             return apps.get_model("dolt", self.model_name)
         except LookupError:
             return self.make_model()
 
     def make_model(self):
-        """ make_model creates queryable diff model """
+        """make_model creates queryable diff model."""
         props = {
             "__module__": "dolt.models",
             "_declared": timezone.now(),
@@ -56,17 +56,17 @@ class DiffModelFactory:
 
     @property
     def model_name(self):
-        """ returns the mod_name """
+        """returns the mod_name."""
         return f"diff_{self.content_type.model}"
 
     @property
     def source_model_verbose_name(self):
-        """ return the underlying models verbose name """
+        """return the underlying models verbose name."""
         return str(self.content_type.model_class()._meta.verbose_name.capitalize())
 
     @property
     def diff_table_name(self):
-        """ diff_table_name returns the name of the diff table """
+        """diff_table_name returns the name of the diff table."""
         return f"dolt_commit_diff_{self.content_type.app_label}_{self.content_type.model}"
 
     @property
@@ -104,20 +104,20 @@ class DiffModelFactory:
 
 
 class DiffListViewFactory:
-    """ DiffListViewFactory dynamically generate diff models """
+    """DiffListViewFactory dynamically generate diff models."""
 
     def __init__(self, content_type):
         self.ct = content_type
 
     def get_table_model(self):
-        """ get_table_model returns the underlying the underlying model """
+        """get_table_model returns the underlying the underlying model."""
         try:
             return apps.get_model("dolt", self.table_model_name)
         except LookupError:
             return self.make_table_model()
 
     def make_table_model(self):
-        """ make_table_model creates a DiffList of a model """
+        """make_table_model creates a DiffList of a model."""
         try:
             # lookup the list view table for this content type
             # todo: once available, use https://github.com/nautobot/nautobot/issues/747
@@ -149,12 +149,12 @@ class DiffListViewFactory:
 
     @property
     def table_model_name(self):
-        """ return the diff table for the model """
+        """return the diff table for the model."""
         return f"diff_{str(self.ct.app_label)}_{str(self.ct.model)}"
 
 
 def row_attrs_for_record(record):  # pylint: disable=R1710
-    """ row_attrs_for_record returns button attributes per diff type """
+    """row_attrs_for_record returns button attributes per diff type."""
     if record.diff["diff_type"] == "added":
         return "bg-success"
     if record.diff["diff_type"] == "removed":
@@ -168,7 +168,7 @@ def row_attrs_for_record(record):  # pylint: disable=R1710
 
 
 class DiffListViewBase(tables.Table):
-    """ DiffListViewBase base model for a DiffList"""
+    """DiffListViewBase base model for a DiffList."""
 
     diff = tables.Column(verbose_name="Diff Type")
 
@@ -183,9 +183,7 @@ class DiffListViewBase(tables.Table):
             col.render = self.wrap_render_func(col.render)
 
     def render_diff(self, value, record):  # pylint: disable=W0613
-        """
-        Custom rendering for the the `Diff Type` columns
-        """
+        """Custom rendering for the the `Diff Type` columns."""
         ct = ContentType.objects.get_for_model(self.Meta.model)  # pylint: disable=E1101
         href = reverse(
             "plugins:dolt:diff_detail",
@@ -220,7 +218,7 @@ class DiffListViewBase(tables.Table):
 
     @staticmethod
     def count_diffs(diff):
-        """ count_diffs counts the numbers of diffs """
+        """count_diffs counts the numbers of diffs."""
         skip_fields = (
             "root",
             "diff_type",
@@ -242,9 +240,7 @@ class DiffListViewBase(tables.Table):
 
     @staticmethod
     def wrap_render_func(fn):
-        """
-        Wraps an existing cell rendering function with diff styling
-        """
+        """Wraps an existing cell rendering function with diff styling."""
 
         def render_before_after_diff(value, record, column, bound_column, bound_row, table):  # pylint: disable=R0913
             # the previous render function may take any of the

@@ -1,4 +1,4 @@
-""" views.py implements views for the api """
+"""views.py implements views for the api."""
 
 from rest_framework.routers import APIRootView
 from nautobot.extras.api.views import CustomFieldModelViewSet
@@ -10,11 +10,10 @@ from . import serializers
 
 
 class VCSRootView(APIRootView):
-    """
-    VCS API root view
-    """
+    """VCS API root view."""
 
     def get_view_name(self):
+        """returns the name of the view."""
         return "VCS"
 
 
@@ -24,7 +23,7 @@ class VCSRootView(APIRootView):
 
 
 class BranchViewSet(CustomFieldModelViewSet):
-    """ BranchViewSet render a view for the Branch model """
+    """BranchViewSet render a view for the Branch model."""
 
     queryset = Branch.objects.all()
     serializer_class = serializers.BranchSerializer
@@ -37,7 +36,7 @@ class BranchViewSet(CustomFieldModelViewSet):
 
 
 class CommitViewSet(CustomFieldModelViewSet):
-    """ CommitViewSet render a view for the Commit model """
+    """CommitViewSet render a view for the Commit model."""
 
     queryset = Commit.objects.all()
     serializer_class = serializers.CommitSerializer
@@ -50,7 +49,7 @@ class CommitViewSet(CustomFieldModelViewSet):
 
 
 class PullRequestViewSet(CustomFieldModelViewSet):
-    """ PullRequestViewSet render a view for the PullRequest model """
+    """PullRequestViewSet render a view for the PullRequest model."""
 
     queryset = PullRequest.objects.all()
     serializer_class = serializers.PullRequestSerializer
@@ -63,7 +62,7 @@ class PullRequestViewSet(CustomFieldModelViewSet):
 
 
 class PullRequestReviewViewSet(CustomFieldModelViewSet):
-    """ PullRequestReviewViewSet render a view for the PullRequestReviewV model """
+    """PullRequestReviewViewSet render a view for the PullRequestReviewV model."""
 
     queryset = PullRequestReview.objects.all()
     serializer_class = serializers.PullRequestReviewSerializer

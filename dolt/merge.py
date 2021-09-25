@@ -205,7 +205,7 @@ class MergeConflicts:
             prefix = "our_"
             if not k.startswith(prefix):
                 continue
-            suffix = k[len(prefix):]
+            suffix = k[len(prefix) :]  # noqa: E203
             ours = obj[f"our_{suffix}"]
             theirs = obj[f"their_{suffix}"]
             base = obj[f"base_{suffix}"]

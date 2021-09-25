@@ -1,4 +1,4 @@
-""" utils.py contains utility methods used throughout the plugin """
+"""utils.py contains utility methods used throughout the plugin."""
 
 
 from contextlib import contextmanager
@@ -10,13 +10,13 @@ from dolt.constants import DB_NAME, DOLT_BRANCH_KEYWORD
 
 
 class DoltError(Exception):
-    """ DoltError is a type of error to represent errors from the Dolt database custom functions """
+    """DoltError is a type of error to represent errors from the Dolt database custom functions."""
 
     pass  # pylint: disable=W0107
 
 
 def author_from_user(usr):
-    """ author_from_user returns an author string from a user object """
+    """author_from_user returns an author string from a user object."""
     if usr and usr.username and usr.email:
         return f"{usr.username} <{usr.email}>"
     # default to generic user
@@ -33,14 +33,14 @@ def is_dolt_model(model):
 
 
 def alter_session_branch(sess=None, branch=None):
-    """ alter_session_branch sets the session cook branch to a new branch """
+    """alter_session_branch sets the session cook branch to a new branch."""
     if sess is None or branch is None:
         raise ValueError("invalid args to change_branches()")
     sess[DOLT_BRANCH_KEYWORD] = branch
 
 
 def active_branch():
-    """ active_branch returns the current active_branch from dolt """
+    """active_branch returns the current active_branch from dolt."""
     with connection.cursor() as cursor:
         cursor.execute("SELECT active_branch() FROM dual;")
         return cursor.fetchone()[0]
@@ -62,7 +62,7 @@ def db_for_commit(commit):
 
 @contextmanager
 def query_on_branch(branch):
-    """ query_on_branch checkout to another branch, runs a query, and checkouts back to main """
+    """query_on_branch checkout to another branch, runs a query, and checkouts back to main."""
     # TODO: remove in favor of db_for_commit
     with connection.cursor() as cursor:
         prev = active_branch()

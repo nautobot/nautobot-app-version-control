@@ -365,9 +365,7 @@ class ConstraintViolations(DoltSystemTable):
     "webhooks",
 )
 class PullRequest(BaseModel):
-    """
-    PullRequest models a pull request between two branches.
-    """
+    """PullRequest models a pull request between two branches."""
 
     OPEN = 0
     MERGED = 1
@@ -398,18 +396,18 @@ class PullRequest(BaseModel):
         return self.title
 
     def get_absolute_url(self):
-        """get_absolute_url returns a url to render a view of the pull request """
+        """get_absolute_url returns a url to render a view of the pull request."""
         return reverse("plugins:dolt:pull_request", args=[self.id])
 
     def get_src_dest_branches(self):
-        """get_src_dest_branches returns a tuple of the src and destination branches """
+        """get_src_dest_branches returns a tuple of the src and destination branches."""
         src = Branch.objects.get(name=self.source_branch)
         dest = Branch.objects.get(name=self.destination_branch)
         return src, dest
 
     @property
     def open(self):
-        """opens returns whether a pull request is open """
+        """opens returns whether a pull request is open."""
         return self.state == PullRequest.OPEN
 
     @property
@@ -442,28 +440,28 @@ class PullRequest(BaseModel):
 
     @property
     def commits(self):
-        """commits returns a queryset of Commit objects that come after the ancestor between the src and des branch """
+        """commits returns a queryset of Commit objects that come after the ancestor between the src and des branch."""
         merge_base = Commit.objects.get(commit_hash=Commit.merge_base(self.source_branch, self.destination_branch))
         db = db_for_commit(Branch.objects.get(name=self.source_branch).hash)
         return Commit.objects.filter(date__gt=merge_base.date).using(db)
 
     @property
     def num_commits(self):
-        """num_commits returns the number of commits that are considered in the pull requests """
+        """num_commits returns the number of commits that are considered in the pull requests."""
         return self.commits.count()
 
     @property
     def num_reviews(self):
-        """num_reviews returns the number of PullRRequestReview(s) created on top of the PR """
+        """num_reviews returns the number of PullRRequestReview(s) created on top of the PR."""
         return PullRequestReview.objects.filter(pull_request=self.pk).count()
 
     @property
     def summary_description(self):
-        """summary_description returns a small summary of the pull request action """
+        """summary_description returns a small summary of the pull request action."""
         return f"""Merging {self.num_commits} commits from "{self.source_branch}" into "{self.destination_branch}" """
 
     def merge(self, user=None, squash=False):
-        """merge executes a merge between a destination and src branch  """
+        """merge executes a merge between a destination and src branch."""
         try:
             src = Branch.objects.get(name=self.source_branch)
             dest = Branch.objects.get(name=self.destination_branch)
@@ -478,9 +476,7 @@ class PullRequest(BaseModel):
     "webhooks",
 )
 class PullRequestReview(BaseModel):
-    """
-    PullRequestReview represents a comments, approval, or block on a pull request
-    """
+    """PullRequestReview represents a comments, approval, or block on a pull request."""
 
     COMMENTED = 0
     APPROVED = 1
@@ -506,5 +502,5 @@ class PullRequestReview(BaseModel):
         return f""""{self.pull_request}" reviewed by {self.reviewer}"""
 
     def get_absolute_url(self):
-        """get_absolute_url returns a link to a view of a pull request review """
+        """get_absolute_url returns a link to a view of a pull request review."""
         return reverse("plugins:dolt:pull_request", args=[self.pull_request.id])

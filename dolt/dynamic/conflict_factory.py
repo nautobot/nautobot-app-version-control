@@ -1,4 +1,4 @@
-""" conflict_factory.py is used to define the ConflictModelFactory that generates queryable Conflicts """
+"""conflict_factory.py is used to define the ConflictModelFactory that generates queryable Conflicts."""
 
 from django.apps import apps
 from django.db import models
@@ -8,23 +8,20 @@ from nautobot.utilities.querysets import RestrictedQuerySet
 
 
 class ConflictModelFactory:
-    """
-    ConflictModelFactory is used to represent a conflict between a particular model
-    """
+    """ConflictModelFactory is used to represent a conflict between a particular model."""
 
     def __init__(self, content_type):
         self.content_type = content_type
 
     def get_model(self):
-        """ get_model returns the model we are querying conflicts for """
-
+        """get_model returns the model we are querying conflicts for."""
         try:
             return apps.get_model("dolt", self.model_name)
         except LookupError:
             return self.make_model()
 
     def make_model(self):
-        """ Create a ConflicTModels for a model """
+        """Create a ConflicTModels for a model."""
         props = {
             "__module__": "dolt.models",
             "_declared": timezone.now(),
@@ -49,17 +46,17 @@ class ConflictModelFactory:
 
     @property
     def model_name(self):
-        """ returns the model's name """
+        """returns the model's name."""
         return f"{self.content_type.model}_conflicts"
 
     @property
     def source_model_verbose_name(self):
-        """ source_model_verbose_name returns the base model's verbose name """
+        """source_model_verbose_name returns the base model's verbose name."""
         return str(self.content_type.model_class()._meta.verbose_name.capitalize())
 
     @property
     def conflict_table_name(self):
-        """ returns the name of the model conflict table we are wrapping """
+        """returns the name of the model conflict table we are wrapping."""
         return f"dolt_conflicts_{self.content_type.app_label}_{self.content_type.model}"
 
     @property

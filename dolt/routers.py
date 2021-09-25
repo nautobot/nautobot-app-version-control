@@ -1,4 +1,4 @@
-""" routers.py manages the GlobalStateRouter """
+"""routers.py manages the GlobalStateRouter."""
 
 from django.utils.safestring import mark_safe
 from dolt.constants import DOLT_DEFAULT_BRANCH, GLOBAL_DB
@@ -8,9 +8,7 @@ from . import is_global_router_enabled, is_versioned_model
 
 
 class GlobalStateRouter:
-    """
-    GlobalStateRouter manages the correct db to write either branch specific state or global state.
-    """
+    """GlobalStateRouter manages the correct db to write either branch specific state or global state."""
 
     global_db = GLOBAL_DB
 
@@ -60,10 +58,10 @@ class GlobalStateRouter:
         return self.global_db
 
     def allow_relation(self, obj1, obj2, **hints):  # pylint: disable=W0613.R0201
-        """ allow_relation allows a relation between obj1 and obj2 too exist """
+        """allow_relation allows a relation between obj1 and obj2 too exist."""
         return True
 
     @staticmethod
     def branch_is_not_primary():
-        """ branch_is_not_primary returns whether the active_branch is the default branch """
+        """branch_is_not_primary returns whether the active_branch is the default branch."""
         return active_branch() != DOLT_DEFAULT_BRANCH

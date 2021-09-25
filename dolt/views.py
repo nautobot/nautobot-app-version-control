@@ -1,4 +1,4 @@
-""" views.py implements django views for all dolt plugin features """
+"""views.py implements django views for all dolt plugin features."""
 
 from datetime import datetime
 import logging
@@ -35,18 +35,18 @@ from dolt.models import (
 
 
 class BranchView(generic.ObjectView):
-    """ BranchView renders a view of a Branch object """
+    """BranchView renders a view of a Branch object."""
 
     queryset = Branch.objects.all()
 
-    def get_extra_context(self, request, instance):  # pylint: disable=W0613,C0116
+    def get_extra_context(self, request, instance):  # pylint: disable=W0613,C0116 # noqa: D102
         merge_base = Commit.merge_base(DOLT_DEFAULT_BRANCH, instance.name)
         head = instance.hash
         return {"results": diffs.two_dot_diffs(from_commit=merge_base, to_commit=head)}
 
 
 class BranchListView(generic.ObjectListView):
-    """ BranchListView renders a view of all branches """
+    """BranchListView renders a view of all branches."""
 
     queryset = Branch.objects.exclude(name__startswith="xxx")
     filterset = filters.BranchFilterSet
@@ -55,31 +55,31 @@ class BranchListView(generic.ObjectListView):
     action_buttons = ("add",)
     template_name = "dolt/branch_list.html"
 
-    def extra_context(self):  # pylint: disable=W0613,C0116
+    def extra_context(self):  # pylint: disable=W0613,C0116  # noqa: D102
         return {"default_branch": DOLT_DEFAULT_BRANCH}
 
 
 class BranchCheckoutView(View):
-    """ BranchCheckoutView renders a view of checking out a branch """
+    """BranchCheckoutView renders a view of checking out a branch."""
 
     queryset = Branch.objects.all()
     model_form = forms.BranchForm
     template_name = "dolt/branch_edit.html"
 
-    def get(self, req, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, req, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         # new branch will be checked out on redirect
         alter_session_branch(sess=req.session, branch=kwargs["pk"])
         return redirect("/")
 
 
 class BranchEditView(generic.ObjectEditView):
-    """ BranchEditView renders either an add or create a branch """
+    """BranchEditView renders either an add or create a branch."""
 
     queryset = Branch.objects.all()
     model_form = forms.BranchForm
     template_name = "dolt/branch_edit.html"
 
-    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         initial = {
             "starting_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
             "creator": request.user,
@@ -93,7 +93,7 @@ class BranchEditView(generic.ObjectEditView):
             },
         )
 
-    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116  # noqa: D102
         form = self.model_form(data=request.POST, files=request.FILES)
         response = super().post(request, *args, **kwargs)
         if BranchEditView._is_success_response(response):
@@ -103,12 +103,12 @@ class BranchEditView(generic.ObjectEditView):
 
     @staticmethod
     def _is_success_response(response):
-        """ returns if response was successful """
+        """returns if response was successful."""
         return response.status_code // 100 in (2, 3)
 
     @staticmethod
     def create_branch_meta(req, form):
-        """ creates a BranchMeta object for a Branch """
+        """creates a BranchMeta object for a Branch."""
         meta, _ = BranchMeta.objects.get_or_create(branch=form.data.get("name"))
         meta.source_branch = form.data.get("starting_branch")
         meta.author = req.user
@@ -117,7 +117,7 @@ class BranchEditView(generic.ObjectEditView):
 
 
 class BranchBulkEditView(generic.BulkEditView):
-    """ BranchBulkEditView is used to edit a set of branches at once """
+    """BranchBulkEditView is used to edit a set of branches at once."""
 
     queryset = Branch.objects.all()
     filterset = filters.BranchFilterSet
@@ -126,17 +126,17 @@ class BranchBulkEditView(generic.BulkEditView):
 
 
 class BranchBulkDeleteView(generic.BulkDeleteView):
-    """ BranchBulkDeleteView is used to delete a set of branches at once"""
+    """BranchBulkDeleteView is used to delete a set of branches at once."""
 
     queryset = Branch.objects.all()
     table = tables.BranchTable
     form = forms.BranchBulkDeleteForm
     template_name = "dolt/branch_bulk_delete.html"
 
-    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         return redirect(self.get_return_url(request))
 
-    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116  # noqa: D102
         logger = logging.getLogger("nautobot.views.BulkDeleteView")
         model = self.queryset.model
 
@@ -199,13 +199,13 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
 
 
 class BranchMergeFormView(GetReturnURLMixin, View):
-    """ BranchMergeFormView is used to confirm a merge """
+    """BranchMergeFormView is used to confirm a merge."""
 
     queryset = Branch.objects.all()
     form = forms.MergeForm
     template_name = "dolt/branch_merge.html"
 
-    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         initial = {
             # TODO: use branch meta source branch
             "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
@@ -220,7 +220,7 @@ class BranchMergeFormView(GetReturnURLMixin, View):
             },
         )
 
-    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116  # noqa: D102
         form = self.form(data=request.POST, files=request.FILES)
         if not form.is_valid():
             raise ValueError(form.errors)
@@ -236,13 +236,13 @@ class BranchMergeFormView(GetReturnURLMixin, View):
 
 
 class BranchMergePreView(GetReturnURLMixin, View):
-    """ BranchMergePreView is used to render a preview of a merge """
+    """BranchMergePreView is used to render a preview of a merge."""
 
     queryset = Branch.objects.all()
     form = forms.MergePreviewForm
     template_name = "dolt/branch_merge_preview.html"
 
-    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         src = Branch.objects.get(name=kwargs["src"])
         dest = Branch.objects.get(name=kwargs["dest"])
         # render a disabled form with previously submitted data
@@ -260,14 +260,14 @@ class BranchMergePreView(GetReturnURLMixin, View):
             },
         )
 
-    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         src, dest = kwargs["src"], kwargs["dest"]
         Branch.objects.get(name=dest).merge(src, user=request.user)
         messages.info(request, mark_safe(f"<h4>merged branch <b>{src}</b> into <b>{dest}</b></h4>"))
         alter_session_branch(sess=request.session, branch=dest)
         return redirect("/")
 
-    def get_extra_context(self, request, src, dest):  # pylint: disable=W0613,C0116,R0201
+    def get_extra_context(self, request, src, dest):  # pylint: disable=W0613,C0116,R0201 # noqa: D102
         merge_base_c = Commit.merge_base(src, dest)
         source_head = src.hash
         return {
@@ -283,11 +283,11 @@ class BranchMergePreView(GetReturnURLMixin, View):
 
 
 class CommitView(generic.ObjectView):
-    """ CommitView is used to render a commit """
+    """CommitView is used to render a commit."""
 
     queryset = Commit.objects.all()
 
-    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         """
         Looks up the requested commit using a database revision
         to ensure the commit is accessible.
@@ -314,7 +314,7 @@ class CommitView(generic.ObjectView):
 
 
 class CommitListView(generic.ObjectListView):
-    """ CommitListView is used to a render a list of Commits """
+    """CommitListView is used to a render a list of Commits."""
 
     queryset = Commit.objects.all()
     filterset = filters.CommitFilterSet
@@ -323,7 +323,7 @@ class CommitListView(generic.ObjectListView):
     template_name = "dolt/commit_list.html"
     action_buttons = None
 
-    def alter_queryset(self, request):
+    def alter_queryset(self, request):  # noqa: D102
         if active_branch() != DOLT_DEFAULT_BRANCH:
             # only list commits on the current branch since the merge-base
             merge_base_hash = Commit.merge_base(DOLT_DEFAULT_BRANCH, active_branch())
@@ -331,12 +331,12 @@ class CommitListView(generic.ObjectListView):
             self.queryset = self.queryset.filter(date__gt=merge_base.date)
         return self.queryset
 
-    def extra_context(self):  # pylint: disable=W0613,C0116
+    def extra_context(self):  # pylint: disable=W0613,C0116 # noqa: D102
         return {"active_branch": active_branch()}
 
 
 class CommitEditView(generic.ObjectEditView):
-    """ CommitEditView is used to edit a commit """
+    """CommitEditView is used to edit a commit."""
 
     queryset = Commit.objects.all()
     model_form = forms.CommitForm
@@ -344,28 +344,26 @@ class CommitEditView(generic.ObjectEditView):
 
 
 class CommitDeleteView(generic.ObjectDeleteView):
-    """ CommitDeleteView is used to render the deletion of a commit """
+    """CommitDeleteView is used to render the deletion of a commit."""
 
     queryset = Commit.objects.all()
 
 
 class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
-    """
-    Revert Commits in bulk.
-    """
+    """Revert Commits in bulk."""
 
     queryset = Commit.objects.all()
     form = forms.CommitBulkRevertForm
     table = tables.CommitRevertTable
     template_name = "dolt/commit_revert.html"
 
-    def get_required_permission(self):
+    def get_required_permission(self):  # noqa: D102
         return get_permission_for_model(self.queryset.model, "change")
 
-    def get_return_url(self, req):  # pylint: disable=W0221,W0613
+    def get_return_url(self, req):  # pylint: disable=W0221,W0613 # noqa: D102
         return reverse("plugins:dolt:commit_list")
 
-    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         model = self.queryset.model
         pk_list = request.POST.getlist("pk")
         commits = self.queryset.filter(commit_hash__in=pk_list)
@@ -429,9 +427,9 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
 
 
 class ActiveBranchDiffs(View):
-    """ ActiveBranchDiffs is used to render the differences in the current active_branch """
+    """ActiveBranchDiffs is used to render the differences in the current active_branch."""
 
-    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         return redirect(
             reverse(
                 "plugins:dolt:branch",
@@ -443,15 +441,15 @@ class ActiveBranchDiffs(View):
 
 
 class DiffDetailView(View):
-    """ DiffDetailView is used to render complex diff between a from and to commit """
+    """DiffDetailView is used to render complex diff between a from and to commit."""
 
     template_name = "dolt/diff_detail.html"
 
     def get_required_permission(self):  # pylint: disable=R0201
-        """ returns permissions """
+        """returns permissions."""
         return get_permission_for_model(Site, "view")
 
-    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         self.model = self.get_model(kwargs)  # pylint: disable=W0201
         before_obj, after_obj = self.get_objs(kwargs)
         return render(
@@ -466,12 +464,12 @@ class DiffDetailView(View):
         )
 
     def get_model(self, kwargs):
-        """ get_model returns the underlying model """
+        """get_model returns the underlying model."""
         return ContentType.objects.get(app_label=kwargs["app_label"], model=kwargs["model"]).model_class()
 
     @staticmethod
     def title(before_obj, after_obj):
-        """ title returns the title of a diff """
+        """title returns the title of a diff."""
         if before_obj and after_obj:
             return f"Updated {after_obj}"
         elif after_obj:
@@ -480,7 +478,7 @@ class DiffDetailView(View):
             return f"Deleted {before_obj}"
 
     def breadcrumb(self, kwargs):
-        """ Return a breadcrumb """
+        """Return a breadcrumb."""
         return {
             "breadcrumb": {
                 "app_label": kwargs["app_label"],
@@ -492,10 +490,7 @@ class DiffDetailView(View):
 
     @staticmethod
     def match_commit(commit):
-        """
-        Replace `commit` with a more semantically meaningful
-        identifier, if possible
-        """
+        """Replace `commit` with a more semantically meaningful identifier, if possible."""
         if Branch.objects.filter(hash=str(commit)).count() == 1:
             b = Branch.objects.get(hash=str(commit))
             url = b.get_absolute_url()
@@ -507,11 +502,11 @@ class DiffDetailView(View):
         return commit
 
     def display_name(self, kwargs):
-        """ returns the verbose name of the model """
+        """returns the verbose name of the model."""
         return self.get_model(kwargs)._meta.verbose_name.capitalize()
 
     def get_objs(self, kwargs):
-        """ Returns the commit objects for the before and after of a diff  """
+        """Returns the commit objects for the before and after of a diff."""
         pk = kwargs["pk"]
         from_commit = kwargs["from_commit"]
         to_commit = kwargs["to_commit"]
@@ -527,7 +522,7 @@ class DiffDetailView(View):
         return before_obj, after_obj
 
     def get_json_diff(self, before_obj, after_obj):
-        """ Returns the diff as json objs """
+        """Returns the diff as json objs."""
         before_obj = self.serialize_obj(before_obj)
         after_obj = self.serialize_obj(after_obj)
         added = not before_obj
@@ -561,7 +556,7 @@ class DiffDetailView(View):
         return json_diff
 
     def serialize_obj(self, obj):
-        """ serialize_obj converts a model into a json object """
+        """serialize_obj converts a model into a json object."""
         if not obj:
             return {}
         json_obj = {}
@@ -583,7 +578,7 @@ class DiffDetailView(View):
 
 
 class PullRequestListView(generic.ObjectListView):
-    """ PullRequestListView is used to render a lit of pull requests """
+    """PullRequestListView is used to render a lit of pull requests."""
 
     queryset = PullRequest.objects.all().order_by("-created_at")
     filterset = filters.PullRequestDefaultOpenFilterSet
@@ -594,12 +589,12 @@ class PullRequestListView(generic.ObjectListView):
 
 
 class PullRequestBase(generic.ObjectView):
-    """ PullRequestBase contains the base information about a PullRequest """
+    """PullRequestBase contains the base information about a PullRequest."""
 
     queryset = PullRequest.objects.all()
     actions = ()
 
-    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116,W0237
+    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116,W0237 # noqa: D102
         src, dest = obj.get_src_dest_branches()
         return {
             "counts": {
@@ -611,11 +606,11 @@ class PullRequestBase(generic.ObjectView):
 
 
 class PullRequestDiffView(PullRequestBase):
-    """ PullRequestDiffView displays a diff for a pull request """
+    """PullRequestDiffView displays a diff for a pull request."""
 
     template_name = "dolt/pull_request/diffs.html"
 
-    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116
+    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         ctx = super().get_extra_context(request, obj, **kwargs)
         head = Branch.objects.get(name=obj.source_branch).hash
         merge_base = Commit.merge_base(obj.source_branch, obj.destination_branch)
@@ -629,11 +624,11 @@ class PullRequestDiffView(PullRequestBase):
 
 
 class PullRequestConflictView(PullRequestBase):
-    """ PullRequestConflictView renders a conflict for a pull request """
+    """PullRequestConflictView renders a conflict for a pull request."""
 
     template_name = "dolt/pull_request/conflicts.html"
 
-    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116
+    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         ctx = super().get_extra_context(request, obj, **kwargs)
         src = Branch.objects.get(name=obj.source_branch)
         dest = Branch.objects.get(name=obj.destination_branch)
@@ -647,11 +642,11 @@ class PullRequestConflictView(PullRequestBase):
 
 
 class PullRequestReviewListView(PullRequestBase):
-    """ PullRequestReviewListView renders a list of pull requests """
+    """PullRequestReviewListView renders a list of pull requests."""
 
     template_name = "dolt/pull_request/review_list.html"
 
-    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116
+    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         ctx = super().get_extra_context(request, obj, **kwargs)
         reviews = PullRequestReview.objects.filter(pull_request=obj.pk).order_by("reviewed_at")
         ctx.update(
@@ -664,12 +659,12 @@ class PullRequestReviewListView(PullRequestBase):
 
 
 class PullRequestCommitListView(PullRequestBase):
-    """ PullRequestCommitListView renders a list of commits """
+    """PullRequestCommitListView renders a list of commits."""
 
     template_name = "dolt/pull_request/commits.html"
     table = tables.CommitTable
 
-    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116
+    def get_extra_context(self, request, obj, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         ctx = super().get_extra_context(request, obj, **kwargs)
         ctx.update(
             {
@@ -681,13 +676,13 @@ class PullRequestCommitListView(PullRequestBase):
 
 
 class PullRequestEditView(generic.ObjectEditView):
-    """ PullRequestEditView renders an edit view for a PR """
+    """PullRequestEditView renders an edit view for a PR."""
 
     queryset = PullRequest.objects.all()
     model_form = forms.PullRequestForm
     template_name = "dolt/pull_request/edit.html"
 
-    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         obj = self.get_object(kwargs)
         initial = {
             "destination_branch": Branch.objects.get(name=DOLT_DEFAULT_BRANCH),
@@ -721,7 +716,7 @@ class PullRequestEditView(generic.ObjectEditView):
             },
         )
 
-    def alter_obj(self, obj, request, url_args, url_kwargs):
+    def alter_obj(self, obj, request, url_args, url_kwargs):  # noqa: D102
         # Allow views to add extra info to an object before it is processed. For example, a parent object can be defined
         # given some parameter from the request URL.
         obj.creator = request.user
@@ -729,13 +724,13 @@ class PullRequestEditView(generic.ObjectEditView):
 
 
 class PullRequestReviewEditView(generic.ObjectEditView):
-    """ PullRequestReviewEditView renders an edit view for a PullRequestReview """
+    """PullRequestReviewEditView renders an edit view for a PullRequestReview."""
 
     queryset = PullRequestReview.objects.all()
     model_form = forms.PullRequestReviewForm
     template_name = "dolt/pull_request/review_edit.html"
 
-    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         initial = {
             "pull_request": PullRequest.objects.get(pk=kwargs["pull_request"]),
         }
@@ -748,29 +743,29 @@ class PullRequestReviewEditView(generic.ObjectEditView):
             },
         )
 
-    def get_return_url(self, req, obj):  # pylint: disable=W0613,W0237
+    def get_return_url(self, req, obj):  # pylint: disable=W0613,W0237 # noqa: D102
         return reverse(
             "plugins:dolt:pull_request_reviews",
             kwargs={"pk": obj.pull_request.pk},
         )
 
-    def alter_obj(self, obj, request, url_args, url_kwargs):
+    def alter_obj(self, obj, request, url_args, url_kwargs):  # noqa: D102
         obj.reviewer = request.user
         return obj
 
-    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         kwargs["user"] = request.user
         return super().post(request, *args, **kwargs)
 
 
 class PullRequestMergeView(generic.ObjectEditView):
-    """ PullRequestMergeView renders a view for rendering a pull request review """
+    """PullRequestMergeView renders a view for rendering a pull request review."""
 
     queryset = PullRequest.objects.all()
     form = ConfirmationForm()
     template_name = "dolt/pull_request/confirm_merge.html"
 
-    def get(self, request, pk):  # pylint: disable=W0613,C0116,W0221
+    def get(self, request, pk):  # pylint: disable=W0613,C0116,W0221 # noqa: D102
         pr = get_object_or_404(self.queryset, pk=pk)
         if pr.state != PullRequest.OPEN:
             msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be merged""")
@@ -790,7 +785,7 @@ class PullRequestMergeView(generic.ObjectEditView):
             },
         )
 
-    def post(self, request, pk):  # pylint: disable=W0613,C0116,W0221
+    def post(self, request, pk):  # pylint: disable=W0613,C0116,W0221 # noqa: D102
         pr = get_object_or_404(self.queryset, pk=pk)
         form = ConfirmationForm(request.POST)
         squash_param = request.POST.get("merge_squash", False)
@@ -817,13 +812,13 @@ class PullRequestMergeView(generic.ObjectEditView):
 
 
 class PullRequestCloseView(generic.ObjectEditView):
-    """ PullRequestCloseView renders a view for closing a pr """
+    """PullRequestCloseView renders a view for closing a pr."""
 
     queryset = PullRequest.objects.all()
     form = ConfirmationForm()
     template_name = "dolt/pull_request/confirm_close.html"
 
-    def get(self, request, pk):  # pylint: disable=W0613,C0116,W0221
+    def get(self, request, pk):  # pylint: disable=W0613,C0116,W0221 # noqa: D102
         pr = get_object_or_404(self.queryset, pk=pk)
         if pr.state != PullRequest.OPEN:
             msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be closed""")
@@ -842,7 +837,7 @@ class PullRequestCloseView(generic.ObjectEditView):
             },
         )
 
-    def post(self, request, pk):  # pylint: disable=W0221
+    def post(self, request, pk):  # pylint: disable=W0221 # noqa: D102
         pr = get_object_or_404(self.queryset, pk=pk)
         form = ConfirmationForm(request.POST)
 
@@ -865,17 +860,17 @@ class PullRequestCloseView(generic.ObjectEditView):
 
 
 class PullRequestBulkDeleteView(generic.BulkDeleteView):
-    """ PullRequestBulkDeleteView renders a bulk delete form for a list of pull requests """
+    """PullRequestBulkDeleteView renders a bulk delete form for a list of pull requests."""
 
     queryset = PullRequest.objects.all()
     table = tables.PullRequestTable
     form = forms.PullRequestDeleteForm
     template_name = "dolt/pull_request_bulk_delete.html"
 
-    def get(self, request):  # pylint: disable=W0613,C0116
+    def get(self, request):  # pylint: disable=W0613,C0116 # noqa: D102
         return redirect(self.get_return_url(request))
 
-    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116
+    def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         logger = logging.getLogger("nautobot.views.BulkDeleteView")
         model = self.queryset.model
 
