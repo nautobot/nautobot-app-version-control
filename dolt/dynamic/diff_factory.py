@@ -122,7 +122,7 @@ class DiffListViewFactory:
             # lookup the list view table for this content type
             # todo: once available, use https://github.com/nautobot/nautobot/issues/747
             model = self.ct.model_class()
-            ModelViewTable = diff_table_for_model(model) # pylint: disable=C0103
+            ModelViewTable = diff_table_for_model(model)  # pylint: disable=C0103
 
             return type(
                 self.table_model_name,
@@ -153,7 +153,7 @@ class DiffListViewFactory:
         return f"diff_{str(self.ct.app_label)}_{str(self.ct.model)}"
 
 
-def row_attrs_for_record(record): # pylint: disable=R1710
+def row_attrs_for_record(record):  # pylint: disable=R1710
     """ row_attrs_for_record returns button attributes per diff type """
     if record.diff["diff_type"] == "added":
         return "bg-success"
@@ -182,11 +182,11 @@ class DiffListViewBase(tables.Table):
                 continue  # uses `render_diff()`
             col.render = self.wrap_render_func(col.render)
 
-    def render_diff(self, value, record): # pylint: disable=W0613
+    def render_diff(self, value, record):  # pylint: disable=W0613
         """
         Custom rendering for the the `Diff Type` columns
         """
-        ct = ContentType.objects.get_for_model(self.Meta.model) # pylint: disable=E1101
+        ct = ContentType.objects.get_for_model(self.Meta.model)  # pylint: disable=E1101
         href = reverse(
             "plugins:dolt:diff_detail",
             kwargs={
@@ -246,7 +246,7 @@ class DiffListViewBase(tables.Table):
         Wraps an existing cell rendering function with diff styling
         """
 
-        def render_before_after_diff(value, record, column, bound_column, bound_row, table): # pylint: disable=R0913
+        def render_before_after_diff(value, record, column, bound_column, bound_row, table):  # pylint: disable=R0913
             # the previous render function may take any of the
             # following args, so provide them all
             kwargs = {
