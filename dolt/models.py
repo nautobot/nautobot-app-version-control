@@ -1,4 +1,4 @@
-""" models.py exposes Dolt primitives such as branches and commits as Django models """
+"""models.py exposes Dolt primitives such as branches and commits as Django models."""
 
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -20,18 +20,17 @@ from dolt.constants import DOLT_DEFAULT_BRANCH
 
 
 class DoltSystemTable(models.Model):
-    """ DoltSystemTable represents an abstraction over Dolt builtin system tables """
+    """DoltSystemTable represents an abstraction over Dolt builtin system tables."""
 
     objects = RestrictedQuerySet.as_manager()
 
     class Meta:
+        """Meta links to a _meta table."""
         abstract = True
         managed = False
 
     def validated_save(self):
-        """
-        Perform model validation during instance save.
-        """
+        """Perform model validation during instance save."""
         self.full_clean()
         self.save()
 
@@ -42,9 +41,7 @@ class DoltSystemTable(models.Model):
 
 
 class Branch(DoltSystemTable):
-    """
-    Branch represents a model over the dolt_branches system table
-    """
+    """Branch represents a model over the dolt_branches system table"""
 
     name = models.TextField(primary_key=True)
     hash = models.TextField()
@@ -67,18 +64,18 @@ class Branch(DoltSystemTable):
         return self.name
 
     def get_absolute_url(self):
-        """ get_absolute_urls provide a url to access this branch's view """
+        """get_absolute_urls provide a url to access this branch's view."""
         return reverse("plugins:dolt:branch", args=[self.name])
 
     @property
     def present_in_database(self):
-        """ present_in_database returns whether the branch exists in the database  """
+        """present_in_database returns whether the branch exists in the database."""
         # determines `editing` flag in forms
         return Branch.objects.filter(name=self.name).exists()
 
     @property
     def active(self):
-        """ returns true if the branch is the active branch """
+        """returns true if the branch is the active branch."""
         return self.name == active_branch()
 
     @property
@@ -98,13 +95,13 @@ class Branch(DoltSystemTable):
 
     @property
     def created_by(self):
-        """ created_by returns the branch author """
+        """created_by returns the branch author."""
         m = self._branch_meta()
         return m.author if m else None
 
     @property
     def created_at(self):
-        """ created_at returns the datetime the branch was created """
+        """created_at returns the datetime the branch was created:"""
         m = self._branch_meta()
         return m.created if m else None
 
