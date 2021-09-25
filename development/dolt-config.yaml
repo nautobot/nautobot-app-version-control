@@ -1,15 +1,16 @@
-log_level: info
+---
+log_level: "info"
 
 behavior:
   read_only: false
   autocommit: true
 
 user:
-  name: nautobot
-  password: notverysecurepwd
+  name: "nautobot"
+  password: "notverysecurepwd"
 
 listener:
-  host: 0.0.0.0
+  host: "0.0.0.0"
   port: 3306
   max_connections: 128
   read_timeout_millis: 28800000
@@ -18,6 +19,3 @@ listener:
 databases:
   - name: "nautobot"
     path: "."
-
-# performance:
-#   query_parallelism: null
