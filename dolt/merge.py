@@ -223,7 +223,7 @@ class MergeConflicts:
             prefix = "our_"
             if not k.startswith(prefix):
                 continue
-            suffix = k[len(prefix) :]
+            suffix = k[len(prefix):]
             ours = obj[f"our_{suffix}"]
             theirs = obj[f"their_{suffix}"]
             base = obj[f"base_{suffix}"]
@@ -281,15 +281,15 @@ class MergeConflicts:
                 rt = v_info["ReferencedTable"]
                 ref_model_name = self._model_from_table(rt)
                 return f"""
-                    The {model_name} "{obj_name}" references a 
-                    missing "{ref_model_name}" object 
+                    The {model_name} "{obj_name}" references a
+                    missing "{ref_model_name}" object
                 """
 
         elif v_type == "unique index":
             if "Columns" in v_info:
                 return f"""
-                    The {model_name} "{obj_name}" violates a 
-                    uniqueness constraint defined over the 
+                    The {model_name} "{obj_name}" violates a
+                    uniqueness constraint defined over the
                     columns {v_info["Columns"]}
                 """
         return "Unknown constraint violation"

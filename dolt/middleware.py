@@ -104,7 +104,7 @@ class DoltBranchMiddleware:
                             </div>
                         </div>
                     </div>
-                    <script> 
+                    <script>
                         const btn{b_id} = document.getElementById("share-button-{b_id}");
                         btn{b_id}.addEventListener('click', ()=>{{
                             const currLink = window.location.href;

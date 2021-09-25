@@ -61,7 +61,7 @@ class TestBranches(DoltTestCase):
         try:
             Branch.objects.filter(name="todelete").delete()
             self.fail("the branch delete should've failed")
-        except:  # nosec pylint: disable=W0702
+        except:  # nosec pylint: disable=W0702 # noqa
             pass
 
         # Delete the pr and try again
@@ -143,7 +143,7 @@ class TestBranches(DoltTestCase):
         try:
             main.merge(other, user=self.user)
             self.fail("this should error for conflicts")
-        except:  # nosec # pylint: disable=W0702
+        except:  # nosec # pylint: disable=W0702 # noqa
             pass
 
         # Validate that any potential conflicts actually exist
