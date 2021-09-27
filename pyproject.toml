@@ -57,7 +57,7 @@ load-plugins="pylint_django"
 no-docstring-rgx="^(_|test_|Meta$)"
 
 # Allow single letter variable names
-good-names="i,j,k,pk,x,y,v,c,mc,rt"
+good-names="i,j,k,pk,x,y,v,c,mc,rt,e,id,db,m"
 
 [tool.pylint.messages_control]
 # Line length is enforced by Black, so pylint doesn't need to check it.
@@ -66,7 +66,9 @@ disable = """,
     line-too-long,
     bad-continuation,
     W0603,
-    W0703
+    W0703,
+    R0903,
+    R0901
     """
 
 [tool.pylint.miscellaneous]

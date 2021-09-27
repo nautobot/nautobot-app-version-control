@@ -1,7 +1,7 @@
-# navigation.py
-from nautobot.core.apps import NavMenuAddButton, NavMenuGroup, NavMenuItem, NavMenuTab
-from nautobot.utilities.choices import ButtonColorChoices
+""" navigation.py contains the navigation items for the top level nav bar """
 
+
+from nautobot.core.apps import NavMenuAddButton, NavMenuGroup, NavMenuItem, NavMenuTab
 
 menu_items = (
     NavMenuTab(

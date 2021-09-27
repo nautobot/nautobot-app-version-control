@@ -226,6 +226,7 @@ __GLOBAL_ROUTER_SWITCH__ = True
 
 def is_global_router_enabled():
     """Returns true if the __GLOBAL_ROUTER_SWITCH__ is turned on"""
+    global __GLOBAL_ROUTER_SWITCH__
     return __GLOBAL_ROUTER_SWITCH__
 
 

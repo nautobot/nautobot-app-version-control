@@ -1,16 +1,15 @@
+""" tables.py contains modules for implementing view tables for different models """
+
 import django_tables2 as tables
-from django_tables2 import A, TemplateColumn
-from dolt.constants import DOLT_DEFAULT_BRANCH
+from django_tables2 import A
+from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
 from dolt.models import (
     Branch,
     Conflicts,
-    ConstraintViolations,
     Commit,
     PullRequest,
-    PullRequestReview,
 )
-from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
 
 __all__ = ("BranchTable", "ConflictsSummaryTable", "CommitTable", "PullRequestTable")
 
@@ -46,6 +45,8 @@ ACTIVE_BRANCH_BADGE = """
 
 
 class BranchTable(BaseTable):
+    """ BranchTable render the table in the branch_list view """
+
     pk = ToggleColumn()
     name = tables.LinkColumn()
     status = tables.TemplateColumn(ACTIVE_BRANCH_BADGE)
@@ -92,6 +93,10 @@ class BranchTable(BaseTable):
 
 
 class CommitTable(BaseTable):
+    """
+    CommitTable renders the commit table in the commit list view
+    """
+
     pk = ToggleColumn(visible=True)
     short_message = tables.LinkColumn(verbose_name="Commit Message")
 
@@ -109,6 +114,10 @@ class CommitTable(BaseTable):
 
 
 class CommitRevertTable(BaseTable):
+    """
+    CommitRevert renders the commit revert table for the commit review view
+    """
+
     short_message = tables.LinkColumn(verbose_name="Commit Message")
 
     class Meta(BaseTable.Meta):
@@ -148,6 +157,8 @@ CONFLICT_TABLE_JSON = """
 
 
 class ConflictsTable(BaseTable):
+    """ ConflictsTable renders the table in the conflict list view """
+
     conflicts = tables.TemplateColumn(
         template_code=CONFLICT_TABLE_JSON,
         verbose_name="Conflicts",
@@ -164,6 +175,8 @@ class ConflictsTable(BaseTable):
 
 
 class ConstraintViolationsTable(BaseTable):
+    """ ConstraintViolations renders the table in the constraint violations table """
+
     class Meta(BaseTable.Meta):
         model = Conflicts
         fields = (
@@ -200,6 +213,8 @@ PR_STATUS_BADGES = """
 
 
 class PullRequestTable(BaseTable):
+    """ PullRequestTable renders the table in the pull request view """
+
     pk = ToggleColumn()
     status = tables.TemplateColumn(
         template_code=PR_STATUS_BADGES,
