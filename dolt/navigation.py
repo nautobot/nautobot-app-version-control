@@ -5,7 +5,7 @@ from nautobot.core.apps import NavMenuAddButton, NavMenuGroup, NavMenuItem, NavM
 
 menu_items = (
     NavMenuTab(
-        name="Dolt",
+        name="Version Control",
         weight=1000,
         groups=(
             NavMenuGroup(

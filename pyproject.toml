@@ -1,9 +1,13 @@
 [tool.poetry]
-name = "dolt"
+name = "nautobot-version-control"
 version = "0.1.0"
-description = ""
+description = "Nautobot Version Control"
 authors = ["Andy Arthur <andy@dolthub.com>"]
 license = "LICENSE.txt"
+
+packages = [
+    { include = "dolt" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"

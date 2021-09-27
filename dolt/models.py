@@ -301,7 +301,7 @@ class Commit(DoltSystemTable):
 
 
 class CommitAncestor(DoltSystemTable):
-    """CommitAncestor models the set of ancestors or parents that precede a Commit"""
+    """CommitAncestor models the set of ancestors or parents that precede a Commit."""
 
     commit_hash = models.TextField(primary_key=True)
     parent_hash = models.TextField()  # primary_key=True
