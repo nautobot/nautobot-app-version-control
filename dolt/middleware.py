@@ -1,6 +1,4 @@
-"""
-middleware.py contains the middleware add-ons needed for the dolt plugin to work.
-"""
+"""middleware.py contains the middleware add-ons needed for the dolt plugin to work."""
 
 import random
 
@@ -23,7 +21,7 @@ from dolt.utils import DoltError, active_branch
 
 def dolt_health_check_intercept_middleware(get_response):
     """
-    Intercept health check calls and disregard
+    Intercept health check calls and disregard.
     TODO: fix health-check and remove
     """
 
@@ -36,12 +34,13 @@ def dolt_health_check_intercept_middleware(get_response):
 
 
 class DoltBranchMiddleware:
-    """ DoltBranchMiddleware keeps track of which branch the dolt database is on """
+    """DoltBranchMiddleware keeps track of which branch the dolt database is on."""
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        """Override __call__."""
         return self.get_response(request)
 
     def process_view(self, request, view_func, view_args, view_kwargs):  # pylint: disable=R0201
@@ -79,7 +78,7 @@ class DoltBranchMiddleware:
 
     @staticmethod
     def get_branch(request):
-        """ get_branch returns the Branch object of the branch stored in the session cookie """
+        """get_branch returns the Branch object of the branch stored in the session cookie."""
         # lookup the active branch in the session cookie
         requested = branch_from_request(request)
         try:
@@ -94,7 +93,7 @@ class DoltBranchMiddleware:
 
     @staticmethod
     def get_active_branch_banner(b_id):
-        """ get_active_branch_banner returns a banner that renders the active branch and its share button """
+        """get_active_branch_banner returns a banner that renders the active branch and its share button."""
         return f"""
                     <div class="text-center">
                         Active Branch: {active_branch()}
@@ -104,7 +103,7 @@ class DoltBranchMiddleware:
                             </div>
                         </div>
                     </div>
-                    <script> 
+                    <script>
                         const btn{b_id} = document.getElementById("share-button-{b_id}");
                         btn{b_id}.addEventListener('click', ()=>{{
                             const currLink = window.location.href;
@@ -119,13 +118,14 @@ class DoltBranchMiddleware:
 class DoltAutoCommitMiddleware:
     """
     DoltAutoCommitMiddleware calls the AutoDoltCommit class on a request.
-    - adapted from nautobot.extras.middleware.ObjectChangeMiddleware
+    - adapted from nautobot.extras.middleware.ObjectChangeMiddleware.
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        """Override call."""
         # Process the request with auto-dolt-commit enabled
         with AutoDoltCommit(request):
             return self.get_response(request)
@@ -134,7 +134,7 @@ class DoltAutoCommitMiddleware:
 class AutoDoltCommit:
     """
     AutoDoltCommit handles automatic dolt commits on the case than objects is created or deleted.
-    - adapted from `nautobot.extras.context_managers`
+    - adapted from `nautobot.extras.context_managers`.
     """
 
     def __init__(self, request):
@@ -159,7 +159,7 @@ class AutoDoltCommit:
         pre_delete.disconnect(self._handle_delete, dispatch_uid="dolt_commit_delete")
 
     def _handle_update(self, sender, instance, **kwargs):  # pylint: disable=W0613
-        """ Fires when an object is created or updated. """
+        """Fires when an object is created or updated."""
         if isinstance(instance, ObjectChange):
             # ignore ObjectChange instances
             return
@@ -169,7 +169,7 @@ class AutoDoltCommit:
         self.commit = True
 
     def _handle_delete(self, sender, instance, **kwargs):  # pylint: disable=W0613
-        """ Fires when an object is deleted. """
+        """Fires when an object is deleted."""
         if isinstance(instance, ObjectChange):
             # ignore ObjectChange instances
             return
@@ -179,7 +179,7 @@ class AutoDoltCommit:
         self.commit = True
 
     def make_commits(self):
-        """ make_commits creates and saves a Commit object """
+        """make_commits creates and saves a Commit object."""
         for db, msgs in self.changes_for_db.items():
             msg = "; ".join(msgs)
             Commit(message=msg).save(
@@ -188,7 +188,7 @@ class AutoDoltCommit:
             )
 
     def collect_change(self, instance, msg):
-        """ collect_change stores changes messages for each db """
+        """collect_change stores changes messages for each db."""
         db = self.database_from_instance(instance)
         if db not in self.changes_for_db:
             self.changes_for_db[db] = []
@@ -196,21 +196,19 @@ class AutoDoltCommit:
 
     @staticmethod
     def database_from_instance(instance):
-        """ database_from_instance returns a database from an instance type """
+        """database_from_instance returns a database from an instance type."""
         return instance._state.db  # pylint: disable=W0212
 
     @staticmethod
     def change_msg_for_update(instance, kwargs):
-        """ Generates a commit message for create or update. """
+        """Generates a commit message for create or update."""
         created = "created" in kwargs and kwargs["created"]
         verb = "Created" if created else "Updated"
         return f"""{verb} {instance._meta.verbose_name} "{instance}" """
 
     @staticmethod
     def change_msg_for_delete(instance):
-        """
-        Generates a commit message for delete
-        """
+        """Generates a commit message for delete."""
         return f"""Deleted {instance._meta.verbose_name} "{instance}" """
 
 

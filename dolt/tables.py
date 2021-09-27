@@ -1,4 +1,4 @@
-""" tables.py contains modules for implementing view tables for different models """
+"""tables.py contains modules for implementing view tables for different models."""
 
 import django_tables2 as tables
 from django_tables2 import A
@@ -45,7 +45,7 @@ ACTIVE_BRANCH_BADGE = """
 
 
 class BranchTable(BaseTable):
-    """ BranchTable render the table in the branch_list view """
+    """BranchTable render the table in the branch_list view."""
 
     pk = ToggleColumn()
     name = tables.LinkColumn()
@@ -93,9 +93,7 @@ class BranchTable(BaseTable):
 
 
 class CommitTable(BaseTable):
-    """
-    CommitTable renders the commit table in the commit list view
-    """
+    """CommitTable renders the commit table in the commit list view."""
 
     pk = ToggleColumn(visible=True)
     short_message = tables.LinkColumn(verbose_name="Commit Message")
@@ -114,9 +112,7 @@ class CommitTable(BaseTable):
 
 
 class CommitRevertTable(BaseTable):
-    """
-    CommitRevert renders the commit revert table for the commit review view
-    """
+    """CommitRevert renders the commit revert table for the commit review view."""
 
     short_message = tables.LinkColumn(verbose_name="Commit Message")
 
@@ -138,9 +134,7 @@ class CommitRevertTable(BaseTable):
 
 
 class ConflictsSummaryTable(BaseTable):
-    """
-    Summary table for `Conflicts` and `ConstraintViolations`
-    """
+    """Summary table for `Conflicts` and `ConstraintViolations`."""
 
     class Meta(BaseTable.Meta):
         model = Conflicts
@@ -157,7 +151,7 @@ CONFLICT_TABLE_JSON = """
 
 
 class ConflictsTable(BaseTable):
-    """ ConflictsTable renders the table in the conflict list view """
+    """ConflictsTable renders the table in the conflict list view."""
 
     conflicts = tables.TemplateColumn(
         template_code=CONFLICT_TABLE_JSON,
@@ -175,7 +169,7 @@ class ConflictsTable(BaseTable):
 
 
 class ConstraintViolationsTable(BaseTable):
-    """ ConstraintViolations renders the table in the constraint violations table """
+    """ConstraintViolations renders the table in the constraint violations table."""
 
     class Meta(BaseTable.Meta):
         model = Conflicts
@@ -213,7 +207,7 @@ PR_STATUS_BADGES = """
 
 
 class PullRequestTable(BaseTable):
-    """ PullRequestTable renders the table in the pull request view """
+    """PullRequestTable renders the table in the pull request view."""
 
     pk = ToggleColumn()
     status = tables.TemplateColumn(

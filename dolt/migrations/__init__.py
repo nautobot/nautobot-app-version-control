@@ -1,7 +1,5 @@
 from django.db import connection
 
-from dolt.constants import DOLT_DEFAULT_BRANCH
-
 
 def auto_dolt_commit_migration(sender, **kwargs):
     msg = "completed database migration"
@@ -11,7 +9,7 @@ def auto_dolt_commit_migration(sender, **kwargs):
         cursor.execute(
             f"""
             SELECT dolt_commit(
-                '--all', 
+                '--all',
                 '--allow-empty',
                 '--message', '{msg}',
                 '--author', '{author}')

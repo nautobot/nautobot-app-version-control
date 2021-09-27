@@ -1,6 +1,4 @@
-"""
-Merge.py contains utilities for the merging two branches and detecting any conflicts
-"""
+"""Merge.py contains utilities for the merging two branches and detecting any conflicts."""
 
 import json
 
@@ -28,8 +26,7 @@ from dolt.tables import (
 
 def get_conflicts_count_for_merge(src, dest):
     """
-    Gather a merge-candidate for `src` and `dest`,
-    then return Conflicts created by the merge
+    Gather a merge-candidate for `src` and `dest`, then return Conflicts created by the merge.
 
     TODO: currently we return conflicts summary,
         we need granular row-level conflicts and
@@ -51,8 +48,7 @@ def get_conflicts_count_for_merge(src, dest):
 
 def get_conflicts_for_merge(src, dest):
     """
-    Gather a merge-candidate for `src` and `dest`,
-    then return Conflicts created by the merge
+    Gather a merge-candidate for `src` and `dest`, then return Conflicts created by the merge.
 
     TODO: currently we return conflicts summary,
         we need granular row-level conflicts and
@@ -75,7 +71,7 @@ def get_conflicts_for_merge(src, dest):
 
 
 def merge_candidate_exists(src, dest):
-    """ merge_candidate_exists returns true if there exist a merge_candidate branch between src and dest """
+    """merge_candidate_exists returns true if there exist a merge_candidate branch between src and dest."""
     name = _merge_candidate_name(src, dest)
     try:
         mc = Branch.objects.get(name=name)
@@ -85,11 +81,7 @@ def merge_candidate_exists(src, dest):
 
 
 def merge_candidate_is_fresh(mc, src, dest):
-    """
-    A merge candidate (MC) is considered "fresh" if the
-    source and destination branches used to create the
-    MC are unchanged since the MC was created.
-    """
+    """A merge candidate (MC) is considered "fresh" if the source and destination branches used to create the MC are unchanged since the MC was created."""
     if not mc:
         return False
     src_stable = Commit.merge_base(mc, src) == src.hash
@@ -98,8 +90,7 @@ def merge_candidate_is_fresh(mc, src, dest):
 
 
 def get_merge_candidate(src, dest):
-    """ get_merge_candidate returns a merge candidate branch if it exists """
-
+    """get_merge_candidate returns a merge candidate branch if it exists."""
     if merge_candidate_exists(src, dest):
         name = _merge_candidate_name(src, dest)
         return Branch.objects.get(name=name)
@@ -107,8 +98,7 @@ def get_merge_candidate(src, dest):
 
 
 def make_merge_candidate(src, dest):
-    """ make_merge_candidate create a merge candidate branch between src and dest """
-
+    """make_merge_candidate create a merge candidate branch between src and dest."""
     name = _merge_candidate_name(src, dest)
     # force updates the merge-candidate branch
     Branch(name=name, starting_branch=dest).save()
@@ -130,8 +120,7 @@ def make_merge_candidate(src, dest):
 
 
 def get_or_make_merge_candidate(src, dest):
-    """ Gets or creates a merge candidate branch between src and dest """
-
+    """Gets or creates a merge candidate branch between src and dest."""
     mc = get_merge_candidate(src, dest)
     if not mc:
         mc = make_merge_candidate(src, dest)
@@ -139,17 +128,15 @@ def get_or_make_merge_candidate(src, dest):
 
 
 def _merge_candidate_name(src, dest):
-    """ Returns the formatted name of a merge candidate branch """
-
+    """Returns the formatted name of a merge candidate branch."""
     return f"xxx-merge-candidate--{src}--{dest}"
 
 
 class MergeConflicts:
-    """
-    Must run under the mc branch
-    """
+    """Must run under the mc branch."""
 
     def __init__(self, src, dest):
+        """Inits the class vars."""
         self.src = src
         self.dest = dest
         self.model_map = self._model_map()
@@ -159,8 +146,7 @@ class MergeConflicts:
         return {ct.model_class()._meta.db_table: ct.model_class() for ct in ContentType.objects.all()}
 
     def make_conflict_summary_table(self):
-        """ Creates the conflict summary table for merge conflicts """
-
+        """Creates the conflict summary table for merge conflicts."""
         conflicts = Conflicts.objects.all()
         violations = ConstraintViolations.objects.all()
         summary = {
@@ -177,25 +163,21 @@ class MergeConflicts:
         return list(summary.values())
 
     def make_conflict_table(self):
-        """ Create a table that represents conflicts on a table between src and dest """
-
+        """Create a table that represents conflicts on a table between src and dest."""
         rows = []
         for c in Conflicts.objects.all():
             rows.extend(self.get_rows_level_conflicts(c))
         return ConflictsTable(rows)
 
     def make_constraint_violations_table(self):
-        """ make_constraint_violations_table creates a table to store constraint violations between two tables  """
-
+        """make_constraint_violations_table creates a table to store constraint violations between two tables."""
         rows = []
         for v in ConstraintViolations.objects.all():
             rows.extend(self.get_rows_level_violations(v))
         return ConstraintViolationsTable(rows)
 
     def get_rows_level_conflicts(self, conflict):
-        """
-        get_row_level_conflicts returns each conflict row in a table as a JSON object.
-        """
+        """get_row_level_conflicts returns each conflict row in a table as a JSON object."""
         with connection.cursor() as cursor:
             # introspect table schema to query conflict data as json
             cursor.execute(f"DESCRIBE dolt_conflicts_{conflict.table}")
@@ -223,7 +205,7 @@ class MergeConflicts:
             prefix = "our_"
             if not k.startswith(prefix):
                 continue
-            suffix = k[len(prefix) :]
+            suffix = k[len(prefix) :]  # noqa: E203
             ours = obj[f"our_{suffix}"]
             theirs = obj[f"their_{suffix}"]
             base = obj[f"base_{suffix}"]
@@ -238,7 +220,7 @@ class MergeConflicts:
         return obj2
 
     def get_rows_level_violations(self, violation):
-        """ get_row_level_violations returns each constrain violation in a JSON row """
+        """get_row_level_violations returns each constrain violation in a JSON row."""
         with connection.cursor() as cursor:
             rows = []
             model_name = self._model_from_table(violation.table)
@@ -281,15 +263,15 @@ class MergeConflicts:
                 rt = v_info["ReferencedTable"]
                 ref_model_name = self._model_from_table(rt)
                 return f"""
-                    The {model_name} "{obj_name}" references a 
-                    missing "{ref_model_name}" object 
+                    The {model_name} "{obj_name}" references a
+                    missing "{ref_model_name}" object
                 """
 
         elif v_type == "unique index":
             if "Columns" in v_info:
                 return f"""
-                    The {model_name} "{obj_name}" violates a 
-                    uniqueness constraint defined over the 
+                    The {model_name} "{obj_name}" violates a
+                    uniqueness constraint defined over the
                     columns {v_info["Columns"]}
                 """
         return "Unknown constraint violation"

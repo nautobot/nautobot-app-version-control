@@ -1,4 +1,4 @@
-""" tests.py contains unittests for the nautobot dolt plugin """
+"""tests.py contains unittests for the nautobot dolt plugin."""
 
 
 from django.test import override_settings, TransactionTestCase
@@ -17,36 +17,36 @@ from dolt.constants import DOLT_DEFAULT_BRANCH
 
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class DoltTestCase(TransactionTestCase):
-    """ DoltTestCase wraps test cases with the subsequent router setting """
+    """DoltTestCase wraps test cases with the subsequent router setting."""
 
     databases = ["default", "global"]
 
 
 class TestBranches(DoltTestCase):
-    """ TestBranch Tests the creation and deletion of branches """
+    """TestBranch Tests the creation and deletion of branches."""
 
     default = DOLT_DEFAULT_BRANCH
 
     def setUp(self):
-        """ setUp is ran before every testcase """
+        """setUp is ran before every testcase."""
         self.user = User.objects.get_or_create(username="branch-test", is_superuser=True)[0]
 
     def tearDown(self):
-        """ tearDown is ran after every testcase """
+        """tearDown is ran after every testcase."""
         Branch.objects.exclude(name=self.default).delete()
 
     def test_default_branch(self):
-        """ test_default_branch asserts that the main branch exists and is preinitialized as the active branch """
+        """test_default_branch asserts that the main branch exists and is preinitialized as the active branch."""
         self.assertEqual(Branch.objects.filter(name=self.default).count(), 1)
         self.assertEqual(active_branch(), self.default)
 
     def test_create_branch(self):
-        """ test_create_branch tests the creation of a new branch """
+        """test_create_branch tests the creation of a new branch."""
         Branch(name="another", starting_branch=self.default).save()
         self.assertEqual(Branch.objects.filter(name="another").count(), 1)
 
     def test_delete_with_pull_requests(self):
-        """ test_delete_with_pull_requests tests that deleting a branch cannot happen unless you delete a branch first """
+        """test_delete_with_pull_requests tests that deleting a branch cannot happen unless you delete a branch first."""
         Branch(name="todelete", starting_branch=self.default).save()
         PullRequest.objects.create(
             title="My Review",
@@ -61,7 +61,7 @@ class TestBranches(DoltTestCase):
         try:
             Branch.objects.filter(name="todelete").delete()
             self.fail("the branch delete should've failed")
-        except:  # nosec pylint: disable=W0702
+        except:  # nosec pylint: disable=W0702 # noqa
             pass
 
         # Delete the pr and try again
@@ -70,7 +70,7 @@ class TestBranches(DoltTestCase):
         self.assertEqual(Branch.objects.filter(name="todelete").count(), 0)
 
     def test_merge_ff(self):
-        """ test_merge_ff tests whether a ff merge works """
+        """test_merge_ff tests whether a ff merge works."""
         Branch(name="ff", starting_branch=self.default).save()
         main = Branch.objects.get(name=self.default)
         other = Branch.objects.get(name="ff")
@@ -94,7 +94,7 @@ class TestBranches(DoltTestCase):
         self.assertEqual(Manufacturer.objects.filter(name="m1", slug="m-1").count(), 1)
 
     def test_merge_no_ff(self):
-        """ test_merge_no_ff tests whether a non-ff merge works """
+        """test_merge_no_ff tests whether a non-ff merge works."""
         Branch(name="noff", starting_branch=self.default).save()
         main = Branch.objects.get(name=self.default)
         other = Branch.objects.get(name="noff")
@@ -120,7 +120,7 @@ class TestBranches(DoltTestCase):
         self.assertEqual(Manufacturer.objects.filter(name="m3", slug="m-3").count(), 1)
 
     def test_merge_conflicts(self):
-        """ test_merge_conflicts tests whether a merge with conflicts is detected and errors """
+        """test_merge_conflicts tests whether a merge with conflicts is detected and errors."""
         main = Branch.objects.get(name=self.default)
         Manufacturer.objects.all().delete()
         Manufacturer.objects.create(name="m2", slug="m-2")
@@ -143,7 +143,7 @@ class TestBranches(DoltTestCase):
         try:
             main.merge(other, user=self.user)
             self.fail("this should error for conflicts")
-        except:  # nosec # pylint: disable=W0702
+        except:  # nosec # pylint: disable=W0702 # noqa
             pass
 
         # Validate that any potential conflicts actually exist
@@ -153,12 +153,12 @@ class TestBranches(DoltTestCase):
 
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestApp(APITestCase):
-    """ TestApp tests the availability of the root api endpoint """
+    """TestApp tests the availability of the root api endpoint."""
 
     databases = ["default", "global"]
 
     def test_root(self):
-        """test_root tests getting the api root """
+        """test_root tests getting the api root."""
         url = reverse("plugins-api:dolt-api:api-root")
         response = self.client.get(f"{url}?format=api", **self.header)
 
@@ -167,7 +167,7 @@ class TestApp(APITestCase):
 
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestBranchesApi(APITestCase, APIViewTestCases):
-    """ TestBranchesApi tests the get,create,delete,etc. of the Branches api """
+    """TestBranchesApi tests the get,create,delete,etc. of the Branches api."""
 
     databases = ["default", "global"]
     model = Branch
@@ -180,7 +180,7 @@ class TestBranchesApi(APITestCase, APIViewTestCases):
 
     @classmethod
     def setUpTestData(cls):
-        """ creates some test data for test suite """
+        """creates some test data for test suite."""
         Branch.objects.create(name="b1", starting_branch=DOLT_DEFAULT_BRANCH)
         Branch.objects.create(name="b2", starting_branch=DOLT_DEFAULT_BRANCH)
         Branch.objects.create(name="b3", starting_branch=DOLT_DEFAULT_BRANCH)
@@ -188,7 +188,7 @@ class TestBranchesApi(APITestCase, APIViewTestCases):
     # The ApiViewTestCase mixin handles get, create, etc. thoroughly but it's a useful exercise for readers to understand
     # what is happening in the background
     def test_get(self):
-        """ test_get tets the get method of the API """
+        """test_get tets the get method of the API."""
         url = reverse("plugins-api:dolt-api:branch-list")
         self.add_permissions(f"{self.model._meta.app_label}.view_{self.model._meta.model_name}")
         response = self.client.get(f"{url}?format=json", **self.header)
@@ -200,7 +200,7 @@ class TestBranchesApi(APITestCase, APIViewTestCases):
 
 
 class TestPullRequestApi(APITestCase, APIViewTestCases):
-    """ TestPullRequestApi tests the PullRequest api """
+    """TestPullRequestApi tests the PullRequest api."""
 
     databases = ["default", "global"]
     model = PullRequest
@@ -216,7 +216,7 @@ class TestPullRequestApi(APITestCase, APIViewTestCases):
 
     @classmethod
     def setUpTestData(cls):
-        """ setUpTestData setups test data """
+        """setUpTestData setups test data."""
         User.objects.get_or_create(username="pr-reviewer", is_superuser=True)
         PullRequest.objects.create(
             title="Review 1",
@@ -244,8 +244,7 @@ class TestPullRequestApi(APITestCase, APIViewTestCases):
         )
 
     def test_get(self):
-        """ test_get tests the pull-request get api """
-
+        """test_get tests the pull-request get api."""
         url = reverse("plugins-api:dolt-api:pullrequest-list")
         self.add_permissions(f"{self.model._meta.app_label}.view_{self.model._meta.model_name}")
         response = self.client.get(f"{url}?format=json", **self.header)
@@ -258,23 +257,22 @@ class TestPullRequestApi(APITestCase, APIViewTestCases):
 
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestPullRequests(DoltTestCase):
-    """ TestPullRequests tests the functionality of the PullRequest model """
+    """TestPullRequests tests the functionality of the PullRequest model."""
 
     default = DOLT_DEFAULT_BRANCH
 
     def setUp(self):
-        """ setUp runs before every test case """
+        """setUp runs before every test case."""
         self.user = User.objects.get_or_create(username="branch-test", is_superuser=True)[0]
         self.main = Branch.objects.get(name=self.default)
 
     def tearDown(self):
-        """ tearDown runs after every test case """
+        """tearDown runs after every test case."""
         PullRequest.objects.all().delete()
         Branch.objects.exclude(name=self.default).delete()
 
     def test_pull_requests_write_to_main(self):
-        """ test_pull_requests_write_to_main asserts that pull request objects hit the pull request m """
-
+        """test_pull_requests_write_to_main asserts that pull request objects hit the global db."""
         Branch(name="test", starting_branch=self.default).save()
         Branch(name="test2", starting_branch=self.default).save()
         test_branch = Branch.objects.get(name="test")
@@ -301,7 +299,7 @@ class TestPullRequests(DoltTestCase):
 
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestPullRequestReviewsApi(APITestCase, APIViewTestCases):
-    """ TestPullRequestReviewsApi tests whether the PullRequestReview model api """
+    """TestPullRequestReviewsApi tests whether the PullRequestReview model api."""
 
     databases = ["default", "global"]
     model = PullRequestReview
@@ -309,7 +307,7 @@ class TestPullRequestReviewsApi(APITestCase, APIViewTestCases):
 
     @classmethod
     def setUpTestData(cls):
-        """ setupTestData create test data for the suite """
+        """setupTestData create test data for the suite."""
         # Create the Pull Request Data before the reviews
         TestPullRequestApi.setUpTestData()
         PullRequestReview.objects.create(
@@ -326,7 +324,7 @@ class TestPullRequestReviewsApi(APITestCase, APIViewTestCases):
         )
 
     def test_get(self):
-        """ test_get tests the PullRequestReview get_api """
+        """test_get tests the PullRequestReview get_api."""
         url = reverse("plugins-api:dolt-api:pullrequestreview-list")
         self.add_permissions(f"{self.model._meta.app_label}.view_{self.model._meta.model_name}")
         response = self.client.get(f"{url}?format=json", **self.header)
@@ -339,12 +337,13 @@ class TestPullRequestReviewsApi(APITestCase, APIViewTestCases):
 
 @override_settings(DATABASE_ROUTERS=["dolt.routers.GlobalStateRouter"])
 class TestCommitsApi(APITestCase, APIViewTestCases):
-    """ TestCommitsApi tests the Commit model Api """
+    """TestCommitsApi tests the Commit model Api."""
 
     databases = ["default", "global"]
     model = Commit
 
     def test_root(self):
+        """test commits."""
         url = reverse("plugins-api:dolt-api:commit-list")
         self.add_permissions(f"{self.model._meta.app_label}.view_{self.model._meta.model_name}")
         response = self.client.get(f"{url}?format=api", **self.header)
