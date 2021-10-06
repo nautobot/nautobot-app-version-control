@@ -344,7 +344,7 @@ The diff table registry works much like the versioned model registry, it is a ma
 Tables in Nautobot core are all subclasses of [`django-tables2`](https://django-tables2.readthedocs.io/en/latest/).
 All entries in the diff table registry must also be subclasses of `django-tables2`.
 
-# Plugin Integration
+# Plugin Integration and Model Registration
 
 The Version Control plugin is designed to be used in coordination with other Nautobot plugins.
 By default, any models registered by other plugins will be considered non-versioned. 
