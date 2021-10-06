@@ -185,7 +185,7 @@ See the [Nautobot docs](https://nautobot.readthedocs.io/en/stable/rest-api/authe
 ## Dolt Branch Header
 
 When querying the API, clients can choose a specific branch using a `dolt-branch` header. 
-For example, the following request will list all of the commits from "my-feature-branch".
+For example, the following request will list all the commits from `my-feature-branch`:
 
 ```bash
 $ curl -s \
@@ -194,7 +194,7 @@ $ curl -s \
 0.0.0.0:8080/api/plugins/dolt/commits/
 ```
 
-Versioning requests works with all API endpoints, not just models from the Version Control plugin: 
+Versioning requests works with all API endpoints, not just models from the Version Control plugin. This example queries for devices in a `my-branch`: 
 
 ```bash
 $ curl -s \
@@ -203,6 +203,25 @@ $ curl -s \
 0.0.0.0:8080/api/dcim/devices/
 ```
 
+This is a python example of querying for devices in the `atl` site in the `atl-leaf-agument` branch:
+
+```python
+import requests
+
+from pprint import pprint
+
+url = "http://0.0.0.0:8080/api/dcim/devices/?site=atl"
+
+payload={}
+headers = {
+  'Authorization': 'Token nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn',
+  'dolt-branch': 'atl-leaf-augment'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+pprint(response.json())
+```
 
 # Implementation Details
 
@@ -210,7 +229,7 @@ $ curl -s \
 [DoltSystemTable](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21)
 is an abstract base class that forms the basis of Django models that expose Dolt [system tables](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21)
 to the Object Relational Mapping (ORM). 
-Plugin models such as Commit and Branch that inherit from DoltSystemTable are [unmanaged](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21)
+Plugin models such as *Commit* and *Branch* that inherit from DoltSystemTable are [unmanaged](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21),
 meaning that Django will ignore these models for the purposes of database migrations. 
 This is important because Dolt system tables exist from the time the database is created and cannot be modified or deleted. 
 Internally, Dolt generates system table data on-the-fly rather than reading it from a traditional database index.
@@ -240,12 +259,17 @@ Database models that are specific to the Nautobot application (e.g. Users, Web H
 Versioning features are restricted for some models such that they have a single “global” state. 
 This is especially important for models that affect permissions and authentication: we need a single place where we can read and update security-sensitive data.
 
-Versioned and non-versioned models have different behavior when working on a non-main feature branch. 
-Versioned models will be read from the tip of the feature branch. 
-Versioned models can also be edited on a feature branch and the edits will be versioned in commits. 
-Non-versioned models cannot be edited on feature branches, they must only be edited on the main branch. 
-Non-versioned models will also always be read from the tip of the main branch, rather than from a feature branch, regardless of what branch is specified in a request. 
-Non-versioned models can’t have multiple versions. There is always a single version which is read-from, and edited on main.
+
+### Model Behavior
+
+Versioned and non-versioned models have different behavior when working on a non-main feature branch: 
+* Versioned models will be read from the tip of the feature branch
+* Versioned models can also be edited on a feature branch, and the edits will be versioned in commits 
+
+Non-versioned models:
+* Cannot be edited on feature branches, they must only be edited on the main branch 
+* Will always be read from the tip of the main branch, rather than from a feature branch, regardless of what branch is specified in a request
+* Can’t have multiple versions: there is always a single version which is read-from, and edited on main.
 
 ## Global State Router
 The business logic for differentiating versioned and non-versioned models is implemented in a Django [database router](https://docs.djangoproject.com/en/3.2/topics/db/multi-db/#automatic-database-routing), 
