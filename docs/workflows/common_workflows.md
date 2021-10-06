@@ -59,7 +59,7 @@ To create a PR, navigate to  *Version Control --> Pull Requests --> + Add*. You 
 
 Once on the *Add a new pull request* screen, fill out the requested details and click on *Create*
 
-## Reviewing a PR
+### Reviewing a PR
 Ideally, a different user would review the PR prior to merging the changes into to main branch.  
 
 
