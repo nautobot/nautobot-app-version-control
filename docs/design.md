@@ -5,6 +5,7 @@ Adding database versioning with Dolt provides another layer of assurance by enab
 Dolt’s branch and merge versioning model allows operators to safely modify the data model on feature branches, merging to production only after validation is complete.
 
 ## Dolt
+
 Dolt is a MySQL compatible relational database that supports Git-like versioning features. 
 Git version files, Dolt versions database tables. 
 Running Nautobot on Dolt means operators can use version-control workflows from software development when managing the network data model.
@@ -20,11 +21,13 @@ The result is a relational database that can branch, diff, merge, push and pull.
 
 
 # Version Control Plugin Design
+
 The core features of the Version Control plugin are commits and branches. 
 All database reads and writes happen on a branch. 
 All database writes create a commit.
 
 ## Branches  
+
 When Nautobot is initialized with the version control app, the database has a single branch “main”. 
 The main branch represents the state of the production data model.
 Main also has a special status in that it cannot be deleted. 
@@ -32,18 +35,23 @@ New branches are created by specifying a starting branch to start from.
 
 ![create branch form](images/create-branch-form.png)
 
+### Requesting Info From A Branch
+
 All requests served through the web interface or API fetch data from a specific database branch. 
-The choice of branch is encoded in the request by the client. 
-For web requests, the branch state is stored in a cookie using Django cookie sessions. 
-For API requests, the branch state is encoded in a request header.
+The choice of branch is encoded in the request by the client: 
+* For web requests, the branch state is stored in a cookie using Django cookie sessions
+* For API requests, the branch state is encoded in a request header
 
 When the server receives a request, it looks for this state and uses it to select the correct database branch to serve this request. 
-If the branch cannot be found or if the requested branch does not exist, the main branch is used. 
-The business logic to handle branch selection is performed in [middleware](https://docs.djangoproject.com/en/3.2/topics/http/middleware/)
-specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/c9f49b8e007ca22afe0d6e3ddb5066e31b37dc64/dolt/middleware.py#L38). 
-In the web interface, a banner is displayed to notify the user of their “active” branch
+* If the requested branch cannot be found or if the requested branch does not exist, the main branch is used.
+* In the web interface, a banner is displayed to notify the user of their “active” branch
 
 ![active branch banner](images/active-branch-banner.png)
+
+The business logic to handle branch selection is performed in [middleware](https://docs.djangoproject.com/en/3.2/topics/http/middleware/), 
+specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/c9f49b8e007ca22afe0d6e3ddb5066e31b37dc64/dolt/middleware.py#L38) 
+
+### Database Versioning
 
 Database versioning happens on a per-connection basis. Each connection will read from a specific branch. 
 Database connections outside of the web server, such as through nbshell are also versioned. 
@@ -60,6 +68,7 @@ When connecting directly to the database you can check your current branch with 
 ```
 
 ## Commits
+
 A Dolt commit is made for every modification to the data model. 
 Each request that writes to the database triggers a commit to be written. 
 The result is a granular change log tracking the history of changes made.
@@ -87,29 +96,46 @@ Commit reversion may fail if applying the reverse patch will cause an inconsiste
 Specifically if the reversion causes a foreign key or unique key violation in the database, the operation will fail and no changes will be applied.
 
 ## Pull Requests
+
 Changes from different branches can be combined using Pull Requests (PRs). 
 A successful PR will result in merging the source branch into the destination branch. 
 The recommended workflow for the Version Control plugin is to make all changes on a non-production branch and merge the change to the main branch only after it undergoes human review.
 
-The primary Pull Request view has four sub views. 
-The “Diffs” tab displays metadata about the PR and a summary of changes made, much like the diff view of a commit. 
-However, the PR diff view combines the changes from all of the commits in the PR’s “source branch”. 
-In the “Commits” tab there is a list of each commit in the PR. 
-The “Conflicts” tab shows any problems that would prevent the PR from being merged. 
-Finally, the “Reviews” tab contains a simple forum-like interface where users can discuss and approve PRs.
+### Pull Request View
+
+The primary Pull Request view has four sub views:
+* The “Diffs” tab displays a diff summary, metadata about the PR, and a list of all the diffs between the current branch and the starting branch
+* In the “Commits” tab there is a list of each commit in the PR
+* The “Conflicts” tab shows any problems that would prevent the PR from being merged 
+* The “Reviews” tab contains a simple forum-like interface where users can discuss and approve PRs.
 
 ![pull request view](images/pull-request-view.png)
 
-Pull Request Reviews can take the form of a “comment”, an “approval”, or a “block” of the PR. 
-Comments are meant for general discussion. 
-Approvals will allow the PR to be merged. 
-Blocks will prevent the PR from being merged. 
-The most recent non-comment review takes precedence in determining the ability to merge the PR. 
+### Pull Request (PR) Reviews
+
+Pull request (PR) reviews allow discussion about the contents of the PR, similar to PR discussions on GitHub.
+
+Version Control app PR reviews can take the form of a “comment”, an “approval”, or a “block” of the PR:
+
+* *Comments* are meant for general discussion 
+* *Approvals* will allow the PR to be merged 
+* *Blocks* will prevent the PR from being merged
+
+### Conflicts
+
+The most recent non-comment review (Block/Approval) takes precedence in determining the ability to merge the PR. 
 In order to be merged, the Pull Request must also be free of conflicts. 
 Conflicts are created when the Dolt cannot successfully merge the data from two versions of a table. 
 Conflicts are caused by concurrent modifications of a single model field, or by referential integrity errors such as Foreign Key and Unique Key violations. 
 Within the PR view, conflicts are determined by pre-computing the merge with a “Merge Candidate”.
 Once a PR is conflict free, it can be merged into its destination branch. 
+
+### Merges
+
+When a PR's status is set to *Approved*, a *Merge* button will appear on the PR screen 
+
+![approved pr](images/approved_pr.png)
+
 Selecting "merge" from the pull request view will navigate the user to a confirmation page:
 
 ![confirm pull request merge](images/confirm-pull-request-merge.png)
@@ -118,12 +144,14 @@ Here the user can inspect the diff before choosing to merge or squash merge the 
 Squash merging in Dolt has the same semantic meaning as [`git merge --squash`](https://git-scm.com/docs/git-merge#Documentation/git-merge.txt---squash):
 the history of the source branch is compacted into a single commit
 
+### *Catching Up* A Branch
+
 The most common use case for pull requests is merging "feature branches" into the main branch. 
 This is consistent with a [trunk-based](https://www.atlassian.com/continuous-delivery/continuous-integration/trunk-based-development) 
 change workflow where changes are made on short-lived branches in incremental steps. 
 Each step branches off from main and merges back to main after a small number of commits.
 If ever there are long-lived feature branches, it can become difficult to merge back to main due to merge conflicts. 
-This problem can be mitigated by "catching up" a feature branch, by merge the main branh into it.
+This problem can be mitigated by "catching up" a feature branch, by merge the main branch into it.
 
 ![branch list view](images/branch-list-view.png)
 
