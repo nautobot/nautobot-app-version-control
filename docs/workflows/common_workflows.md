@@ -30,10 +30,45 @@ Make changes to the data as necessary.
 
 ### Reviewing Changes
 
+To review changes in your branch (compared to the starting branch): *Version Control --> Diffs*.
+
+The diffs page contains:
+* A diff summary pane
+* Metadata about the PR
+* A list of all the diffs between the current branch and the starting branch
+
+Use this screen to review/confirm your changes prior to submitting a pull request to merge the changes into the main (production) branch.
+
+### Viewing Branch Commits
+
+There are two ways to view commits in a branch:
+* Click on item in the **Diff Type** column on the branch's diffs page
+  * *Version Control --> Diffs --> Click on one of the changes*
+  * This will show the commit details for the diff 
+* Navigate to *Version Control --> Commits* 
+  * This will show a list of the commits in the active branch
+  * Clicking on a given commit will take you to a screen with the commit details
+
 ## The Pull Request (PR) Process
+
+After reviewing changes on a branch and any specific diffs for the changes, a user will typically want to submit a PR to merge the changes in the branch into the main (production) branch.
+
+### Creating a PR
+
+To create a PR, navigate to  *Version Control --> Pull Requests --> + Add*. You may also create the PR directly from the navigation menu: *Version Control --> Pull Requests -->+* if you don't wish to view all the open PRs prior to creating a PR.
+
+Once on the *Add a new pull request* screen, fill out the requested details and click on *Create*
+
+## Reviewing a PR
+Ideally, a different user would review the PR prior to merging the changes into to main branch.  
+
 
 
 ## Reverting Changes
+
+At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse.  
+
+
 
 ### Reverting Single Commits
 
