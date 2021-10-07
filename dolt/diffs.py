@@ -1,7 +1,7 @@
 """Diffs.py contains a set of utilities for producing Dolt diffs."""
 
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
+from django.db import connection, models
 from django.db.models import F, Subquery, OuterRef, Value
 
 from nautobot.dcim.tables import cables, devices, devicetypes, power, racks, sites
@@ -32,12 +32,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
         raise ValueError("must specify both a to_commit and from_commit")
 
     diff_results = []
-    for content_type in ContentType.objects.all():
-        model = content_type.model_class()
-        if not model:
-            continue
-        if not diff_table_for_model(model):
-            continue
+    for content_type in content_types_with_diffs(from_commit=from_commit, to_commit=to_commit):
 
         factory = DiffModelFactory(content_type)
         diffs = factory.get_model().objects.filter(from_commit=from_commit, to_commit=to_commit)
@@ -99,6 +94,37 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             }
         )
     return diff_results
+
+
+def content_types_with_diffs(from_commit=None, to_commit=None):
+    """
+    Returns ContentType for models with non-empty diffs.
+    """
+    diff_counts = []
+    for ct in ContentType.objects.all():
+        model = ct.model_class()
+        if not model or not diff_table_for_model(model):
+            # only diff models that have registered a diff table
+            continue
+        diff_counts.append(
+            f"""SELECT '{ct.app_label}', '{ct.model}', count(*) 
+                FROM dolt_commit_diff_{model._meta.db_table}
+                WHERE from_commit = '{from_commit}' 
+                AND to_commit = '{to_commit}'"""
+        )
+
+    # UNION all the queries into one
+    union = "(" + ") UNION (".join(diff_counts) + ")"
+
+    with connection.cursor() as cursor:
+        cursor.execute(union)
+        res = cursor.fetchall()
+
+    nonempty = filter(lambda tup: tup[2] != 0, res)
+    return ContentType.objects.filter(
+        app_label__in={tup[0] for tup in nonempty},
+        model__in={tup[1] for tup in nonempty},
+    )
 
 
 def diff_annotation_query_fields(model):
