@@ -120,7 +120,7 @@ def content_types_with_diffs(from_commit=None, to_commit=None):
         cursor.execute(union)
         res = cursor.fetchall()
 
-    nonempty = filter(lambda tup: tup[2] != 0, res)
+    nonempty = list(filter(lambda tup: tup[2] != 0, res))
     return ContentType.objects.filter(
         app_label__in={tup[0] for tup in nonempty},
         model__in={tup[1] for tup in nonempty},
