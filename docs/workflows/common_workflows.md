@@ -7,7 +7,13 @@
 
 To create a new branch, navigate to *Version Control --> Branches --> +* or *Version Control --> Branches --> + Add*.
 
+
+
+![](../images/creating-a-branch.png)
+
 Fill out the form, filling in the Name and selecting the starting branch (defaults to *main*).
+
+![](../images/add-a-new-branch-form.png)
 
 > **NOTE**: The branch name must be in slug form, consisting of letters, numbers, underscores or hyphens (no spaces).
 
@@ -18,15 +24,21 @@ Once the branch is created:
 * A banner will appear, notifying you that the branch was created
 * A second banner will appear, showing that the newly created branch is now the active branch
 
+![](../images/branch-detail-page.png)
+
 ### Making Changes To The Data
 
 Any changes to data in Nautobot will be limited to the active branch. To avoid making changes to production data, ensure a non-main branch is active:
 * Create a new branch: upon creation, that branch will become active
 * Switch to an existing non-main branch: *Version Control --> Branches --> 'Activate' a non-main branch*
 
+[](../images/activate-non-main-branch.png)
+
 You should see a banner indicating that the created/selected branch is the *Active Branch*.
 
-Make changes to the data as necessary.
+[](../images/active-branch-banner.png)
+
+Make changes to the data as necessary in that branch.
 
 ### Reviewing Changes
 
@@ -39,6 +51,8 @@ The diffs page contains:
 
 Use this screen to review/confirm your changes prior to submitting a pull request to merge the changes into the main (production) branch.
 
+![](../images/diffs-from-starting-branch.png)
+
 ### Viewing Branch Commits
 
 There are two ways to view commits in a branch:
@@ -49,6 +63,8 @@ There are two ways to view commits in a branch:
   * This will show a list of the commits in the active branch
   * Clicking on a given commit will take you to a screen with the commit details
 
+![](../images/diffs-and-commits.png)
+
 ## The Pull Request (PR) Process
 
 After reviewing changes on a branch and any specific diffs for the changes, a user will typically want to submit a PR to merge the changes in the branch into the main (production) branch.
@@ -57,22 +73,26 @@ After reviewing changes on a branch and any specific diffs for the changes, a us
 
 To create a PR, navigate to  *Version Control --> Pull Requests --> + Add*. You may also create the PR directly from the navigation menu: *Version Control --> Pull Requests -->+* if you don't wish to view all the open PRs prior to creating a PR.
 
+![](../images/create-a-pr.png)
+
 Once on the *Add a new pull request* screen, fill out the requested details and click on *Create*
+
+![](../images/add-new-pr-page.png)
+
+Creating the PR will take you to the PR detail page.
+
+![](../images/pr-detail-page.png)
 
 ### Reviewing a PR
 Ideally, a different user would review the PR prior to merging the changes into to main branch.  
 
-
-
-## Reverting Changes
+## Reverting Commits
 
 At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse.  
 
-
-
 ### Reverting Single Commits
 
-A single commit is a specific change to the database. A commit is generated each time the user clicks on a *Create*, *Delete*, *Update*, or *Merge*.
+A single commit is a specific change to the database. A commit is generated each time the user clicks on a *Create*, *Delete*, *Update*, or *Merge* button.
 
 ### Reverting Multiple Commits
 

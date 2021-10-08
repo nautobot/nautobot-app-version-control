@@ -42,7 +42,7 @@ The choice of branch is encoded in the request by the client:
 * For web requests, the branch state is stored in a cookie using Django cookie sessions
 * For API requests, the branch state is encoded in a request header
 
-When the server receives a request, it looks for this state and uses it to select the correct database branch to serve this request. 
+When the server receives a request, it looks for this state and uses it to select the correct database branch to serve the request: 
 * If the requested branch cannot be found or if the requested branch does not exist, the main branch is used.
 * In the web interface, a banner is displayed to notify the user of their “active” branch
 
