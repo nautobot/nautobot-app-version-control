@@ -63,15 +63,6 @@ Use this screen to review/confirm your changes prior to submitting a pull reques
 
 ![](../images/diffs-from-starting-branch.png)
 
-
-
-
-
-
-
-
-
-
 ### Viewing Branch Commits
 
 To view commits in a given branch:
@@ -100,7 +91,7 @@ Once on the *Add a new pull request* screen, fill out the requested details and 
 
 Creating the PR will take you to the PR detail page, which has 4 tabs, [explained here](../design.md#pull-request-view).
 
-### Reviewing a PR / PR Detail View
+### Reviewing a PR 
 Ideally, a different user would review the PR prior to merging the changes into to main branch. 
 
 To review a PR, go to *Version Control --> Pull Requests*.
@@ -112,9 +103,13 @@ This will take you to the pull requests list page; once there:
 
 ![](../images/pr-list-page.png)
 
+Part of the review process can be reverting commits, which is covered [here](../design.md#commits)
+
 ## Reverting Commits
 
 At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse.  
+
+Part of the review process can be reverting commits, which is covered [here](../design.md#commits)
 
 ### Reverting Single Commits
 
