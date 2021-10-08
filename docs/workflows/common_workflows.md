@@ -1,13 +1,13 @@
 # Common Workflows
 
+This section covers some common workflows. Some of this info is covered in the [design.md](../design.md) file at a higher level.
+The intent of this section is to cover common workflows in a bit more detail.
 
 ## Proposing Data Changes
 
 ### Creating A Branch
 
 To create a new branch, navigate to *Version Control --> Branches --> +* or *Version Control --> Branches --> + Add*.
-
-
 
 ![](../images/creating-a-branch.png)
 
@@ -45,23 +45,40 @@ Make changes to the data as necessary in that branch.
 To review changes in your branch (compared to the starting branch): *Version Control --> Diffs*.
 
 The diffs page contains:
-* A diff summary pane
-* Metadata about the PR
-* A list of all the diffs between the current branch and the starting branch
+1. A panel on the left hand side with meta data about the PR
+2. A panel on the right hand side with a diff summary for the PR
+  * The number of adds, changes, and deletions in the PR are highlighted in green, orange, and red, respectively
+  * Clicking on a section of the diff summary will take you to the detailed changes for that section
+3. The detailed diffs, organized by sections (Device, Circuit, Console port, Interface, Power port)
+
+
+
+In the detailed diffs section, there is a **Diff Type** column; this column contains a badge with the type of change (added/changed/deleted).
+
+Clicking on a specific badge for a change takes you to the specific diff.
+
+![](../images/diff-info-from-pr-detail-page.png)
 
 Use this screen to review/confirm your changes prior to submitting a pull request to merge the changes into the main (production) branch.
 
 ![](../images/diffs-from-starting-branch.png)
 
+
+
+
+
+
+
+
+
+
 ### Viewing Branch Commits
 
-There are two ways to view commits in a branch:
-* Click on item in the **Diff Type** column on the branch's diffs page
-  * *Version Control --> Diffs --> Click on one of the changes*
-  * This will show the commit details for the diff 
-* Navigate to *Version Control --> Commits* 
+To view commits in a given branch:
+* While the given branch is active, navigate to *Version Control --> Commits* 
   * This will show a list of the commits in the active branch
-  * Clicking on a given commit will take you to a screen with the commit details
+  * Clicking on a given commit will take you to a screen with the commit diffs
+  * Once on the *diffs* screen, clicking on a given `Diff Type` will take you to the specific change that triggered the commit
 
 ![](../images/diffs-and-commits.png)
 
@@ -79,12 +96,21 @@ Once on the *Add a new pull request* screen, fill out the requested details and 
 
 ![](../images/add-new-pr-page.png)
 
-Creating the PR will take you to the PR detail page.
+### The Pull Request (PR) Detail View
 
-![](../images/pr-detail-page.png)
+Creating the PR will take you to the PR detail page, which has 4 tabs, [explained here](../design.md#pull-request-view).
 
-### Reviewing a PR
-Ideally, a different user would review the PR prior to merging the changes into to main branch.  
+### Reviewing a PR / PR Detail View
+Ideally, a different user would review the PR prior to merging the changes into to main branch. 
+
+To review a PR, go to *Version Control --> Pull Requests*.
+
+This will take you to the pull requests list page; once there:
+* Determine which PR you want to review
+* Switch the active branch to that of the PR source branch (this is necessary if you wish to revert any changes in the PR)
+* Navigate back to the PR list page and click on the desired PR
+
+![](../images/pr-list-page.png)
 
 ## Reverting Commits
 
