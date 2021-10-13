@@ -109,13 +109,7 @@ Part of the review process can be reverting commits, which is covered [here](../
 
 At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse.  
 
-Part of the review process can be reverting commits, which is covered [here](../design.md#commits)
-
-### Reverting Single Commits
-
-A single commit is a specific change to the database. A commit is generated each time the user clicks on a *Create*, *Delete*, *Update*, or *Merge* button.
-
-### Reverting Multiple Commits
+View how to revert commits [here](../database-git-like-operations.md#reverting-a-commit).
 
 
 
