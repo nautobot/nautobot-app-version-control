@@ -781,7 +781,7 @@ class PullRequestMergeView(generic.ObjectEditView):
                 "form": self.form,
                 "return_url": pr.get_absolute_url(),
                 "conflicts": merge.get_conflicts_for_merge(src, dest),
-                "diffs": diffs.three_dot_diffs(from_commit=dest, to_commit=src),
+                "diffs": diffs.three_dot_diffs(from_commit=dest.hash, to_commit=src.hash),
             },
         )
 
