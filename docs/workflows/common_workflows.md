@@ -1,7 +1,7 @@
 # Common Workflows
 
-This section covers some common workflows. Some of this info is covered in the [design.md](../design.md) file at a higher level.
-The intent of this section is to cover common workflows in a bit more detail.
+This section covers some common workflows. 
+It is recommended to review the [version control operations](../version-control-operations.md) section prior to this section.
 
 ## Proposing Data Changes
 
@@ -53,13 +53,15 @@ The diffs page contains:
 
 
 
-In the detailed diffs section, there is a **Diff Type** column; this column contains a badge with the type of change (added/changed/deleted).
+In the detailed diffs section, there is a **Diff Type** column; this column contains a badge with the type of change (*added/changed/deleted*).
 
-Clicking on a specific badge for a change takes you to the specific diff.
+Clicking on the **Diff Type** badge for a specific change takes you to the specific change for that diff.
+
+The example below shows that the `bkk-leaf-08` status changed from `Active` to `Decommissioning` in that diff:
 
 ![](../images/diff-info-from-pr-detail-page.png)
 
-Use this screen to review/confirm your changes prior to submitting a pull request to merge the changes into the main (production) branch.
+Use the *diffs* page to review/confirm your changes prior to submitting a pull request (PR) to merge the changes into the main (production) branch.
 
 ![](../images/diffs-from-starting-branch.png)
 
@@ -68,10 +70,11 @@ Use this screen to review/confirm your changes prior to submitting a pull reques
 To view commits in a given branch:
 * While the given branch is active, navigate to *Version Control --> Commits* 
   * This will show a list of the commits in the active branch
-  * Clicking on a given commit will take you to a screen with the commit diffs
-  * Once on the *diffs* screen, clicking on a given `Diff Type` will take you to the specific change that triggered the commit
+  1. Clicking on a given commit will take you to a screen with the commit diffs
+  2. Clicking on the badge for a diff in the **Diff Type** column will take you to the change for that diff   
+  3. Once on the *diffs* screen, clicking on a given `Diff Type` will take you to the specific change that triggered the commit
 
-![](../images/diffs-and-commits.png)
+![](../images/commit-diff-change.png)
 
 ## The Pull Request (PR) Process
 
@@ -89,7 +92,7 @@ Once on the *Add a new pull request* screen, fill out the requested details and 
 
 ### The Pull Request (PR) Detail View
 
-Creating the PR will take you to the PR detail page, which has 4 tabs, [explained here](../design.md#pull-request-view).
+Creating the PR will take you to the PR detail page, which has 4 tabs, [explained here](../version-control-operations.md#pull-request-view).
 
 ### Reviewing a PR 
 Ideally, a different user would review the PR prior to merging the changes into to main branch. 
@@ -103,13 +106,10 @@ This will take you to the pull requests list page; once there:
 
 ![](../images/pr-list-page.png)
 
-Part of the review process can be reverting commits, which is covered [here](../design.md#commits)
 
 ## Reverting Commits
 
-At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse.  
-
-View how to revert commits [here](../database-git-like-operations.md#reverting-a-commit).
+At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse. View how to revert commits [here](../version-control-operations.md#reverting-a-commit).
 
 
 
