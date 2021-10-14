@@ -44,6 +44,8 @@ Make changes to the data as necessary in that branch.
 
 To review changes in your branch (compared to the starting branch): *Version Control --> Diffs*.
 
+Use the *diffs* page to review/confirm your changes prior to submitting a pull request (PR) to merge the changes into the main (production) branch.
+
 The diffs page contains:
 1. A panel on the left hand side with meta data about the PR
 2. A panel on the right hand side with a diff summary for the PR
@@ -51,7 +53,7 @@ The diffs page contains:
   * Clicking on a section of the diff summary will take you to the detailed changes for that section
 3. The detailed diffs, organized by sections (Device, Circuit, Console port, Interface, Power port)
 
-
+![](../images/diffs-from-starting-branch.png)
 
 In the detailed diffs section, there is a **Diff Type** column; this column contains a badge with the type of change (*added/changed/deleted*).
 
@@ -61,20 +63,12 @@ The example below shows that the `bkk-leaf-08` status changed from `Active` to `
 
 ![](../images/diff-info-from-pr-detail-page.png)
 
-Use the *diffs* page to review/confirm your changes prior to submitting a pull request (PR) to merge the changes into the main (production) branch.
-
-![](../images/diffs-from-starting-branch.png)
 
 ### Viewing Branch Commits
 
 To view commits in a given branch, [activate the branch](../version-control-operations.md#switching-branches) with the commits you are interested in. 
 
-While the given branch is active, navigate to *Version Control --> Commits*:
-  1. Clicking on a given commit will take you to a screen with the commit diffs
-  2. Clicking on the badge for a diff in the **Diff Type** column will take you to the change for that diff   
-  3. Once on the *diffs* screen, clicking on a given `Diff Type` will take you to the specific change that triggered the commit
-
-![](../images/commit-diff-change.png)
+See the [Commits documentation](../version-control-operations.md#commits) to learn how to view commits in the selected branch. 
 
 ## The Pull Request (PR) Process
 

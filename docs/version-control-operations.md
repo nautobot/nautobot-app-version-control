@@ -27,7 +27,7 @@ The selected branch will then become active.
 
 ## Commits
 
-A Dolt commit is made for every modification to the data model: each time the user clicks on a `Create`, `Update`, or `Delete` button, that triggers a commit.
+A Dolt commit is made for every modification to the data model: each time the user clicks on a `Create`, `Update`, or `Delete` button, it triggers a request that writes to the database.  
 Each request that writes to the database triggers a commit to be written. 
 The result is a granular change log tracking the history of changes made.
 
@@ -69,6 +69,8 @@ The recommended workflow for the Version Control plugin is to make all changes o
 
 ### Pull Request View
 
+Once a Pull Request (PR) is created, users can access the pull request info by navigating to *Version Control --> Pull Requests* and selecting the pull request of interest.
+
 The primary Pull Request view has four sub views:
 * The “Diffs” tab displays a diff summary, metadata about the PR, and a list of all the diffs between the current branch and the starting branch
 * In the “Commits” tab there is a list of each commit in the PR
@@ -103,7 +105,7 @@ When a PR's status is set to *Approved*, a *Merge* button will appear on the PR 
 
 ![approved pr](images/approved_pr.png)
 
-Selecting "merge" from the pull request view will navigate the user to a confirmation page:
+Selecting *Merge* from the pull request view will navigate the user to a confirmation page:
 
 ![confirm pull request merge](images/confirm-pull-request-merge.png)
 
