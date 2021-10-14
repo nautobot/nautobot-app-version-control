@@ -89,17 +89,28 @@ Once on the *Add a new pull request* screen, fill out the requested details and 
 Creating the PR will take you to the PR detail page, which has 4 tabs, [explained here](../version-control-operations.md#pull-request-view).
 
 ### Reviewing a PR 
+
 Ideally, a different user would review the PR prior to merging the changes into to main branch. 
 
 To review a PR, go to *Version Control --> Pull Requests*.
 
 This will take you to the pull requests list page; once there:
-* Determine which PR you want to review
-* Switch the active branch to that of the PR source branch (this is necessary if you wish to revert any changes in the PR)
+* Determine which PR you want to review and its source branch
+* [Switch the active branch](../version-control-operations.md#switching-branches) to that of the PR source branch (this is necessary if you wish to revert any changes in the PR)
 * Navigate back to the PR list page and click on the desired PR
 
 ![](../images/pr-list-page.png)
 
+Once you have reviewed changes proposed in the PR, click on the *Reviews* tab to start a review discussion. 
+Here, you can start a conversation around the PR, including any questions or comments on the changes.
+
+![](../images/start-pr-review.png)
+
+Each review can be a *Comment*, *Approval*, or *Blocked* operation. 
+Once the PR is moved to *Approved* status, a *Merge* button appears, allowing the reviewer to merge the changes into the destination branch.
+For more information on merges, see version control operations [section on merges](../version-control-operations.md#merges).
+
+![](../images/pr-review-conversation.png)
 
 ## Reverting Commits
 
