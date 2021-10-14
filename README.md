@@ -2,6 +2,12 @@
 
 This is a work in progress and NOT officially released or supported.
 
+## Documentation
+
+Read the docs for [version control operations](docs/version-control-operations.md) and [common workflows](docs/workflows/common_workflows.md).
+
+The [design](docs/design.md) documents describe the considerations and architecture for this app.
+
 ## Local Dev & Test Environment
 
 A local environment based on Docker Compose is available for development and testing as well as a sample dataset to help get started faster with Nautobot & Dolt integration.
