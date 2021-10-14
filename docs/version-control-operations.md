@@ -23,6 +23,8 @@ To activate a different branch:
 
 ![activate a branch](images/activate-branch.png)
 
+The selected branch will then become active.
+
 ## Commits
 
 A Dolt commit is made for every modification to the data model: each time the user clicks on a `Create`, `Update`, or `Delete` button, that triggers a commit.
