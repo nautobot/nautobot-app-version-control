@@ -53,6 +53,8 @@ def db_for_commit(commit):
     e.g. "nautobot/3a5mqdgao8029bf8ji0huobbskq1n1l5"
     """
     cm_hash = str(commit)
+    if len(cm_hash) != 32:
+        raise Exception("commit hash length is incorrect")
     db = deepcopy(connections.databases["default"])
     db["id"] = cm_hash
     db["NAME"] = f"{DB_NAME}/{cm_hash}"
