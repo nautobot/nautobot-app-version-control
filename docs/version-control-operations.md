@@ -1,4 +1,4 @@
-# Version Control Git-like Operations
+# Version Control Operations
 
 This section describes common git-like operations that the Version Control app enables on the Nautobot database.
 It is recommended to read these prior to reading the [common workflows](workflows/common_workflows.md) section.
