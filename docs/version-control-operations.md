@@ -13,6 +13,16 @@ New branches are created by specifying a starting branch to start from.
 ![create branch form](images/create-branch-form.png)
 
 
+### Switching Branches
+
+Users can switch between branches by activating a different branch. 
+
+To activate a different branch:
+1. Navigate to *Version Control --> Branches*
+2. Select the branch of interest and click on `Activate`
+
+![activate a branch](images/activate-branch.png)
+
 ## Commits
 
 A Dolt commit is made for every modification to the data model: each time the user clicks on a `Create`, `Update`, or `Delete` button, that triggers a commit.

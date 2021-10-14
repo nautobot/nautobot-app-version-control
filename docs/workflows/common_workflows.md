@@ -67,9 +67,9 @@ Use the *diffs* page to review/confirm your changes prior to submitting a pull r
 
 ### Viewing Branch Commits
 
-To view commits in a given branch:
-* While the given branch is active, navigate to *Version Control --> Commits* 
-  * This will show a list of the commits in the active branch
+To view commits in a given branch, [activate the branch](../version-control-operations.md#switching-branches) with the commits you are interested in. 
+
+While the given branch is active, navigate to *Version Control --> Commits*:
   1. Clicking on a given commit will take you to a screen with the commit diffs
   2. Clicking on the badge for a diff in the **Diff Type** column will take you to the change for that diff   
   3. Once on the *diffs* screen, clicking on a given `Diff Type` will take you to the specific change that triggered the commit
