@@ -10,7 +10,7 @@ The [design](docs/design.md) documents describe the considerations and architect
 
 ## Installation
 
-The current Nautobot installation MUST be running a [MySQL](https://nautobot.readthedocs.io/en/latest/installation/#mysql) database.
+The current Nautobot installation MUST be running a Dolt database.
 
 The version control app can be installed with pip:
 
