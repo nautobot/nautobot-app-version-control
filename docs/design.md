@@ -126,7 +126,7 @@ pprint(response.json())
 
 ## Commit Logic
 
-The committing logic is implemented using a combination of middleware and [Django signals](https://docs.djangoproject.com/en/3.2/topics/signals/),
+The committing logic is implemented using a combination of middleware and [Django signals](https://docs.djangoproject.com/en/stable/topics/signals/),
 specifically [DoltAutoCommitMiddleWare](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L118). 
 DoltAutoCommitMiddleWare wraps every server request in a [AutoDoltCommit](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L134)
 context manager which listens for and responds to database writes made while processing the request. 
