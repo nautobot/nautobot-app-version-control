@@ -29,20 +29,18 @@ All database writes create a commit.
 ### Requesting Info From A Branch
 
 All requests served through the web interface or API fetch data from a specific database branch. 
-The choice of branch is encoded in the request by the client:
-
+The choice of branch is encoded in the request by the client: 
 * For web requests, the branch state is stored in a cookie using Django cookie sessions
 * For API requests, the branch state is encoded in a request header
 
 When the server receives a request, it looks for this state and uses it to select the correct database branch to serve the request: 
-
 * If the requested branch cannot be found or if the requested branch does not exist, the main branch is used.
 * In the web interface, a banner is displayed to notify the user of their “active” branch
 
 ![active branch banner](images/active-branch-banner.png)
 
 The business logic to handle branch selection is performed in [middleware](https://docs.djangoproject.com/en/stable/topics/http/middleware/), 
-specifically in [`dolt.middleware.DoltBranchMiddleware`](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L36) 
+specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L36) 
 
 ### Database Versioning
 
@@ -128,11 +126,11 @@ pprint(response.json())
 
 ## Commit Logic
 
-The committing logic is implemented using a combination of middleware and [Django signals](https://docs.djangoproject.com/en/3.2/topics/signals/),
-specifically [`dolt.middleware.DoltAutoCommitMiddleWare`](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L118). 
-`DoltAutoCommitMiddleWare` wraps every server request in a [`dolt.middleware.AutoDoltCommit`](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L134)
+The committing logic is implemented using a combination of middleware and [Django signals](https://docs.djangoproject.com/en/stable/topics/signals/),
+specifically [DoltAutoCommitMiddleWare](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L118). 
+DoltAutoCommitMiddleWare wraps every server request in a [AutoDoltCommit](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L134)
 context manager which listens for and responds to database writes made while processing the request. 
-`AutoDoltCommit` listens for signals fired by Django model updates and makes a Dolt commit if updates were made during the lifetime of the context manager. 
+AutoDoltCommit listens for signals fired by Django model updates and makes a Dolt commit if updates were made during the lifetime of the context manager. 
 The message for the commit is derived from the model signals that were captured.
 
 ## DoltSystemTables
@@ -173,12 +171,10 @@ This is especially important for models that affect permissions and authenticati
 ### Model Behavior
 
 Versioned and non-versioned models have different behavior when working on a non-main feature branch: 
-
 * Versioned models will be read from the tip of the feature branch
 * Versioned models can also be edited on a feature branch, and the edits will be versioned in commits 
 
 Non-versioned models:
-
 * Cannot be edited on feature branches, they must only be edited on the main branch 
 * Will always be read from the tip of the main branch, rather than from a feature branch, regardless of what branch is specified in a request
 * Can’t have multiple versions: there is always a single version which is read-from, and edited on main.
