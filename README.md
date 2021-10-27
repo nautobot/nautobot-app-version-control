@@ -18,18 +18,18 @@ The version control app can be installed with pip:
 pip3 install git+https://github.com/nautobot/nautobot-plugin-version-control
 ```
 
-> The plugin is compatible with Nautobot 1.1.0 and higher
+> The app is compatible with Nautobot 1.1.0 and higher
 
 To ensure the version control app is automatically re-installed during future upgrades, create a file named `local_requirements.txt` (if not already existing) in the Nautobot root directory (alongside `requirements.txt`) and list the `nautobot-plugin-version-control` package:
 
 ```no-highlight
-# echo nautobot-plugin-version-control >> local_requirements.txt
+echo nautobot-plugin-version-control >> local_requirements.txt
 ```
 
-Once installed, the plugin needs to be enabled in your `nautobot_configuration.py`
+Once installed, the plugin needs to be enabled in your `nautobot_config.py`
 
 ```python
-# In your nautobot_configuration.py
+# In your nautobot_config.py
 PLUGINS = [ "nautobot_plugin_version_control" ]
 ```
 

@@ -30,6 +30,7 @@ Once the branch is created:
 ### Making Changes To The Data
 
 Any changes to data in Nautobot will be limited to the active branch. To avoid making changes to production data, ensure a non-main branch is active:
+
 * Create a new branch: upon creation, that branch will become active
 * Switch to an existing non-main branch: *Version Control --> Branches --> 'Activate' a non-main branch*
 
@@ -48,10 +49,13 @@ To review changes in your branch (compared to the starting branch): *Version Con
 Use the *diffs* page to review/confirm your changes prior to submitting a pull request (PR) to merge the changes into the main (production) branch.
 
 The diffs page contains:
+
 1. A panel on the left hand side with meta data about the PR
+   
 2. A panel on the right hand side with a diff summary for the PR
   * The number of adds, changes, and deletions in the PR are highlighted in green, orange, and red, respectively
   * Clicking on a section of the diff summary will take you to the detailed changes for that section
+
 3. The detailed diffs, organized by sections (Device, Circuit, Console port, Interface, Power port)
 
 ![](../images/diffs-from-starting-branch.png)
