@@ -137,7 +137,7 @@ The message for the commit is derived from the model signals that were captured.
 [DoltSystemTable](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/models.py#L22)
 is an abstract base class that forms the basis of Django models that expose Dolt system tables
 to the Object Relational Mapping (ORM). 
-Plugin models such as *Commit* and *Branch* that inherit from DoltSystemTable are [unmanaged](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21),
+Plugin models such as *Commit* and *Branch* that inherit from DoltSystemTable are [unmanaged](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/models.py#L31
 meaning that Django will ignore these models for the purposes of database migrations. 
 This is important because Dolt system tables exist from the time the database is created and cannot be modified or deleted. 
 Internally, Dolt generates system table data on-the-fly rather than reading it from a traditional database index.
