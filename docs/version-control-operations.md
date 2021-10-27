@@ -71,7 +71,8 @@ The recommended workflow for the Version Control plugin is to make all changes o
 
 Once a Pull Request (PR) is created, users can access the pull request info by navigating to *Version Control --> Pull Requests* and selecting the pull request of interest.
 
-The primary Pull Request view has four sub views:
+The primary Pull Request view has four sub-views:
+
 * The “Diffs” tab displays a diff summary, metadata about the PR, and a list of all the diffs between the current branch and the starting branch
 * In the “Commits” tab there is a list of each commit in the PR
 * The “Conflicts” tab shows any problems that would prevent the PR from being merged 
