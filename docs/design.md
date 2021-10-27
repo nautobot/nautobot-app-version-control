@@ -40,7 +40,7 @@ When the server receives a request, it looks for this state and uses it to selec
 ![active branch banner](images/active-branch-banner.png)
 
 The business logic to handle branch selection is performed in [middleware](https://docs.djangoproject.com/en/3.2/topics/http/middleware/), 
-specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/c9f49b8e007ca22afe0d6e3ddb5066e31b37dc64/dolt/middleware.py#L38) 
+specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L36) 
 
 ### Database Versioning
 
