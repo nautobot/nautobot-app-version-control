@@ -14,7 +14,7 @@ The current Nautobot installation MUST be running a Dolt database.
 
 The version control app can be installed with pip:
 
-```shell
+```no-highlight
 pip3 install git+https://github.com/nautobot/nautobot-plugin-version-control
 ```
 
