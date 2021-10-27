@@ -1,4 +1,5 @@
 # Motivation
+
 Nautobot is an open source Network Source of Truth and Network Automation Platform. 
 Nautobot provides a number of features to validate its data model and safeguard network configuration from errors. 
 Adding database versioning with Dolt provides another layer of assurance by enabling human review of changesets and database rollback in the case of errors. 
@@ -18,7 +19,6 @@ Prolly trees allow the database to maintain multiple versions of a database tabl
 Further, each of the nodes is [content-addressable](https://en.wikipedia.org/wiki/Content-addressable_storage), 
 meaning that Dolt can compare different versions of the database using the same performant algorithms that Git uses to compare versions of source files. 
 The result is a relational database that can branch, diff, merge, push and pull.
-
 
 # Version Control Plugin Design
 
@@ -140,6 +140,7 @@ AutoDoltCommit listens for signals fired by Django model updates and makes a Dol
 The message for the commit is derived from the model signals that were captured.
 
 ## DoltSystemTables
+
 [DoltSystemTable](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/models.py#L22)
 is an abstract base class that forms the basis of Django models that expose Dolt system tables
 to the Object Relational Mapping (ORM). 
@@ -149,6 +150,7 @@ This is important because Dolt system tables exist from the time the database is
 Internally, Dolt generates system table data on-the-fly rather than reading it from a traditional database index.
 
 ## BranchMeta
+
 The Branch model is one such "unmanaged" model. 
 It exposes the dolt_branches system table to the ORM. 
 System tables have a static schema, so additional object fields such as "created by" and "source branch" must be stored in another model. 
@@ -158,6 +160,7 @@ However, this relationship is not formalized with a Foreign Key due to limitatio
 Branch objects lookup their associated BranchMeta objects on a best-effort basis.
 
 ## Merge Candidates
+
 The Version Control app prevents Pull Requests from being merged if it will create merge conflicts. 
 In order to determine if merging a Pull Request will cause conflicts, the merge is precomputed when rendering the PR view. 
 The result of pre-computing this merge is called a “merge candidate”. 
@@ -167,6 +170,7 @@ Merge candidates are generated on demand when a PR view is rendered, unless a va
 If the source and destination branch of a PR are unchanged since the merge candidate was computed, it is considered valid.
 
 ## Versioned Models
+
 Within the Nautobot data model, database models are divided into two groups: versioned and non-versioned. 
 Generally speaking, database models that represent a part of the network state will be versioned models (e.g. Devices, IP Addresses, Sites). 
 Database models that are specific to the Nautobot application (e.g. Users, Web Hooks, Permissions) will not be versioned. 
@@ -188,6 +192,7 @@ Non-versioned models:
 * Can’t have multiple versions: there is always a single version which is read-from, and edited on main.
 
 ## Global State Router
+
 The business logic for differentiating versioned and non-versioned models is implemented in a Django [database router](https://docs.djangoproject.com/en/stable/topics/db/multi-db/#automatic-database-routing), 
 specifically the [GlobalStateRouter](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/routers.py#L10). 
 The GlobalStateRouter is responsible for choosing a database connection to read an object from or write an object to, depending on its model class. 

@@ -33,7 +33,6 @@ Once installed, the plugin needs to be enabled in your `nautobot_config.py`
 PLUGINS = [ "nautobot_plugin_version_control" ]
 ```
 
-
 ## Local Dev & Test Environment
 
 A local environment based on Docker Compose is available for development and testing as well as a sample dataset to help get started faster with Nautobot & Dolt integration.
@@ -57,8 +56,9 @@ invoke start
 
 After few min, Nautobot will be available at `http://0.0.0.0:8080` 
 You can connect with either of these 2 accounts:
-- Login `admin` / Password `admin`
-- Login `demo` / Password `nautobot`
+
+* Login `admin` / Password `admin`
+* Login `demo` / Password `nautobot`
 
 Run the following commands to Reset the Local environment and load the sample dataset again
 ```
@@ -70,12 +70,14 @@ invoke start
 ```
 
 ### Start the Local environment with an empty database
+
 ```
 invoke migrate
 invoke start
 ```
+
 After few min, Nautobot will be available at `http://0.0.0.0:8080` 
-You can connect with either of these 2 accounts:
+You can connect with:
 - Login `admin` / Password `admin`
 
 Run the following commands to Reset the Local environment

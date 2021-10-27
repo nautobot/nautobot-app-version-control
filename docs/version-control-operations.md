@@ -111,8 +111,8 @@ Selecting *Merge* from the pull request view will navigate the user to a confirm
 
 ![confirm pull request merge](images/confirm-pull-request-merge.png)
 
-Here the user can inspect the diff before choosing to merge or squash merge the changes.
-Squash merging in Dolt has the same semantic meaning as [`git merge --squash`](https://git-scm.com/docs/git-merge#Documentation/git-merge.txt---squash):
+Here the user can inspect the diff before choosing to *merge* or *squash merge* the changes.
+*Squash merging* in Dolt has the same semantic meaning as [`git merge --squash`](https://git-scm.com/docs/git-merge#Documentation/git-merge.txt---squash):
 the history of the source branch is compacted into a single commit
 
 ### *Catching Up* A Branch

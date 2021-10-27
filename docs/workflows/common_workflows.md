@@ -53,6 +53,7 @@ The diffs page contains:
 1. A panel on the left hand side with meta data about the PR
    
 2. A panel on the right hand side with a diff summary for the PR
+
   * The number of adds, changes, and deletions in the PR are highlighted in green, orange, and red, respectively
   * Clicking on a section of the diff summary will take you to the detailed changes for that section
 
@@ -100,6 +101,7 @@ Ideally, a different user would review the PR prior to merging the changes into 
 To review a PR, go to *Version Control --> Pull Requests*.
 
 This will take you to the pull requests list page; once there:
+
 * Determine which PR you want to review and its source branch
 * [Switch the active branch](../version-control-operations.md#switching-branches) to that of the PR source branch (this is necessary if you wish to revert any changes in the PR)
 * Navigate back to the PR list page and click on the desired PR
@@ -119,7 +121,8 @@ For more information on merges, see version control operations [section on merge
 
 ## Reverting Commits
 
-At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse. View how to revert commits [here](../version-control-operations.md#reverting-a-commit).
+At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse. 
+View how to revert commits [here](../version-control-operations.md#reverting-a-commit).
 
 
 
