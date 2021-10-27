@@ -2,6 +2,42 @@
 
 This is a work in progress and NOT officially released or supported.
 
+## Documentation
+
+Read the docs for [version control operations](docs/version-control-operations.md) and [common workflows](docs/workflows/common_workflows.md).
+
+The [design](docs/design.md) documents describe the considerations and architecture for this app.
+
+## Installation Considerations
+
+There are some special considerations for running the Version Control app:
+
+* The Nautobot installation MUST be running a Dolt database
+* There are some [additional configurations](##configuring-nautobot-to-use-version-control) required in `nautobot_config.py`
+
+
+The version control app can be installed with pip3:
+
+```no-highlight
+pip3 install git+https://github.com/nautobot/nautobot-plugin-version-control
+```
+
+> The app is compatible with Nautobot 1.1.0 and higher
+
+To ensure the version control app is automatically re-installed during future upgrades, create a file named `local_requirements.txt` (if not already existing) in the Nautobot root directory (alongside `requirements.txt`) and list the `nautobot-plugin-version-control` package:
+
+```no-highlight
+echo nautobot-plugin-version-control >> local_requirements.txt
+```
+
+Once installed, the plugin needs to be enabled in your `nautobot_config.py`
+
+```python
+# In your nautobot_config.py
+PLUGINS = [ "nautobot_plugin_version_control" ]
+```
+
+
 ## Configuring Nautobot to use Version Control
 
 Add this to your `nautobot_config.py`:
@@ -31,37 +67,6 @@ DATABASE_ROUTERS = ["dolt.routers.GlobalStateRouter"]
 ```
 
 Note that any time you need to perform database migrations (such as when upgrading Nautobot or Dolt) you **absolutely must comment out/disable `DATABASE_ROUTERS` from your `nautobot_config.py`** or you will encounter errors.
-
-## Documentation
-
-Read the docs for [version control operations](docs/version-control-operations.md) and [common workflows](docs/workflows/common_workflows.md).
-
-The [design](docs/design.md) documents describe the considerations and architecture for this app.
-
-## Installation
-
-The current Nautobot installation MUST be running a Dolt database.
-
-The version control app can be installed with pip:
-
-```no-highlight
-pip3 install git+https://github.com/nautobot/nautobot-plugin-version-control
-```
-
-> The app is compatible with Nautobot 1.1.0 and higher
-
-To ensure the version control app is automatically re-installed during future upgrades, create a file named `local_requirements.txt` (if not already existing) in the Nautobot root directory (alongside `requirements.txt`) and list the `nautobot-plugin-version-control` package:
-
-```no-highlight
-echo nautobot-plugin-version-control >> local_requirements.txt
-```
-
-Once installed, the plugin needs to be enabled in your `nautobot_config.py`
-
-```python
-# In your nautobot_config.py
-PLUGINS = [ "nautobot_plugin_version_control" ]
-```
 
 ## Local Dev & Test Environment
 
