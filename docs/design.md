@@ -177,7 +177,7 @@ Versioned and non-versioned models have different behavior when working on a non
 
 Non-versioned models:
 
-* Cannot be edited on feature branches, they must only be edited on the main branch 
+* Cannot be edited on feature branches, they can only be edited on the main branch 
 * Will always be read from the tip of the main branch, rather than from a feature branch, regardless of what branch is specified in a request
 * Can’t have multiple versions: there is always a single version which is read-from, and edited on main.
 

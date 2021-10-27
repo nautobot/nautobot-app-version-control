@@ -1,6 +1,6 @@
 # Version Control Operations
 
-This section describes common git-like operations that the Version Control app enables on the Nautobot database.
+This section describes common Git-like operations that the Version Control app enables on the Nautobot database.
 It is recommended to read these prior to reading the [common workflows](workflows/common_workflows.md) section.
 
 ## Branches  
@@ -18,6 +18,7 @@ New branches are created by specifying a starting branch to start from.
 Users can switch between branches by activating a different branch. 
 
 To activate a different branch:
+
 1. Navigate to *Version Control --> Branches*
 2. Select the branch of interest and click on `Activate`
 
@@ -39,7 +40,7 @@ Each commit can be individually inspected to see a diff view: a summary of the c
 
 You can inspect the specific changes in a diff by clicking the `Diff Type` badge for a given diff. The example above shows 
 that you can click the `changed` badge for the diff and view the actual data change. 
-This example shows that the device *status* was changed from `Active` to `Decommisioning`:
+This example shows that the device *status* was changed from `Active` to `Decommissioning`:
 
 ![diffs in a commit](images/inspecting-a-diff-change.png)
 
@@ -65,7 +66,7 @@ Specifically if the reversion causes a foreign key or unique key violation in th
 
 Changes from different branches can be combined using Pull Requests (PRs). 
 A successful PR will result in merging the source branch into the destination branch. 
-The recommended workflow for the Version Control plugin is to make all changes on a non-production branch and merge the change to the main branch only after it undergoes human review.
+The recommended workflow for the Version Control app is to make all changes on a non-production branch and merge the change to the main branch only after it undergoes human review.
 
 ### Pull Request View
 
