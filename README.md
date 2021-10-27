@@ -13,7 +13,7 @@ The [design](docs/design.md) documents describe the considerations and architect
 There are some special considerations for running the Version Control app:
 
 * The Nautobot installation MUST be running a Dolt database
-* There are some [additional configurations](##configuring-nautobot-to-use-version-control) required in `nautobot_config.py`
+* There are some [additional configurations](#configuring-nautobot-to-use-version-control) required in `nautobot_config.py`
 
 
 The version control app can be installed with pip3:
