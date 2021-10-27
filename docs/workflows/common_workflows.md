@@ -20,6 +20,7 @@ Fill out the form, filling in the Name and selecting the starting branch (defaul
 Click the *Create* button.
 
 Once the branch is created:
+
 * You will be taken to the detail view for the branch
 * A banner will appear, notifying you that the branch was created
 * A second banner will appear, showing that the newly created branch is now the active branch
