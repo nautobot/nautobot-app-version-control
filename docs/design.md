@@ -128,7 +128,7 @@ pprint(response.json())
 
 The committing logic is implemented using a combination of middleware and [Django signals](https://docs.djangoproject.com/en/3.2/topics/signals/),
 specifically [DoltAutoCommitMiddleWare](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L118). 
-DoltAutoCommitMiddleWare wraps every server request in a [AutoDoltCommit](https://github.com/nautobot/nautobot-plugin-version-control/blob/c2f0bbd1680ee46c61bb22a3df5a6c5c1bcbe41a/dolt/middleware.py#L124)
+DoltAutoCommitMiddleWare wraps every server request in a [AutoDoltCommit](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L134)
 context manager which listens for and responds to database writes made while processing the request. 
 AutoDoltCommit listens for signals fired by Django model updates and makes a Dolt commit if updates were made during the lifetime of the context manager. 
 The message for the commit is derived from the model signals that were captured.
