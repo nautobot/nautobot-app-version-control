@@ -5,7 +5,7 @@ It is recommended to read these prior to reading the [common workflows](workflow
 
 ## Branches  
 
-When Nautobot is initialized with the version control app, the database has a single branch “main”. 
+When Nautobot is initialized with the Version Control app, the database has a single branch “main”. 
 The main branch represents the state of the production data model.
 Main also has a special status in that it cannot be deleted. 
 New branches are created by specifying a starting branch to start from.
