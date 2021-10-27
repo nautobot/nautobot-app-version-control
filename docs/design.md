@@ -22,11 +22,17 @@ The result is a relational database that can branch, diff, merge, push and pull.
 
 # Version Control Plugin Design
 
-The core features of the Version Control app are commits and branches. 
-All database reads and writes happen on a branch. 
-All database writes create a commit.
+The core features of the Version Control app are *commits* and *branches*. 
+All database *reads* and *writes* happen on a branch. 
+All database *writes* create a commit.
 
-### Requesting Info From A Branch
+## Branches  
+
+When Nautobot is initialized with the version control app, the database has a single branch “main”. 
+The main branch represents the state of the production data model.
+Main also has a special status in that it cannot be deleted.
+
+## Requesting Info From A Branch
 
 All requests served through the web interface or API fetch data from a specific database branch. 
 The choice of branch is encoded in the request by the client: 
@@ -42,7 +48,7 @@ When the server receives a request, it looks for this state and uses it to selec
 The business logic to handle branch selection is performed in [middleware](https://docs.djangoproject.com/en/stable/topics/http/middleware/), 
 specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L36) 
 
-### Database Versioning
+## Database Versioning
 
 Database versioning happens on a per-connection basis. Each connection will read from a specific branch. 
 Database connections outside of the web server, such as through nbshell are also versioned. 
