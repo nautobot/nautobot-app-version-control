@@ -24,7 +24,7 @@ services:
     <<: *nautobot-build
     <<: *nautobot-base
   worker:
-    entrypoint: "nautobot-server rqworker"
+    entrypoint: "sh -c 'nautobot-server celery worker -l $$NAUTOBOT_LOG_LEVEL'"
     depends_on:
       - "nautobot"
     healthcheck:
