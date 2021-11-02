@@ -119,6 +119,26 @@ For more information on merges, see version control operations [section on merge
 
 ![](../images/pr-review-conversation.png)
 
+### Resolving Conflicts
+
+Should a conflict arise when a PR is created, you will see an indication on the `Conflicts` tab:
+
+![](../images/pr-with-conflict.png)
+
+Should a conflict come up, you can do the following:
+
+* Note the object(s) with the conflict(s) (`cdg-leaf-08` in this example) and go to the `Commits` tab on the PR
+* Search for the object with the conflict (`cdg-leaf-08` in this example)
+  
+![](../images/find-commit-w-conflict.png)
+
+* Right-click on the commit (open in new tab) to view the diff --> click on the `Diff Type` badge to view the specific change
+
+![](../images/view-conflict.png)
+
+At this point you can either [revert the specific commit](../version-control-operations.md#reverting-a-commit) in your PR or modify the other branch with the conflict (the `main` branch in this example).
+
+
 ## Reverting Commits
 
 At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse. 
