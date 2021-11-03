@@ -119,7 +119,7 @@ def diff_summary_for_table(table, from_commit, to_commit):
         cursor.execute(
             f"""SELECT diff_type, count(diff_type) FROM dolt_commit_diff_{table}
                 WHERE to_commit = %s AND from_commit = %s
-                GROUP BY diff_type ORDER BY diff_type""",
+                GROUP BY diff_type ORDER BY diff_type""",  # nosec
             (to_commit, from_commit),
         )
         for pair in cursor.fetchall():
