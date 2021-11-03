@@ -1,9 +1,13 @@
 [tool.poetry]
-name = "dolt"
+name = "nautobot-version-control"
 version = "0.1.0"
-description = ""
+description = "Nautobot Version Control"
 authors = ["Andy Arthur <andy@dolthub.com>"]
 license = "LICENSE.txt"
+
+packages = [
+    { include = "dolt" },
+]
 
 [tool.poetry.dependencies]
 python = "^3.6"
@@ -52,12 +56,22 @@ load-plugins="pylint_django"
 # No docstrings required for private methods (Pylint default), or for test_ functions, or for inner Meta classes.
 no-docstring-rgx="^(_|test_|Meta$)"
 
+# Allow single letter variable names
+good-names="i,j,k,pk,x,y,v,c,mc,rt,e,id,db,m,pr,b,f,kw,ct,fn"
+
 [tool.pylint.messages_control]
 # Line length is enforced by Black, so pylint doesn't need to check it.
 # Pylint and Black disagree about how to format multi-line arrays; Black wins.
 disable = """,
     line-too-long,
     bad-continuation,
+    W0603,
+    W0703,
+    R0903,
+    R0901,
+    R0201,
+    R1705,
+    R0801
     """
 
 [tool.pylint.miscellaneous]

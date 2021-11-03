@@ -1,13 +1,13 @@
+"""middleware.py contains the middleware add-ons needed for the dolt plugin to work."""
+
+import random
+
 from django.contrib import messages
-from django.contrib.contenttypes.models import ContentType
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import connection
 from django.db.models.signals import m2m_changed, post_save, pre_delete
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.utils.safestring import mark_safe
-
-from health_check.db.models import TestModel
 
 from nautobot.extras.models.change_logging import ObjectChange
 
@@ -15,15 +15,13 @@ from dolt.constants import (
     DOLT_BRANCH_KEYWORD,
     DOLT_DEFAULT_BRANCH,
 )
-from dolt.models import Branch, Commit, PullRequest, PullRequestReview
-from dolt.utils import DoltError, is_dolt_model, active_branch
-
-import random
+from dolt.models import Branch, Commit
+from dolt.utils import DoltError, active_branch
 
 
 def dolt_health_check_intercept_middleware(get_response):
     """
-    Intercept health check calls and disregard
+    Intercept health check calls and disregard.
     TODO: fix health-check and remove
     """
 
@@ -36,21 +34,28 @@ def dolt_health_check_intercept_middleware(get_response):
 
 
 class DoltBranchMiddleware:
+    """DoltBranchMiddleware keeps track of which branch the dolt database is on."""
+
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        """Override __call__."""
         return self.get_response(request)
 
-    def process_view(self, request, view_func, view_args, view_kwargs):
+    def process_view(self, request, view_func, view_args, view_kwargs):  # pylint: disable=R0201
+        """
+        process_view maintains the dolt branch session cookie and verifies authentication. It then returns the
+        view that needs to be rendered.
+        """
         # Check whether the desired branch was passed in as a querystring
-        queryStringBranch = request.GET.get(DOLT_BRANCH_KEYWORD, None)
-        if queryStringBranch is not None:
+        query_string_branch = request.GET.get(DOLT_BRANCH_KEYWORD, None)
+        if query_string_branch is not None:
             # update the session Cookie
-            request.session[DOLT_BRANCH_KEYWORD] = queryStringBranch
+            request.session[DOLT_BRANCH_KEYWORD] = query_string_branch
             return redirect(request.path)
 
-        branch = self.get_branch(request)
+        branch = DoltBranchMiddleware.get_branch(request)
         try:
             branch.checkout()
         except Exception as e:
@@ -60,7 +65,7 @@ class DoltBranchMiddleware:
         if request.user.is_authenticated:
             # Inject the "active branch" banner. Use a random number for the button id to ensure button listeners do not
             # clash. This is safe since it is JS generated on our end and should not be modifiable by any XSS attack.
-            msg = self.get_active_branch_banner(
+            msg = DoltBranchMiddleware.get_active_branch_banner(
                 random.randint(0, 10000)  # nosec random is not being used for security purposes.
             )
             messages.info(request, mark_safe(msg))
@@ -71,7 +76,9 @@ class DoltBranchMiddleware:
             messages.error(request, mark_safe(e))
             return redirect(request.path)
 
-    def get_branch(self, request):
+    @staticmethod
+    def get_branch(request):
+        """get_branch returns the Branch object of the branch stored in the session cookie."""
         # lookup the active branch in the session cookie
         requested = branch_from_request(request)
         try:
@@ -84,49 +91,53 @@ class DoltBranchMiddleware:
             request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
 
-    def get_active_branch_banner(self, id):
+    @staticmethod
+    def get_active_branch_banner(b_id):
+        """get_active_branch_banner returns a banner that renders the active branch and its share button."""
         return f"""
                     <div class="text-center">
                         Active Branch: {active_branch()}
                         <div class = "pull-right">
-                            <div class="btn btn-xs btn-primary" id="share-button-{id}">
+                            <div class="btn btn-xs btn-primary" id="share-button-{b_id}">
                                 Share
                             </div>
                         </div>
                     </div>
-                    <script> 
-                        const btn{id} = document.getElementById("share-button-{id}");
-                        btn{id}.addEventListener('click', ()=>{{
+                    <script>
+                        const btn{b_id} = document.getElementById("share-button-{b_id}");
+                        btn{b_id}.addEventListener('click', ()=>{{
                             const currLink = window.location.href;
                             const copiedLink = currLink + "?{DOLT_BRANCH_KEYWORD}={active_branch()}";
                             navigator.clipboard.writeText(copiedLink);
-                            btn{id}.textContent = "Copied!"
+                            btn{b_id}.textContent = "Copied!"
                         }});
                     </script>
                 """
 
 
-class DoltAutoCommitMiddleware(object):
+class DoltAutoCommitMiddleware:
     """
-    adapted from nautobot.extras.middleware.ObjectChangeMiddleware
+    DoltAutoCommitMiddleware calls the AutoDoltCommit class on a request.
+    - adapted from nautobot.extras.middleware.ObjectChangeMiddleware.
     """
 
     def __init__(self, get_response):
         self.get_response = get_response
 
     def __call__(self, request):
+        """Override call."""
         # Process the request with auto-dolt-commit enabled
-        branch = branch_from_request(request)
-        with AutoDoltCommit(request, branch):
+        with AutoDoltCommit(request):
             return self.get_response(request)
 
 
-class AutoDoltCommit(object):
+class AutoDoltCommit:
     """
-    adapted from `nautobot.extras.context_managers`
+    AutoDoltCommit handles automatic dolt commits on the case than objects is created or deleted.
+    - adapted from `nautobot.extras.context_managers`.
     """
 
-    def __init__(self, request, branch):
+    def __init__(self, request):
         self.request = request
         self.commit = False
         self.changes_for_db = {}
@@ -137,7 +148,7 @@ class AutoDoltCommit(object):
         m2m_changed.connect(self._handle_update, dispatch_uid="dolt_commit_update")
         pre_delete.connect(self._handle_delete, dispatch_uid="dolt_commit_delete")
 
-    def __exit__(self, type, value, traceback):
+    def __exit__(self, type, value, traceback):  # pylint: disable=W0622
         if self.commit:
             self.make_commits()
 
@@ -147,11 +158,9 @@ class AutoDoltCommit(object):
         m2m_changed.disconnect(self._handle_update, dispatch_uid="dolt_commit_update")
         pre_delete.disconnect(self._handle_delete, dispatch_uid="dolt_commit_delete")
 
-    def _handle_update(self, sender, instance, **kwargs):
-        """
-        Fires when an object is created or updated.
-        """
-        if type(instance) == ObjectChange:
+    def _handle_update(self, sender, instance, **kwargs):  # pylint: disable=W0613
+        """Fires when an object is created or updated."""
+        if isinstance(instance, ObjectChange):
             # ignore ObjectChange instances
             return
 
@@ -159,11 +168,9 @@ class AutoDoltCommit(object):
         self.collect_change(instance, msg)
         self.commit = True
 
-    def _handle_delete(self, sender, instance, **kwargs):
-        """
-        Fires when an object is deleted.
-        """
-        if type(instance) == ObjectChange:
+    def _handle_delete(self, sender, instance, **kwargs):  # pylint: disable=W0613
+        """Fires when an object is deleted."""
+        if isinstance(instance, ObjectChange):
             # ignore ObjectChange instances
             return
 
@@ -172,6 +179,7 @@ class AutoDoltCommit(object):
         self.commit = True
 
     def make_commits(self):
+        """make_commits creates and saves a Commit object."""
         for db, msgs in self.changes_for_db.items():
             msg = "; ".join(msgs)
             Commit(message=msg).save(
@@ -180,6 +188,7 @@ class AutoDoltCommit(object):
             )
 
     def collect_change(self, instance, msg):
+        """collect_change stores changes messages for each db."""
         db = self.database_from_instance(instance)
         if db not in self.changes_for_db:
             self.changes_for_db[db] = []
@@ -187,26 +196,28 @@ class AutoDoltCommit(object):
 
     @staticmethod
     def database_from_instance(instance):
-        return instance._state.db
+        """database_from_instance returns a database from an instance type."""
+        return instance._state.db  # pylint: disable=W0212
 
     @staticmethod
     def change_msg_for_update(instance, kwargs):
-        """
-        Generates a commit message for create or update.
-        """
+        """Generates a commit message for create or update."""
         created = "created" in kwargs and kwargs["created"]
         verb = "Created" if created else "Updated"
         return f"""{verb} {instance._meta.verbose_name} "{instance}" """
 
     @staticmethod
     def change_msg_for_delete(instance):
-        """
-        Generates a commit message for delete
-        """
+        """Generates a commit message for delete."""
         return f"""Deleted {instance._meta.verbose_name} "{instance}" """
 
 
 def branch_from_request(request):
+    """
+    Returns the active branch from a request
+    :param request: A django request
+    :return: Branch name
+    """
     if DOLT_BRANCH_KEYWORD in request.session:
         return request.session.get(DOLT_BRANCH_KEYWORD)
     if DOLT_BRANCH_KEYWORD in request.headers:

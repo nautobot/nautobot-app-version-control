@@ -1,3 +1,5 @@
+""" This is the main module that contains the code for the Dolt backed Version Control plugin. """
+
 from django.db.models.signals import pre_migrate, post_migrate
 
 from nautobot.extras.plugins import PluginConfig
@@ -8,6 +10,8 @@ from dolt.migrations import auto_dolt_commit_migration
 
 
 class NautobotDolt(PluginConfig):
+    """ NautobotDolt initializes the dolt configs, middleware, and sets up migrations."""
+
     name = "dolt"
     verbose_name = "Nautobot Dolt"
     description = "Nautobot + Dolt"
@@ -41,7 +45,7 @@ class NautobotDolt(PluginConfig):
         post_migrate.connect(auto_dolt_commit_migration, sender=self)
 
 
-config = NautobotDolt
+config = NautobotDolt  # pylint: disable=C0103
 
 
 def query_registry(model, registry):
@@ -221,15 +225,19 @@ __GLOBAL_ROUTER_SWITCH__ = True
 
 
 def is_global_router_enabled():
-    global __GLOBAL_ROUTER_SWITCH__
+    """Returns true if the __GLOBAL_ROUTER_SWITCH__ is turned on"""
+    global __GLOBAL_ROUTER_SWITCH__  # pylint: disable=W0602
     return __GLOBAL_ROUTER_SWITCH__
 
 
-def switch_global_router_on(sender, **kwargs):
+def switch_global_router_on(**kwargs):
+    """Sets __GLOBAL_ROUTER_SWITCH to true """
+
     global __GLOBAL_ROUTER_SWITCH__
     __GLOBAL_ROUTER_SWITCH__ = True
 
 
-def switch_global_router_off(sender, **kwargs):
+def switch_global_router_off(**kwargs):
+    """Sets __GLOBAL_ROUTER_SWITCH to false"""
     global __GLOBAL_ROUTER_SWITCH__
     __GLOBAL_ROUTER_SWITCH__ = False

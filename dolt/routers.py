@@ -1,21 +1,18 @@
-from django.contrib.sessions.backends.db import SessionStore
-from django.db import connections
+"""routers.py manages the GlobalStateRouter."""
+
 from django.utils.safestring import mark_safe
+from dolt.constants import DOLT_DEFAULT_BRANCH, GLOBAL_DB
+from dolt.utils import DoltError, is_dolt_model, active_branch
 
 from . import is_global_router_enabled, is_versioned_model
-from dolt.constants import DB_NAME, DOLT_DEFAULT_BRANCH, GLOBAL_DB
-from dolt.models import Branch
-from dolt.utils import DoltError, is_dolt_model, active_branch
 
 
 class GlobalStateRouter:
-    """
-    TODO
-    """
+    """GlobalStateRouter manages the correct db to write either branch specific state or global state."""
 
     global_db = GLOBAL_DB
 
-    def db_for_read(self, model, **hints):
+    def db_for_read(self, model, **hints):  # pylint: disable=W0613
         """
         Directs read queries to the global state db for non-versioned models.
         Versioned models use the 'default' database and the Dolt branch that
@@ -29,7 +26,7 @@ class GlobalStateRouter:
 
         return self.global_db
 
-    def db_for_write(self, model, **hints):
+    def db_for_write(self, model, **hints):  # pylint: disable=W0613
         """
         Directs write queries to the global state db for non-versioned models.
         Versioned models use the 'default' database and the Dolt branch that
@@ -51,18 +48,20 @@ class GlobalStateRouter:
             # non-versioned models can only be edited on "main"
             raise DoltError(
                 mark_safe(
-                    f"""Error writing model <strong>{model.__name__}</strong> 
-                        on branch <strong>"{active_branch()}"</strong>: 
-                        non-versioned models must be written on branch 
+                    f"""Error writing model <strong>{model.__name__}</strong>
+                        on branch <strong>"{active_branch()}"</strong>:
+                        non-versioned models must be written on branch
                         <strong>"{DOLT_DEFAULT_BRANCH}"</strong>."""
                 )
             )
 
         return self.global_db
 
-    def allow_relation(self, obj1, obj2, **hints):
+    def allow_relation(self, obj1, obj2, **hints):  # pylint: disable=W0613.R0201
+        """allow_relation allows a relation between obj1 and obj2 too exist."""
         return True
 
     @staticmethod
     def branch_is_not_primary():
+        """branch_is_not_primary returns whether the active_branch is the default branch."""
         return active_branch() != DOLT_DEFAULT_BRANCH

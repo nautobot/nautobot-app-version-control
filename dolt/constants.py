@@ -1,3 +1,5 @@
+"""Constants.py defines several important constants used throughout the plugin."""
+
 # TODO: move these to settings?
 
 

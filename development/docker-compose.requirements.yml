@@ -5,10 +5,10 @@ services:
     build:
       context: "../"
       dockerfile: "development/Dockerfile-dolt"
-    command: 
-      - dolt
-      - sql-server
-      - --config=/dolt-config.yaml
+    command:
+      - "dolt"
+      - "sql-server"
+      - "--config=/dolt-config.yaml"
     env_file:
       - "dev.env"
       - "creds.env"

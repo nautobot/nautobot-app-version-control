@@ -1,11 +1,15 @@
+"""Filters.py defines a set of Filters needed for each model defined in models.py."""
+
 import django_filters
 from django.db.models import Q
 
-from nautobot.utilities.filters import BaseFilterSet, TreeNodeMultipleChoiceFilter
+from nautobot.utilities.filters import BaseFilterSet
 from dolt.models import Branch, Commit, PullRequest, PullRequestReview
 
 
 class BranchFilterSet(BaseFilterSet):
+    """BranchFilterSet returns a filter for the Branch model."""
+
     q = django_filters.CharFilter(
         method="search",
         label="Search",
@@ -22,7 +26,14 @@ class BranchFilterSet(BaseFilterSet):
             "latest_commit_message",
         )
 
-    def search(self, queryset, name, value):
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+        """
+        search performs an ORM filter on the Branch model
+        :param queryset: The Branch queryset
+        :param name: The modelname
+        :param value: The value to be searched for
+        :return: A filtered queryset
+        """
         value = value.strip()
         if not value:
             return queryset
@@ -37,6 +48,8 @@ class BranchFilterSet(BaseFilterSet):
 
 
 class CommitFilterSet(BaseFilterSet):
+    """CommitFilterSet returns a filter for the CommitFilterSet."""
+
     q = django_filters.CharFilter(
         method="search",
         label="Search",
@@ -52,7 +65,14 @@ class CommitFilterSet(BaseFilterSet):
             "message",
         )
 
-    def search(self, queryset, name, value):
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+        """
+        search performs an ORM filter on the Commit model
+        :param queryset: The Commit queryset
+        :param name: The modelname
+        :param value: The value to be searched for
+        :return: A filtered queryset
+        """
         value = value.strip()
         if not value:
             return queryset
@@ -66,6 +86,8 @@ class CommitFilterSet(BaseFilterSet):
 
 
 class PullRequestFilterSet(BaseFilterSet):
+    """PullRequestFilterSet returns a filter for the PullRequest model."""
+
     q = django_filters.CharFilter(
         method="search",
         label="Search",
@@ -82,7 +104,14 @@ class PullRequestFilterSet(BaseFilterSet):
             "creator",
         )
 
-    def search(self, queryset, name, value):
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+        """
+        search performs an ORM filter on the PullRequestFilterSet model
+        :param queryset: The PullRequestFilterSet queryset
+        :param name: The modelname
+        :param value: The value to be searched for
+        :return: A filtered queryset
+        """
         value = value.strip()
         if not value:
             return queryset
@@ -97,6 +126,8 @@ class PullRequestFilterSet(BaseFilterSet):
 
 
 class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
+    """PullRequestDefaultOpenFilterSet returns a filter for the PullRequest model where the default search is state=OPEN."""
+
     state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
 
     def __init__(self, data, *args, **kwargs):
@@ -107,6 +138,8 @@ class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
 
 
 class PullRequestReviewFilterSet(BaseFilterSet):
+    """PullRequestReviewFilterSet returns a filter for the PullRequestReview model."""
+
     q = django_filters.CharFilter(
         method="search",
         label="Search",
@@ -123,7 +156,14 @@ class PullRequestReviewFilterSet(BaseFilterSet):
             "summary",
         )
 
-    def search(self, queryset, name, value):
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+        """
+        search performs an ORM filter on the PullRequestReviewFilterSet model
+        :param queryset: The PullRequestReviewFilterSet queryset
+        :param name: The modelname
+        :param value: The value to be searched for
+        :return: A filtered queryset
+        """
         value = value.strip()
         if not value:
             return queryset
