@@ -11,7 +11,7 @@ from nautobot.ipam import tables as ipam_tables
 from nautobot.tenancy import tables as tenancy_tables
 from nautobot.virtualization import tables as virtualization_tables
 
-from dolt.dynamic.diff_factory import DiffModelFactory, DiffListViewFactory
+from dolt.dynamic.diff_factory import DiffListViewFactory
 from dolt.models import Commit
 from dolt.utils import db_for_commit
 
@@ -39,9 +39,10 @@ def two_dot_diffs(from_commit=None, to_commit=None):
         if not diff_table_for_model(model):
             continue
 
-        factory = DiffModelFactory(content_type)
-        diffs = factory.get_model().objects.filter(from_commit=from_commit, to_commit=to_commit)
-        tbl_name = content_type.model_class()._meta.db_table
+        ct_meta = content_type.model_class()._meta
+        tbl_name = ct_meta.db_table
+        verbose_name = str(ct_meta.verbose_name.capitalize())
+
         to_queryset = (
             content_type.model_class()
             .objects.filter(
@@ -99,15 +100,30 @@ def two_dot_diffs(from_commit=None, to_commit=None):
         diff_view_table = DiffListViewFactory(content_type).get_table_model()
         diff_results.append(
             {
-                "name": f"{factory.source_model_verbose_name} Diffs",
+                "name": f"{verbose_name} Diffs",
                 "table": diff_view_table(diff_rows),
-                # todo: convert to raw SQL to eliminate diff factory dependency
-                "added": diffs.filter(diff_type="added").count(),
-                "modified": diffs.filter(diff_type="modified").count(),
-                "removed": diffs.filter(diff_type="removed").count(),
+                **diff_summary_for_table(tbl_name, from_commit, to_commit),
             }
         )
     return diff_results
+
+
+def diff_summary_for_table(table, from_commit, to_commit):
+    summary = {
+        "added": 0,
+        "modified": 0,
+        "removed": 0,
+    }
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""SELECT diff_type, count(diff_type) FROM dolt_commit_diff_{table} 
+                WHERE to_commit = %s AND from_commit = %s
+                GROUP BY diff_type ORDER BY diff_type""",
+            (to_commit, from_commit),
+        )
+        for pair in cursor.fetchall():
+            summary[pair[0]] = pair[1]
+    return summary
 
 
 def json_diff_fields(tbl_name):
