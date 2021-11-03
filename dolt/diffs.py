@@ -73,7 +73,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                 # add the `diff_type = 'removed'` clause, because we only want deleted
                 # rows in this queryset. modified rows come from the `to_queryset`
                 pk__in=RawSQL(  # nosec
-                    f"""SELECT to_id FROM dolt_commit_diff_{tbl_name}
+                    f"""SELECT from_id FROM dolt_commit_diff_{tbl_name}
                         WHERE to_commit = %s AND from_commit = %s AND diff_type = 'removed' """,
                     (to_commit, from_commit),
                 )
@@ -92,7 +92,6 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             # "time-travel" query the database at `from_commit`
             .using(db_for_commit(from_commit))
         )
-
         diff_rows = sorted(list(to_queryset) + list(from_queryset), key=lambda d: d.pk)
         if len(diff_rows) == 0:
             continue
