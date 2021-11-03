@@ -4,15 +4,12 @@ import copy
 
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
 
 import django_tables2 as tables
 from django_tables2.utils import call_with_appropriate
-
-from nautobot.utilities.querysets import RestrictedQuerySet
 
 from dolt import diff_table_for_model
 
