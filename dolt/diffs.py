@@ -121,8 +121,8 @@ def diff_summary_for_table(table, from_commit, to_commit):
                 GROUP BY diff_type ORDER BY diff_type""",  # nosec
             (to_commit, from_commit),
         )
-        for pair in cursor.fetchall():
-            summary[pair[0]] = pair[1]
+        for diff_type, count in cursor.fetchall():
+            summary[diff_type] = count
     return summary
 
 
