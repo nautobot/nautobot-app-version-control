@@ -134,7 +134,7 @@ def json_diff_fields(tbl_name):
     with connection.cursor() as cursor:
         cursor.execute(f"DESCRIBE dolt_commit_diff_{tbl_name}")
         cols = cursor.fetchall()
-    pairs = [f"'{c[0]}', dolt_commit_diff_{tbl_name}.{c[0]}" for c in cols]
+    pairs = (f"'{c[0]}', dolt_commit_diff_{tbl_name}.{c[0]}" for c in cols)
     return ", ".join(pairs)
 
 
