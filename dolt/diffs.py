@@ -1,8 +1,9 @@
 """Diffs.py contains a set of utilities for producing Dolt diffs."""
 
 from django.contrib.contenttypes.models import ContentType
+from django.db import connection
 from django.db import models
-from django.db.models import F, Subquery, OuterRef, Value
+from django.db.models.expressions import RawSQL
 
 from nautobot.dcim.tables import cables, devices, devicetypes, power, racks, sites
 from nautobot.circuits import tables as circuits_tables
@@ -10,10 +11,9 @@ from nautobot.ipam import tables as ipam_tables
 from nautobot.tenancy import tables as tenancy_tables
 from nautobot.virtualization import tables as virtualization_tables
 
-from dolt.dynamic.diff_factory import DiffModelFactory, DiffListViewFactory
+from dolt.dynamic.diff_factory import DiffListViewFactory
 from dolt.models import Commit
 from dolt.utils import db_for_commit
-from dolt.functions import JSONObject
 
 from . import diff_table_for_model, register_diff_tables
 
@@ -39,51 +39,59 @@ def two_dot_diffs(from_commit=None, to_commit=None):
         if not diff_table_for_model(model):
             continue
 
-        factory = DiffModelFactory(content_type)
-        diffs = factory.get_model().objects.filter(from_commit=from_commit, to_commit=to_commit)
+        ct_meta = content_type.model_class()._meta
+        tbl_name = ct_meta.db_table
+        verbose_name = str(ct_meta.verbose_name.capitalize())
+
         to_queryset = (
             content_type.model_class()
-            .objects.filter(pk__in=diffs.values_list("to_id", flat=True))
-            .annotate(
-                diff=Subquery(
-                    diffs.annotate(
-                        obj=JSONObject(
-                            root=Value("to", output_field=models.CharField()),
-                            **diff_annotation_query_fields(diffs.model),
-                        )
-                    )
-                    .filter(to_id=OuterRef("id"))
-                    .values("obj"),
-                    output_field=models.JSONField(),
-                ),
+            .objects.filter(
+                pk__in=RawSQL(  # nosec
+                    f"""SELECT to_id FROM dolt_commit_diff_{tbl_name}
+                        WHERE to_commit = %s AND from_commit = %s""",
+                    (to_commit, from_commit),
+                )
             )
+            .annotate(
+                # Annotate each row with a JSON-ified diff
+                diff=RawSQL(  # nosec
+                    f"""SELECT JSON_OBJECT("root", "to", {json_diff_fields(tbl_name)})
+                        FROM dolt_commit_diff_{tbl_name}
+                        WHERE to_commit = %s AND from_commit = %s
+                        AND to_id = {tbl_name}.id """,
+                    (to_commit, from_commit),
+                    output_field=models.JSONField(),
+                )
+            )
+            # "time-travel" query the database at `to_commit`
             .using(db_for_commit(to_commit))
         )
 
         from_queryset = (
             content_type.model_class()
             .objects.filter(
-                # we only want deleted rows in this queryset
-                # modified rows come from `to_queryset`
-                pk__in=diffs.filter(diff_type="removed").values_list("from_id", flat=True)
+                # add the `diff_type = 'removed'` clause, because we only want deleted
+                # rows in this queryset. modified rows come from the `to_queryset`
+                pk__in=RawSQL(  # nosec
+                    f"""SELECT from_id FROM dolt_commit_diff_{tbl_name}
+                        WHERE to_commit = %s AND from_commit = %s AND diff_type = 'removed' """,
+                    (to_commit, from_commit),
+                )
             )
             .annotate(
-                diff=Subquery(
-                    diffs.annotate(
-                        obj=JSONObject(
-                            root=Value("from", output_field=models.CharField()),
-                            **diff_annotation_query_fields(diffs.model),
-                        )
-                    )
-                    .filter(from_id=OuterRef("id"))
-                    .values("obj"),
+                # Annotate each row with a JSON-ified diff
+                diff=RawSQL(  # nosec
+                    f"""SELECT JSON_OBJECT("root", "from", {json_diff_fields(tbl_name)})
+                        FROM dolt_commit_diff_{tbl_name}
+                        WHERE to_commit = %s AND from_commit = %s
+                        AND from_id = {tbl_name}.id """,
+                    (to_commit, from_commit),
                     output_field=models.JSONField(),
-                ),
+                )
             )
             # "time-travel" query the database at `from_commit`
             .using(db_for_commit(from_commit))
         )
-
         diff_rows = sorted(list(to_queryset) + list(from_queryset), key=lambda d: d.pk)
         if len(diff_rows) == 0:
             continue
@@ -91,27 +99,43 @@ def two_dot_diffs(from_commit=None, to_commit=None):
         diff_view_table = DiffListViewFactory(content_type).get_table_model()
         diff_results.append(
             {
-                "name": f"{factory.source_model_verbose_name} Diffs",
+                "name": f"{verbose_name} Diffs",
                 "table": diff_view_table(diff_rows),
-                "added": diffs.filter(diff_type="added").count(),
-                "modified": diffs.filter(diff_type="modified").count(),
-                "removed": diffs.filter(diff_type="removed").count(),
+                **diff_summary_for_table(tbl_name, from_commit, to_commit),
             }
         )
     return diff_results
 
 
-def diff_annotation_query_fields(model):
-    """diff_annotation_query_fields returns all of the column names for a model and turns them into to_ and from_ fields."""
-    names = [
-        f.name
-        for f in model._meta.get_fields()
-        # field names containing "__" cannot be
-        # diffed as Django interprets kwargs with
-        # "__" as lookups
-        if "__" not in f.name
-    ]
-    return {name: F(name) for name in names}
+def diff_summary_for_table(table, from_commit, to_commit):
+    """diff_summary_for_table returns the diff summary for table, for the commits from_commit and to_commit."""
+    summary = {
+        "added": 0,
+        "modified": 0,
+        "removed": 0,
+    }
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"""SELECT diff_type, count(diff_type) FROM dolt_commit_diff_{table}  # nosec
+                WHERE to_commit = %s AND from_commit = %s
+                GROUP BY diff_type ORDER BY diff_type""",  # nosec
+            (to_commit, from_commit),
+        )
+        for diff_type, count in cursor.fetchall():
+            summary[diff_type] = count
+    return summary
+
+
+def json_diff_fields(tbl_name):
+    """
+    json_diff_fields returns all of the column names for a model
+    and turns them into to_ and from_ fields.
+    """
+    with connection.cursor() as cursor:
+        cursor.execute(f"DESCRIBE dolt_commit_diff_{tbl_name}")
+        cols = cursor.fetchall()
+    pairs = (f"'{c[0]}', dolt_commit_diff_{tbl_name}.{c[0]}" for c in cols)
+    return ", ".join(pairs)
 
 
 register_diff_tables(
