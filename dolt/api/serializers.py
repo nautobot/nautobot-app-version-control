@@ -8,14 +8,7 @@ class BranchSerializer(ValidatedModelSerializer):
 
     class Meta:
         model = Branch
-        fields = [
-            "name",
-            "hash",
-            "latest_committer",
-            "latest_committer_email",
-            "latest_commit_date",
-            "latest_commit_message",
-        ]
+        fields = "__all__"
 
 
 class CommitSerializer(ValidatedModelSerializer):
@@ -23,13 +16,7 @@ class CommitSerializer(ValidatedModelSerializer):
 
     class Meta:
         model = Commit
-        fields = [
-            "commit_hash",
-            "committer",
-            "email",
-            "date",
-            "message",
-        ]
+        fields = "__all__"
 
 
 class PullRequestSerializer(ValidatedModelSerializer):
@@ -37,15 +24,7 @@ class PullRequestSerializer(ValidatedModelSerializer):
 
     class Meta:
         model = PullRequest
-        fields = [
-            "title",
-            "state",
-            "source_branch",
-            "destination_branch",
-            "description",
-            "creator",
-            "created_at",
-        ]
+        fields = "__all__"
 
 
 class PullRequestReviewSerializer(ValidatedModelSerializer):
@@ -53,4 +32,4 @@ class PullRequestReviewSerializer(ValidatedModelSerializer):
 
     class Meta:
         model = PullRequestReview
-        fields = ["pull_request", "reviewer", "reviewed_at", "state", "summary"]
+        fields = "__all__"
