@@ -11,6 +11,9 @@ Add this to your `nautobot_config.py`:
 # database so that it may generate diffs.
 DATABASES["global"] = DATABASES["default"]
 
+# Dolt requires a custom database router to generate the before & after queries for generating diffs.
+DATABASE_ROUTERS = ["dolt.routers.GlobalStateRouter"]
+
 # Add Dolt to your list of plugins.
 PLUGINS += [
    "dolt",
@@ -22,15 +25,6 @@ Then run database migrations:
 ```no-highlight
 $ nautobot-server migrate
 ```
-
-After migrations have been run, then you must enable the `DATABASE_ROUTERS` required by Dolt to use the `default` and `global` database configurations to perform the before & after queries for generating diffs. Add this to your `nautobot_config.py` and restart Nautobot afterward:
-
-```python
-# Dolt requires a custom database router to generate the before & after queries for generating diffs.
-DATABASE_ROUTERS = ["dolt.routers.GlobalStateRouter"]
-```
-
-Note that any time you need to perform database migrations (such as when upgrading Nautobot or Dolt) you **absolutely must comment out/disable `DATABASE_ROUTERS` from your `nautobot_config.py`** or you will encounter errors.
 
 ## Local Dev & Test Environment
 

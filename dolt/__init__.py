@@ -10,7 +10,7 @@ from dolt.migrations import auto_dolt_commit_migration
 
 
 class NautobotDolt(PluginConfig):
-    """ NautobotDolt initializes the dolt configs, middleware, and sets up migrations."""
+    """NautobotDolt initializes the dolt configs, middleware, and sets up migrations."""
 
     name = "dolt"
     verbose_name = "Nautobot Dolt"
@@ -231,7 +231,7 @@ def is_global_router_enabled():
 
 
 def switch_global_router_on(**kwargs):
-    """Sets __GLOBAL_ROUTER_SWITCH to true """
+    """Sets __GLOBAL_ROUTER_SWITCH to true"""
 
     global __GLOBAL_ROUTER_SWITCH__
     __GLOBAL_ROUTER_SWITCH__ = True
