@@ -10,14 +10,14 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.6.2"
 nautobot = "^1.1.0"
 mysqlclient = "^2.0.3"
 django-debug-toolbar = "^3.2.2"
 
 [tool.poetry.dev-dependencies]
 invoke = "*"
-black = "*"
+black = "^21.10b0"
 yamllint = "*"
 bandit = "*"
 pylint = "*"
