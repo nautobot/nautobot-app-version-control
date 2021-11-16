@@ -11,18 +11,20 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
+# Package version detection in older versions of Python
+importlib-metadata = {version = "~3.10.0", python = "<3.8"}
 nautobot = "^1.1.0"
 mysqlclient = "^2.0.3"
-django-debug-toolbar = "^3.2.2"
 
 [tool.poetry.dev-dependencies]
-invoke = "*"
-black = "^21.10b0"
-yamllint = "*"
 bandit = "*"
-pylint = "*"
-pydocstyle = "*"
+black = "^21.10b0"
+django-debug-toolbar = "^3.2.2"
 flake8 = "*"
+invoke = "*"
+yamllint = "*"
+pydocstyle = "*"
+pylint = "*"
 pylint-django = "*"
 
 [tool.black]

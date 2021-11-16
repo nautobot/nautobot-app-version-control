@@ -407,7 +407,7 @@ Django = "*"
 name = "django-debug-toolbar"
 version = "3.2.2"
 description = "A configurable set of panels that display various debug information about the current request/response."
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=3.6"
 
@@ -1552,7 +1552,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "1fdb8577b5af153cb8e5aaf1cd99c6469252ed7504872453f9b064402505e3c7"
+content-hash = "b5526845570de9367dc804bbaefe8ca7456f4f29cef4dfcf7ee529186bffb363"
 
 [metadata.files]
 amqp = [
