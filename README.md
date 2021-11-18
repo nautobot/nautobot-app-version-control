@@ -99,6 +99,10 @@ invoke build
 ```
 
 ### Start the Local environment with a sample database
+
+This is a good option for those who want to quickly spin up a working instance of Nautobot running the Version Control app.  
+The steps below 
+
 ```
 invoke migrate
 invoke load-data
@@ -113,7 +117,8 @@ You can connect with either of these 2 accounts:
 * Login `admin` / Password `admin`
 * Login `demo` / Password `nautobot`
 
-Run the following commands to Reset the Local environment and load the sample dataset again
+
+Run the following commands to Reset the Local environment and load the sample dataset again:
 ```
 invoke stop
 invoke destroy
@@ -124,6 +129,7 @@ invoke start
 
 ### Start the Local environment with an empty database
 
+This option will simply start the local dev environment. Nautobot will have an empty database:
 ```
 invoke migrate
 invoke start
@@ -133,14 +139,13 @@ After few min, Nautobot will be available at `http://0.0.0.0:8080`
 You can connect with:
 - Login `admin` / Password `admin`
 
-Run the following commands to Reset the Local environment
+Run the following commands to Reset the Local environment:
 ```
 invoke stop
 invoke destroy
 invoke migrate
 invoke start
 ```
-
 
 ## Production Installation
 
