@@ -101,7 +101,7 @@ invoke build
 ### Start the Local environment with a sample database
 
 This is a good option for those who want to quickly spin up a working instance of Nautobot running the Version Control app.  
-The steps below 
+The steps below will create a Nautobot instance running the Version Control app and install sample data to experiment with.
 
 ```
 invoke migrate
