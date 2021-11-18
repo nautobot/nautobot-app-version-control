@@ -1,6 +1,12 @@
-# Nautobot + Dolt
+# Nautobot Version Control App
 
-This is a work in progress and NOT officially released or supported.
+The Nautobot Version Control app brings version control to Nautobot's database. Nautobot is an open source Network Source of Truth and Network Automation Platform. 
+Nautobot provides a number of features to validate its data model and safeguard network configuration from errors. 
+Adding database versioning provides another layer of assurance by enabling human review of proposed changes to production data, use of automated testing pipelines, and database rollback in the case of errors. 
+
+The database versioning is made possible by the use of a [*Dolt*](https://github.com/dolthub/dolt) database. 
+Dolt is an SQL database that you can fork, clone, branch, merge, push and pull just like a git repository.
+Dolt’s *branch* and *merge* versioning model allows operators to safely modify the data model on feature branches, merging to production only after validation is complete.
 
 ## Documentation
 
@@ -19,7 +25,7 @@ In addition to this README file, there are docs covering the following topics:
 
 Getting started with development for the Version Control plugin is pretty straightforward. 
 It’s modeled directly after the development environment of Nautobot itself, and should feel very familiar to anyone with Django development experience. 
-The Version Control plugin uses a Docker Compose environment to make it simple to manage dependencies like Dolt and Redis.
+The Version Control app uses a Docker Compose environment to make it simple to manage dependencies like Dolt and Redis.
 
 ### Install Invoke
 
