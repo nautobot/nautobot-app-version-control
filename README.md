@@ -1,6 +1,7 @@
-# Nautobot + Dolt
+# Nautobot Version Control 
 
-This is a work in progress and NOT officially released or supported.
+TODO: add summary 
+
 
 ## Configuring Nautobot to use Version Control
 
