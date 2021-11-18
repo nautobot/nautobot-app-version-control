@@ -88,6 +88,8 @@ Additional useful commands for the development environment:
 - invoke stop - Stops all containers created by invoke start
 
 
+## Local Dev & Test Environment
+
 A local environment based on Docker Compose is available for development and testing as well as a sample dataset to help get started faster with Nautobot & Dolt integration.
 
 ### Initialize the Local environment
