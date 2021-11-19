@@ -87,11 +87,6 @@ Additional useful commands for the development environment:
 - invoke start - Starts all Docker containers to run in the background with debug disabled
 - invoke stop - Stops all containers created by invoke start
 
-
-## Local Dev & Test Environment
-
-A local environment based on Docker Compose is available for development and testing as well as a sample dataset to help get started faster with Nautobot & Dolt integration.
-
 ### Initialize the Local environment
 
 Run the following commmands to initialize the local environment
@@ -99,6 +94,8 @@ Run the following commmands to initialize the local environment
 cp development/creds.example.env development/creds.env
 invoke build
 ```
+
+From here, you can either [start the local environment with a sample database](#start-the-local-environment-with-a-sample-database) or [start the local environment with an empty database](#start-the-local-environment-with-an-empty-database).
 
 ### Start the Local environment with a sample database
 
