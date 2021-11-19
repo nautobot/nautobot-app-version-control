@@ -11,9 +11,7 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-# TODO(jathan): Once we get to final release, this must be replaced.
-# nautobot = "^1.1.5"
-nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "next" }
+nautobot = "~1.2.0b1"
 # MySQL database adapter
 mysqlclient = "^2.0.3"
 

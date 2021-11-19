@@ -26,7 +26,7 @@ namespace = Collection("nautobot_dolt")
 namespace.configure(
     {
         "nautobot_dolt": {
-            "nautobot_ver": "1.1.2",
+            "nautobot_ver": "1.2.0b1",
             "project_name": "dolt",
             "python_ver": "3.6",
             "local": False,
