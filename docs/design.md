@@ -1,10 +1,12 @@
 # Motivation
+
 Nautobot is an open source Network Source of Truth and Network Automation Platform. 
 Nautobot provides a number of features to validate its data model and safeguard network configuration from errors. 
 Adding database versioning with Dolt provides another layer of assurance by enabling human review of changesets and database rollback in the case of errors. 
 Dolt’s branch and merge versioning model allows operators to safely modify the data model on feature branches, merging to production only after validation is complete.
 
 ## Dolt
+
 Dolt is a MySQL compatible relational database that supports Git-like versioning features. 
 Git version files, Dolt versions database tables. 
 Running Nautobot on Dolt means operators can use version-control workflows from software development when managing the network data model.
@@ -18,32 +20,35 @@ Further, each of the nodes is [content-addressable](https://en.wikipedia.org/wik
 meaning that Dolt can compare different versions of the database using the same performant algorithms that Git uses to compare versions of source files. 
 The result is a relational database that can branch, diff, merge, push and pull.
 
-
 # Version Control Plugin Design
-The core features of the Version Control plugin are commits and branches. 
-All database reads and writes happen on a branch. 
-All database writes create a commit.
+
+The core features of the Version Control app are *commits* and *branches*. 
+All database *reads* and *writes* happen on a branch. 
+All database *writes* create a commit.
 
 ## Branches  
+
 When Nautobot is initialized with the version control app, the database has a single branch “main”. 
 The main branch represents the state of the production data model.
-Main also has a special status in that it cannot be deleted. 
-New branches are created by specifying a starting branch to start from.
+Main also has a special status in that it cannot be deleted.
 
-![create branch form](images/create-branch-form.png)
+## Requesting Info From A Branch
 
 All requests served through the web interface or API fetch data from a specific database branch. 
-The choice of branch is encoded in the request by the client. 
-For web requests, the branch state is stored in a cookie using Django cookie sessions. 
-For API requests, the branch state is encoded in a request header.
+The choice of branch is encoded in the request by the client: 
+* For web requests, the branch state is stored in a cookie using Django cookie sessions
+* For API requests, the branch state is encoded in a request header
 
-When the server receives a request, it looks for this state and uses it to select the correct database branch to serve this request. 
-If the branch cannot be found or if the requested branch does not exist, the main branch is used. 
-The business logic to handle branch selection is performed in [middleware](https://docs.djangoproject.com/en/3.2/topics/http/middleware/)
-specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/c9f49b8e007ca22afe0d6e3ddb5066e31b37dc64/dolt/middleware.py#L38). 
-In the web interface, a banner is displayed to notify the user of their “active” branch
+When the server receives a request, it looks for this state and uses it to select the correct database branch to serve the request: 
+* If the requested branch cannot be found or if the requested branch does not exist, the main branch is used.
+* In the web interface, a banner is displayed to notify the user of their “active” branch
 
 ![active branch banner](images/active-branch-banner.png)
+
+The business logic to handle branch selection is performed in [middleware](https://docs.djangoproject.com/en/stable/topics/http/middleware/), 
+specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L36) 
+
+## Database Versioning
 
 Database versioning happens on a per-connection basis. Each connection will read from a specific branch. 
 Database connections outside of the web server, such as through nbshell are also versioned. 
@@ -59,81 +64,9 @@ When connecting directly to the database you can check your current branch with 
     'foo'
 ```
 
-## Commits
-A Dolt commit is made for every modification to the data model. 
-Each request that writes to the database triggers a commit to be written. 
-The result is a granular change log tracking the history of changes made.
-
-![commit list](images/commit-list.png)
-
-Each commit can be individually inspected to see a diff view: a summary of the changes made within that commit.
-
-![commit diff view](images/commit-diff-view.png)
-
-The committing logic is implemented using a combination of middleware and [Django signals](https://docs.djangoproject.com/en/3.2/topics/signals/),
-specifically [DoltAutoCommitMiddleWare](https://github.com/nautobot/nautobot-plugin-version-control/blob/c2f0bbd1680ee46c61bb22a3df5a6c5c1bcbe41a/dolt/middleware.py#L109). 
-DoltAutoCommitMiddleWare wraps every server request in a [AutoDoltCommit](https://github.com/nautobot/nautobot-plugin-version-control/blob/c2f0bbd1680ee46c61bb22a3df5a6c5c1bcbe41a/dolt/middleware.py#L124)
-context manager which listens for and responds to database writes made while processing the request. 
-AutoDoltCommit listens for signals fired by Django model updates and makes a Dolt commit if updates were made during the lifetime of the context manager. 
-The message for the commit is derived from the model signals that were captured.
-
-Changes made within a commit can be undone by reverting the commit.
-
-![confirm commit revert](images/confirm-commit-revert.png)
-
-Reverting a commit causes the database to apply the “reverse patch” of the commits in the reversion, much like [Git revert](https://git-scm.com/docs/git-revert). 
-Reverting commits, rather than deleting them, has the benefit of keeping all changes made in change history. 
-Commit reversion may fail if applying the reverse patch will cause an inconsistency in the data model. 
-Specifically if the reversion causes a foreign key or unique key violation in the database, the operation will fail and no changes will be applied.
-
-## Pull Requests
-Changes from different branches can be combined using Pull Requests (PRs). 
-A successful PR will result in merging the source branch into the destination branch. 
-The recommended workflow for the Version Control plugin is to make all changes on a non-production branch and merge the change to the main branch only after it undergoes human review.
-
-The primary Pull Request view has four sub views. 
-The “Diffs” tab displays metadata about the PR and a summary of changes made, much like the diff view of a commit. 
-However, the PR diff view combines the changes from all of the commits in the PR’s “source branch”. 
-In the “Commits” tab there is a list of each commit in the PR. 
-The “Conflicts” tab shows any problems that would prevent the PR from being merged. 
-Finally, the “Reviews” tab contains a simple forum-like interface where users can discuss and approve PRs.
-
-![pull request view](images/pull-request-view.png)
-
-Pull Request Reviews can take the form of a “comment”, an “approval”, or a “block” of the PR. 
-Comments are meant for general discussion. 
-Approvals will allow the PR to be merged. 
-Blocks will prevent the PR from being merged. 
-The most recent non-comment review takes precedence in determining the ability to merge the PR. 
-In order to be merged, the Pull Request must also be free of conflicts. 
-Conflicts are created when the Dolt cannot successfully merge the data from two versions of a table. 
-Conflicts are caused by concurrent modifications of a single model field, or by referential integrity errors such as Foreign Key and Unique Key violations. 
-Within the PR view, conflicts are determined by pre-computing the merge with a “Merge Candidate”.
-Once a PR is conflict free, it can be merged into its destination branch. 
-Selecting "merge" from the pull request view will navigate the user to a confirmation page:
-
-![confirm pull request merge](images/confirm-pull-request-merge.png)
-
-Here the user can inspect the diff before choosing to merge or squash merge the changes.
-Squash merging in Dolt has the same semantic meaning as [`git merge --squash`](https://git-scm.com/docs/git-merge#Documentation/git-merge.txt---squash):
-the history of the source branch is compacted into a single commit
-
-The most common use case for pull requests is merging "feature branches" into the main branch. 
-This is consistent with a [trunk-based](https://www.atlassian.com/continuous-delivery/continuous-integration/trunk-based-development) 
-change workflow where changes are made on short-lived branches in incremental steps. 
-Each step branches off from main and merges back to main after a small number of commits.
-If ever there are long-lived feature branches, it can become difficult to merge back to main due to merge conflicts. 
-This problem can be mitigated by "catching up" a feature branch, by merge the main branh into it.
-
-![branch list view](images/branch-list-view.png)
-
-From the branch list view, we can see a "Catchup" button that will do exactly that. 
-Following this button will take us to a pull request creation form pre-populated with main as the source branch and the feature branch as destination branch.
-Creating such a pull request will allow us to inspect any conflicts between the branches and to update the feature branch if none exist.
-
 # REST API
 
-The Version Control plugin extends the Nautobot's core [REST API](https://nautobot.readthedocs.io/en/stable/rest-api/overview/#rest-api-overview) with endpoints for plugin models. 
+The Version Control app extends the Nautobot's core [REST API](https://nautobot.readthedocs.io/en/stable/rest-api/overview/#rest-api-overview) with endpoints for plugin models. 
 
 ## REST API EndPoints
 
@@ -157,7 +90,7 @@ See the [Nautobot docs](https://nautobot.readthedocs.io/en/stable/rest-api/authe
 ## Dolt Branch Header
 
 When querying the API, clients can choose a specific branch using a `dolt-branch` header. 
-For example, the following request will list all of the commits from "my-feature-branch".
+For example, the following request will list all the commits from `my-feature-branch`:
 
 ```bash
 $ curl -s \
@@ -166,7 +99,7 @@ $ curl -s \
 0.0.0.0:8080/api/plugins/dolt/commits/
 ```
 
-Versioning requests works with all API endpoints, not just models from the Version Control plugin: 
+Versioning requests works with all API endpoints, not just models from the Version Control app. This example queries for devices in a `my-branch`: 
 
 ```bash
 $ curl -s \
@@ -175,29 +108,60 @@ $ curl -s \
 0.0.0.0:8080/api/dcim/devices/
 ```
 
+This is a python example of querying for devices in the `atl` site in the `atl-leaf-agument` branch:
+
+```python
+import requests
+
+from pprint import pprint
+
+url = "http://0.0.0.0:8080/api/dcim/devices/?site=atl"
+
+payload={}
+headers = {
+  'Authorization': 'Token nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn',
+  'dolt-branch': 'atl-leaf-augment'
+}
+
+response = requests.request("GET", url, headers=headers, data=payload)
+
+pprint(response.json())
+```
 
 # Implementation Details
 
+## Commit Logic
+
+The committing logic is implemented using a combination of middleware and [Django signals](https://docs.djangoproject.com/en/stable/topics/signals/),
+specifically [DoltAutoCommitMiddleWare](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L118). 
+DoltAutoCommitMiddleWare wraps every server request in a [AutoDoltCommit](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L134)
+context manager which listens for and responds to database writes made while processing the request. 
+AutoDoltCommit listens for signals fired by Django model updates and makes a Dolt commit if updates were made during the lifetime of the context manager. 
+The message for the commit is derived from the model signals that were captured.
+
 ## DoltSystemTables
-[DoltSystemTable](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21)
-is an abstract base class that forms the basis of Django models that expose Dolt [system tables](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21)
+
+[DoltSystemTable](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/models.py#L22)
+is an abstract base class that forms the basis of Django models that expose Dolt system tables
 to the Object Relational Mapping (ORM). 
-Plugin models such as Commit and Branch that inherit from DoltSystemTable are [unmanaged](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L21)
+Plugin models such as *Commit* and *Branch* that inherit from DoltSystemTable are [unmanaged](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/models.py#L31
 meaning that Django will ignore these models for the purposes of database migrations. 
 This is important because Dolt system tables exist from the time the database is created and cannot be modified or deleted. 
 Internally, Dolt generates system table data on-the-fly rather than reading it from a traditional database index.
 
 ## BranchMeta
+
 The Branch model is one such "unmanaged" model. 
 It exposes the dolt_branches system table to the ORM. 
 System tables have a static schema, so additional object fields such as "created by" and "source branch" must be stored in another model. 
-The [BranchMeta](https://github.com/nautobot/nautobot-plugin-version-control/blob/3020d86159b92edfb68abefd1079c84f54a358b8/dolt/models.py#L194) model does exactly that. 
+The [BranchMeta](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/models.py#L205) model does exactly that. 
 Each Branch object has an associated BranchMeta object where the `BranchMeta.branch field` is equal to the name field of the associated branch. 
 However, this relationship is not formalized with a Foreign Key due to limitations with the dolt_branches table.
 Branch objects lookup their associated BranchMeta objects on a best-effort basis.
 
 ## Merge Candidates
-The Version Control plugin prevents Pull Requests from being merged if it will create merge conflicts. 
+
+The Version Control app prevents Pull Requests from being merged if it will create merge conflicts. 
 In order to determine if merging a Pull Request will cause conflicts, the merge is precomputed when rendering the PR view. 
 The result of pre-computing this merge is called a “merge candidate”. 
 Merge candidates are generated by making a hidden branch starting at the tip of the PRs destination branch, and merging the PRs source branch into this new branch. 
@@ -206,22 +170,31 @@ Merge candidates are generated on demand when a PR view is rendered, unless a va
 If the source and destination branch of a PR are unchanged since the merge candidate was computed, it is considered valid.
 
 ## Versioned Models
+
 Within the Nautobot data model, database models are divided into two groups: versioned and non-versioned. 
 Generally speaking, database models that represent a part of the network state will be versioned models (e.g. Devices, IP Addresses, Sites). 
 Database models that are specific to the Nautobot application (e.g. Users, Web Hooks, Permissions) will not be versioned. 
 Versioning features are restricted for some models such that they have a single “global” state. 
 This is especially important for models that affect permissions and authentication: we need a single place where we can read and update security-sensitive data.
 
-Versioned and non-versioned models have different behavior when working on a non-main feature branch. 
-Versioned models will be read from the tip of the feature branch. 
-Versioned models can also be edited on a feature branch and the edits will be versioned in commits. 
-Non-versioned models cannot be edited on feature branches, they must only be edited on the main branch. 
-Non-versioned models will also always be read from the tip of the main branch, rather than from a feature branch, regardless of what branch is specified in a request. 
-Non-versioned models can’t have multiple versions. There is always a single version which is read-from, and edited on main.
+
+### Model Behavior
+
+Versioned and non-versioned models have different behavior when working on a non-main feature branch:
+
+* Versioned models will be read from the tip of the feature branch
+* Versioned models can also be edited on a feature branch, and the edits will be versioned in commits 
+
+Non-versioned models:
+
+* Cannot be edited on feature branches, they can only be edited on the main branch 
+* Will always be read from the tip of the main branch, rather than from a feature branch, regardless of what branch is specified in a request
+* Can’t have multiple versions: there is always a single version which is read-from, and edited on main.
 
 ## Global State Router
-The business logic for differentiating versioned and non-versioned models is implemented in a Django [database router](https://docs.djangoproject.com/en/3.2/topics/db/multi-db/#automatic-database-routing), 
-specifically the [GlobalStateRouter](https://github.com/nautobot/nautobot-plugin-version-control/blob/c9f49b8e007ca22afe0d6e3ddb5066e31b37dc64/dolt/routers.py#L11). 
+
+The business logic for differentiating versioned and non-versioned models is implemented in a Django [database router](https://docs.djangoproject.com/en/stable/topics/db/multi-db/#automatic-database-routing), 
+specifically the [GlobalStateRouter](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/routers.py#L10). 
 The GlobalStateRouter is responsible for choosing a database connection to read an object from or write an object to, depending on its model class. 
 There are two connections to choose from when accessing the database. 
 The “default” connection will access the database on the Dolt branch that was specified in the request. 
@@ -229,7 +202,7 @@ This connection is used to read and write versioned models.
 The “global” connection always accesses the database on the main branch, it is used for non-versioned models.
 
 In order to choose a connection for a model, the router first references the 
-[versioned model registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/c9f49b8e007ca22afe0d6e3ddb5066e31b37dc64/dolt/__init__.py#L83)
+[versioned model registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/__init__.py#L87)
 to determine if the model is under version control. 
 Currently, this registry is a hardcoded mapping from ContentType to versioned/non-versioned. 
 The versioned model registry is structured as an ["allow-list"](https://help.dnsfilter.com/hc/en-us/articles/1500008111381-Allow-and-Block-Lists).
@@ -238,7 +211,7 @@ If a model is absent from the list, it is assumed to be non-versioned.
 in Nautobot core will make it possible for models to declare themselves whether they should be version controlled.
 
 Database connections for versioned and non-versioned models are defined in 
-[nautobot_config.py](https://github.com/nautobot/nautobot-plugin-version-control/blob/abd12aae0f1c4a684ce89c7eaeaca81bd1d37e68/development/nautobot_config.py#L54). 
+[nautobot_config.py](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/development/nautobot_config.py#L55). 
 The database configuration is as follows:
 ```python
 DATABASES = {
@@ -267,7 +240,7 @@ DATABASES = {
 These two database connections are logically separate at the Django layer, but in fact point to the same physical Dolt instance. 
 The “default” database handles versioned models, the “global” database handles non-versioned models. 
 For test purposes, the databases are configured as replicas. 
-The “TEST” entry in the config dict for the “global” database is a [primary/replica](https://docs.djangoproject.com/en/3.2/topics/testing/advanced/#testing-primary-replica-configurations)
+The “TEST” entry in the config dict for the “global” database is a [primary/replica](https://docs.djangoproject.com/en/stable/topics/testing/advanced/#testing-primary-replica-configurations)
 configuration for testing. 
 This indicates that under testing “global” should be treated as a mirror of “default”.
 
@@ -286,19 +259,19 @@ Custom rendering functions are added to apply diff styling to the list view.
 
 Diff table classes are created dynamically at runtime. 
 When a diff table is needed to display model changes, the core model's table is looked up from the 
-[diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/c5ca7c4467b7588b5eb925523a51ce0eab62df4e/dolt/__init__.py#L175)
+[diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/__init__.py#L179)
 and then a new subclass is created to extend the core table.
 The diff table registry works much like the versioned model registry, it is a mapping from a models content type to its table.
 Tables in Nautobot core are all subclasses of [`django-tables2`](https://django-tables2.readthedocs.io/en/latest/).
 All entries in the diff table registry must also be subclasses of `django-tables2`.
 
-# Plugin Integration
+# Plugin Integration and Model Registration
 
-The Version Control plugin is designed to be used in coordination with other Nautobot plugins.
+The Version Control app is designed to be used in coordination with other Nautobot plugins.
 By default, any models registered by other plugins will be considered non-versioned. 
 In order to make use of version control and diff features, plugins must register their models in 
-the [versioned models registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/c5ca7c4467b7588b5eb925523a51ce0eab62df4e/dolt/__init__.py#L139) 
-and the [diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/c5ca7c4467b7588b5eb925523a51ce0eab62df4e/dolt/__init__.py#L186). 
+the [versioned models registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/__init__.py#L143) 
+and the [diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/__init__.py#L190). 
 Both of these functions take nested dictionaries as arguments:
 ```python
 register_versioned_models({
