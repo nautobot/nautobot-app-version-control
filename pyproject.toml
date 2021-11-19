@@ -11,18 +11,16 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-nautobot = "^1.1.0"
-# Package version detection in older versions of Python
-importlib-metadata = {version = "~3.10.0", python = "<3.8"}
-# Rendering of markdown files to HTML
-markdown = "3.3.4"
+# TODO(jathan): Once we get to final release, this must be replaced.
+# nautobot = "^1.1.5"
+nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "next" }
 # MySQL database adapter
 mysqlclient = "^2.0.3"
 
 [tool.poetry.dev-dependencies]
 bandit = "*"
-black = "^21.10b0"
-django-debug-toolbar = "^3.2.2"
+black = "*"
+django-debug-toolbar = "*"
 flake8 = "*"
 invoke = "*"
 yamllint = "*"
