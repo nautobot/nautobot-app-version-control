@@ -1657,7 +1657,7 @@ testing = ["pytest (>=4.6)", "pytest-checkdocs (>=2.4)", "pytest-flake8", "pytes
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.6.2"
-content-hash = "38de7099071cb63eb45e4c40d3c98ee711b9aef17c74d7323013c915866977e4"
+content-hash = "261e90a493b7c5a7c3467dd433e9660d0360f284ef210253de26cf32a56ab6de"
 
 [metadata.files]
 amqp = [
