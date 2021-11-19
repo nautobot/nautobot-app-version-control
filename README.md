@@ -31,11 +31,13 @@ The Version Control app uses a Docker Compose environment to make it simple to m
 
 Because it is used to execute all common Docker workflow tasks, Invoke must be installed for your user environment. 
 On most systems, if you're installing without root/superuser permissions, the default will install into your local user environment.
+
 ```bash
 $ pip3 install invoke
 ```
 
 If you run into issues, you may also deliberately tell pip3 to install into your user environment by adding the --user flag:
+
 ```bash
 $ pip3 install --user invoke
 ```
@@ -43,6 +45,7 @@ $ pip3 install --user invoke
 ### List Invoke Tasks
 
 Now that you have an invoke command, list the tasks defined in tasks.py with `invoke --list`:
+
 ```bash
 $ invoke --list
 Available tasks:
@@ -78,27 +81,27 @@ Available tasks:
 ### Using Docker with Invoke
 
 A development environment can be easily started up from the root of the project using the following commands:
+
 - invoke build - Builds Nautobot docker images
 - invoke migrate - Performs database migration operation in Django
 - invoke createsuperuser - Creates a superuser account for the Nautobot application
 - invoke debug - Starts Docker containers for Nautobot, PostgreSQL, Redis, Celery, and the RQ worker in debug mode and attaches their output to the terminal in the foreground. You may enter Control-C to stop the containers.
 
 Additional useful commands for the development environment:
+
 - invoke start - Starts all Docker containers to run in the background with debug disabled
 - invoke stop - Stops all containers created by invoke start
 
-
-## Local Dev & Test Environment
-
-A local environment based on Docker Compose is available for development and testing as well as a sample dataset to help get started faster with Nautobot & Dolt integration.
-
 ### Initialize the Local environment
 
-Run the following commmands to initialize the local environment
+Run the following commmands to initialize the local environment:
+
 ```
 cp development/creds.example.env development/creds.env
 invoke build
 ```
+
+From here, you can either [start the local environment with a sample database](#start-the-local-environment-with-a-sample-database) or [start the local environment with an empty database](#start-the-local-environment-with-an-empty-database).
 
 ### Start the Local environment with a sample database
 
@@ -121,6 +124,7 @@ You can connect with either of these 2 accounts:
 
 
 Run the following commands to Reset the Local environment and load the sample dataset again:
+
 ```
 invoke stop
 invoke destroy
@@ -132,6 +136,7 @@ invoke start
 ### Start the Local environment with an empty database
 
 This option will simply start the local dev environment. Nautobot will have an empty database:
+
 ```
 invoke migrate
 invoke start
@@ -139,9 +144,11 @@ invoke start
 
 After few min, Nautobot will be available at `http://0.0.0.0:8080` 
 You can connect with:
+
 - Login `admin` / Password `admin`
 
 Run the following commands to Reset the Local environment:
+
 ```
 invoke stop
 invoke destroy
@@ -175,7 +182,7 @@ To ensure the version control app is automatically re-installed during future up
 echo nautobot-plugin-version-control >> local_requirements.txt
 ```
 
-Once installed, the plugin needs to be enabled in your `nautobot_config.py`
+Once installed, the plugin needs to be enabled in your `nautobot_config.py`:
 
 ```python
 # In your nautobot_config.py
