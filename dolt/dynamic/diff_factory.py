@@ -4,7 +4,6 @@ import copy
 
 from django.apps import apps
 from django.contrib.contenttypes.models import ContentType
-from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.html import format_html
@@ -12,95 +11,7 @@ from django.utils.html import format_html
 import django_tables2 as tables
 from django_tables2.utils import call_with_appropriate
 
-from nautobot.utilities.querysets import RestrictedQuerySet
-
 from dolt import diff_table_for_model
-
-
-class DiffModelFactory:
-    """DiffModelFactory wraps a DiffModel to query the dolt_diff_tablename table."""
-
-    def __init__(self, content_type):
-        self.content_type = content_type
-
-    def get_model(self):
-        """get_model returns the underlying model."""
-        try:
-            return apps.get_model("dolt", self.model_name)
-        except LookupError:
-            return self.make_model()
-
-    def make_model(self):
-        """make_model creates queryable diff model."""
-        props = {
-            "__module__": "dolt.models",
-            "_declared": timezone.now(),
-            "Meta": self._model_meta(),
-            "objects": RestrictedQuerySet.as_manager(),
-            **self._make_diff_fields(),
-        }
-        model = type(self.model_name, (models.Model,), props)
-        for f in model._meta.get_fields():
-            # back-link field references
-            f.model = model
-        return model
-
-    def _model_meta(self):
-        class Meta:
-            app_label = "dolt"
-            managed = False
-            db_table = self.diff_table_name
-            verbose_name = self.model_name
-
-        return Meta
-
-    @property
-    def model_name(self):
-        """returns the mod_name."""
-        return f"diff_{self.content_type.model}"
-
-    @property
-    def source_model_verbose_name(self):
-        """return the underlying models verbose name."""
-        return str(self.content_type.model_class()._meta.verbose_name.capitalize())
-
-    @property
-    def diff_table_name(self):
-        """diff_table_name returns the name of the diff table."""
-        return f"dolt_commit_diff_{self.content_type.app_label}_{self.content_type.model}"
-
-    @property
-    def _model_fields(self):
-        return self.content_type.model_class()._meta.get_fields()
-
-    def _make_diff_fields(self):
-        diff_fields = [
-            models.SlugField(name="to_commit"),
-            models.DateTimeField(name="to_commit_date"),
-            models.SlugField(name="from_commit"),
-            models.DateTimeField(name="from_commit_date"),
-            models.SlugField(name="diff_type"),
-        ]
-
-        for field in self._model_fields:
-            if not field.concrete or field.is_relation:
-                continue
-            diff_fields.extend(self._diff_fields_from_field(field))
-        return {df.name: df for df in diff_fields}
-
-    def _diff_fields_from_field(self, field):
-        def clone_field(prefix):
-            field_type = type(field)
-            kwargs = {"name": f"{prefix}{field.name}"}
-
-            # copy these kwargs if they exist
-            optional = ("primary_key", "target_field", "base_field")
-            for kw in optional:
-                if kw in field.__dict__:
-                    kwargs[kw] = field.__dict__[kw]
-            return field_type(**kwargs)
-
-        return [clone_field(pre) for pre in ("to_", "from_")]
 
 
 class DiffListViewFactory:
@@ -155,6 +66,8 @@ class DiffListViewFactory:
 
 def row_attrs_for_record(record):  # pylint: disable=R1710
     """row_attrs_for_record returns button attributes per diff type."""
+    if not record.diff:
+        return ""
     if record.diff["diff_type"] == "added":
         return "bg-success"
     if record.diff["diff_type"] == "removed":
@@ -263,7 +176,7 @@ class DiffListViewBase(tables.Table):
                 # the branch, leading to referential integrity errors.
                 return value
 
-            if record.diff["diff_type"] != "modified":
+            if not record.diff or record.diff["diff_type"] != "modified":
                 # only render before/after diff styling
                 # for 'modified' rows
                 return cell
