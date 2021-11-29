@@ -428,8 +428,8 @@ class PullRequest(BaseModel):
             return "open"
 
         # get the most recent review that approved or blocked
-        decision = pr_reviews.exclude(state=PullRequestReview.COMMENTED).order_by("-reviewed_at").first()
-        if not decision:
+        decision = pr_reviews.order_by("-reviewed_at").first()
+        if not decision or (decision and decision.state == PullRequestReview.COMMENTED):
             # all PRs are "comments"
             return "in-review"
         if decision.state == PullRequestReview.APPROVED:
