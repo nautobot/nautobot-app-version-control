@@ -744,7 +744,7 @@ class PullRequestReviewEditView(generic.ObjectEditView):
         obj.reviewer = request.user
         return obj
 
-    # FIXME(jathan): Figure out why we had to revert to pre-1.2.0 `get_object()`
+    # TODO(jathan): Figure out why we had to revert to pre-1.2.0 `get_object()`
     # for this to work.
     def get_object(self, kwargs):
         """Overload to restore pre-1.2.0 functionality."""
