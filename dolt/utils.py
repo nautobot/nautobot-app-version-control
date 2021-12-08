@@ -15,12 +15,18 @@ class DoltError(Exception):
     pass  # pylint: disable=W0107
 
 
-def author_from_user(usr):
-    """author_from_user returns an author string from a user object."""
-    if usr and usr.username and usr.email:
-        return f"{usr.username} <{usr.email}>"
+def author_from_user(user):
+    """author_from_user returns an author string from a user object.
+
+    Note that while user.email is optional in Django, it's mandatory for Dolt.
+    """
+    if user:
+        if user.email:
+            return f"{user.username} <{user.email}>"
+        # RFC 6761 defines .invalid as a reserved TLD that will never be used for real-world domains
+        return f"{user.username} <{user.username}@nautobot.invalid>"
     # default to generic user
-    return "nautobot <nautobot@ntc.com>"
+    return "unknown <unknown@nautobot.invalid>"
 
 
 def is_dolt_model(model):

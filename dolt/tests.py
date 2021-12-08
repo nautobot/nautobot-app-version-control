@@ -29,7 +29,10 @@ class TestBranches(DoltTestCase):
 
     def setUp(self):
         """setUp is ran before every testcase."""
-        self.user = User.objects.get_or_create(username="branch-test", is_superuser=True)[0]
+        self.user, _ = User.objects.get_or_create(
+            username="branch-test", email="branch-test@example.com", is_superuser=True
+        )
+        self.user_no_email, _ = User.objects.get_or_create(username="branch-test-no-email", is_superuser=True)
 
     def tearDown(self):
         """tearDown is ran after every testcase."""
@@ -77,11 +80,21 @@ class TestBranches(DoltTestCase):
 
         Commit(message="commit any changes").save(user=self.user)
 
+        # Commit().save() doesn't update the PK correctly, it appears - .refresh_from_db() fails with
+        # "Commit matching query does not exist". So we need to load it fresh from the DB instead:
+        commit = Commit.objects.order_by("date").last()
+        self.assertEqual(commit.committer, self.user.username)
+        self.assertEqual(commit.email, self.user.email)
+
         # Checkout to the other branch and make a change
         other.checkout()
         Manufacturer.objects.all().delete()
         Manufacturer.objects.create(name="m1", slug="m-1")
-        Commit(message="added a manufacturer").save(user=self.user)
+        Commit(message="added a manufacturer").save(user=self.user_no_email)
+
+        commit = Commit.objects.order_by("date").last()
+        self.assertEqual(commit.committer, self.user_no_email.username)
+        self.assertEqual(commit.email, f"{self.user_no_email.username}@nautobot.invalid")
 
         # Now do a merge
         main.checkout()
@@ -106,7 +119,7 @@ class TestBranches(DoltTestCase):
         # Checkout to the other branch and make a change
         other.checkout()
         Manufacturer.objects.create(name="m3", slug="m-3")
-        Commit(message="commit m3").save(user=self.user)
+        Commit(message="commit m3").save(user=self.user_no_email)
 
         # Now do a merge
         main.checkout()
