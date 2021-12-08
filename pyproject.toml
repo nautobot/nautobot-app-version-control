@@ -11,7 +11,8 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-nautobot = "~1.2.0b1"
+# nautobot = "~1.2.0b1"
+nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop" }
 # MySQL database adapter
 mysqlclient = "^2.0.3"
 

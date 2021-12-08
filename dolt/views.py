@@ -1,15 +1,14 @@
 """views.py implements django views for all dolt plugin features."""
 
-from datetime import datetime
 import logging
+from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
-from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
+from django.shortcuts import get_list_or_404, get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views import View
-
 from nautobot.core.views import generic
 from nautobot.dcim.models.sites import Site
 from nautobot.utilities.forms import ConfirmationForm
@@ -18,16 +17,8 @@ from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequired
 
 from dolt import diffs, filters, forms, merge, tables
 from dolt.constants import DOLT_DEFAULT_BRANCH
-from dolt.utils import alter_session_branch, db_for_commit, active_branch
-from dolt.models import (
-    Branch,
-    BranchMeta,
-    Commit,
-    CommitAncestor,
-    PullRequest,
-    PullRequestReview,
-)
-
+from dolt.models import Branch, BranchMeta, Commit, CommitAncestor, PullRequest, PullRequestReview
+from dolt.utils import active_branch, alter_session_branch, db_for_commit
 
 #
 # Branches
@@ -752,6 +743,16 @@ class PullRequestReviewEditView(generic.ObjectEditView):
     def alter_obj(self, obj, request, url_args, url_kwargs):  # noqa: D102
         obj.reviewer = request.user
         return obj
+
+    # FIXME(jathan): Figure out why we had to revert to pre-1.2.0 `get_object()`
+    # for this to work.
+    def get_object(self, kwargs):
+        # Look up an existing object by slug or PK, if provided.
+        if "slug" in kwargs:
+            return get_object_or_404(self.queryset, slug=kwargs["slug"])
+        elif "pk" in kwargs:
+            return get_object_or_404(self.queryset, pk=kwargs["pk"])
+        return self.queryset.model()
 
     def post(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         kwargs["user"] = request.user
