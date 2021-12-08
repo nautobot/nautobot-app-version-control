@@ -747,6 +747,7 @@ class PullRequestReviewEditView(generic.ObjectEditView):
     # FIXME(jathan): Figure out why we had to revert to pre-1.2.0 `get_object()`
     # for this to work.
     def get_object(self, kwargs):
+        """Overload to restore pre-1.2.0 functionality."""
         # Look up an existing object by slug or PK, if provided.
         if "slug" in kwargs:
             return get_object_or_404(self.queryset, slug=kwargs["slug"])
