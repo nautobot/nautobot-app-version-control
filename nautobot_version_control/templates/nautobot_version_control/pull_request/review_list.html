@@ -1,0 +1,49 @@
+{% extends 'nautobot_version_control/pull_request/base.html' %}
+{% load buttons %}
+{% load static %}
+{% load helpers %}
+{% load render_table from django_tables2 %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane active" id="reviews">
+                {% if review_list %}
+                    <div class="row">
+                        <div class="col-sm-3"></div>
+                        <div class="col-md-6">
+                            {% for review in review_list %}
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <strong>
+                                        Reviewed By
+                                        <label class="label label-primary">{{ review.reviewer|placeholder }}</label>
+                                         on {{ review.reviewed_at|placeholder}}
+                                    </strong>
+                                    <div class="pull-right">
+                                        {% if review.state == 0 %}
+                                        <span class="label label-primary">Commented</span>
+                                        {% elif review.state == 1 %}
+                                        <span class="label label-success">Approved</span>
+                                        {% elif review.state == 2 %}
+                                        <span class="label label-warning">Blocked</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="table table-hover panel-body attr-table">
+                                    <p>{{review.summary}}</p>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <div class="col-sm-3"></div>
+                    </div>
+                {% else %}
+                    <h3 class="text-muted text-center">No Reviews Submitted</h3>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

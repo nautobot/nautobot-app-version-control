@@ -1,0 +1,60 @@
+{% extends 'nautobot_version_control/pull_request/base.html' %}
+{% load buttons %}
+{% load custom_links %}
+{% load helpers %}
+{% load plugins %}
+{% load static %}
+{% load render_table from django_tables2 %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="tab-content">
+                <div role="tabpanel" class="tab-pane active" id="details">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="panel panel-default">
+                                <div class="panel-heading">
+                                    <strong>{{ object.summary_description|placeholder }}</strong>
+                                </div>
+                                <table class="table table-hover panel-body attr-table">
+                                    <tr>
+                                        <td>Description</td>
+                                        <td>{{ object.description|placeholder }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Source Branch</td>
+                                        <td>{{ object.source_branch|placeholder }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Destination Branch</td>
+                                        <td>{{ object.destination_branch|placeholder }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Creator</td>
+                                        <td>{{ object.creator|placeholder }}</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Created</td>
+                                        <td>{{ object.created_at|placeholder }}</td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="col-md-3"></div>
+                        <div class="col-md-3">
+                            {% include 'nautobot_version_control/pull_request/conflict_summary.html' with conflicts=conflicts %}
+                        </div>
+                    </div>
+                </div>
+                {% if conflicts %}
+                    {% include 'nautobot_version_control/conflicts.html' with conflicts=conflicts %}
+                {% else %}
+                    <div id="conflicts">
+                        <h3 class="text-muted text-center">No conflicts found</h3>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

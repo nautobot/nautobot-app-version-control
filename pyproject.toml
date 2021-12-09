@@ -6,7 +6,7 @@ authors = ["Andy Arthur <andy@dolthub.com>"]
 license = "LICENSE.txt"
 
 packages = [
-    { include = "dolt" },
+    { include = "nautobot_version_control" },
 ]
 
 [tool.poetry.dependencies]
