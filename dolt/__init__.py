@@ -1,23 +1,32 @@
 """ This is the main module that contains the code for the Dolt backed Version Control plugin. """
+try:
+    from importlib import metadata
+except ImportError:
+    # Python version < 3.8
+    import importlib_metadata as metadata
 
 from django.db.models.signals import pre_migrate, post_migrate
+import django_tables2
 
 from nautobot.extras.plugins import PluginConfig
 
-import django_tables2
-
 from dolt.migrations import auto_dolt_commit_migration
 
+__version__ = metadata.version("nautobot_version_control")
 
-class NautobotDolt(PluginConfig):
-    """NautobotDolt initializes the dolt configs, middleware, and sets up migrations."""
+
+class NautobotVersionControl(PluginConfig):
+    """NautobotVersionControl initializes the dolt configs, middleware, and sets up migrations."""
 
     name = "dolt"
-    verbose_name = "Nautobot Dolt"
-    description = "Nautobot + Dolt"
-    version = "0.1"
+    verbose_name = "Nautobot Version Control"
+    description = "Nautobot Version Control with Dolt"
+    base_url = "version-control"
+    version = __version__
     author = "Andy Arthur"
     author_email = "andy@dolthub.com"
+    min_version = "1.2.0-beta.1"
+    max_version = "1.999"
     required_settings = []
     default_settings = {
         # TODO: are these respected?
@@ -45,7 +54,7 @@ class NautobotDolt(PluginConfig):
         post_migrate.connect(auto_dolt_commit_migration, sender=self)
 
 
-config = NautobotDolt  # pylint: disable=C0103
+config = NautobotVersionControl  # pylint: disable=C0103
 
 
 def query_registry(model, registry):
