@@ -5,8 +5,9 @@ from django.db import connection
 from django.db import models
 from django.db.models.expressions import RawSQL
 
-from nautobot.dcim.tables import cables, devices, devicetypes, power, racks, sites
 from nautobot.circuits import tables as circuits_tables
+from nautobot.dcim.tables import cables, devices, devicetypes, power, racks, sites
+from nautobot.extras import tables as extras_tables
 from nautobot.ipam import tables as ipam_tables
 from nautobot.tenancy import tables as tenancy_tables
 from nautobot.virtualization import tables as virtualization_tables
@@ -140,6 +141,12 @@ def json_diff_fields(tbl_name):
 
 register_diff_tables(
     {
+        "circuits": {
+            "circuit": circuits_tables.CircuitTable,
+            # "circuittermination": None,
+            "circuittype": circuits_tables.CircuitTypeTable,
+            "provider": circuits_tables.ProviderTable,
+        },
         "dcim": {
             # "baseinterface": devices.BaseInterfaceTable,
             "cable": cables.CableTable,
@@ -190,11 +197,9 @@ register_diff_tables(
             "site": sites.SiteTable,
             "virtualchassis": devices.VirtualChassisTable,
         },
-        "circuits": {
-            "circuit": circuits_tables.CircuitTable,
-            # "circuittermination": None,
-            "circuittype": circuits_tables.CircuitTypeTable,
-            "provider": circuits_tables.ProviderTable,
+        "extras": {
+            "secret": extras_tables.SecretTable,
+            "secretsgroup": extras_tables.SecretsGroupTable,
         },
         "ipam": {
             "aggregate": ipam_tables.AggregateTable,

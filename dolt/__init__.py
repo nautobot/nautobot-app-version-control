@@ -123,6 +123,8 @@ __VERSIONED_MODEL_REGISTRY___ = {
         "objectchange": True,
         "relationship": True,
         "relationshipassociation": True,
+        "secret": True,
+        "secretsgroup": True,
         "status": True,
         "tag": True,
         "taggeditem": True,
