@@ -1,7 +1,5 @@
 """middleware.py contains the middleware add-ons needed for the dolt plugin to work."""
 
-import random
-
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import m2m_changed, post_save, pre_delete
@@ -16,7 +14,7 @@ from dolt.constants import (
     DOLT_DEFAULT_BRANCH,
 )
 from dolt.models import Branch, Commit
-from dolt.utils import DoltError, active_branch
+from dolt.utils import DoltError
 
 
 def dolt_health_check_intercept_middleware(get_response):
@@ -62,14 +60,6 @@ class DoltBranchMiddleware:
             msg = f"could not checkout branch {branch}: {str(e)}"
             messages.error(request, mark_safe(msg))
 
-        if request.user.is_authenticated:
-            # Inject the "active branch" banner. Use a random number for the button id to ensure button listeners do not
-            # clash. This is safe since it is JS generated on our end and should not be modifiable by any XSS attack.
-            msg = DoltBranchMiddleware.get_active_branch_banner(
-                random.randint(0, 10000)  # nosec random is not being used for security purposes.
-            )
-            messages.info(request, mark_safe(msg))
-
         try:
             return view_func(request, *view_args, **view_kwargs)
         except DoltError as e:
@@ -90,29 +80,6 @@ class DoltBranchMiddleware:
             )
             request.session[DOLT_BRANCH_KEYWORD] = DOLT_DEFAULT_BRANCH
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
-
-    @staticmethod
-    def get_active_branch_banner(b_id):
-        """get_active_branch_banner returns a banner that renders the active branch and its share button."""
-        return f"""
-                    <div class="text-center">
-                        Active Branch: {active_branch()}
-                        <div class = "pull-right">
-                            <div class="btn btn-xs btn-primary" id="share-button-{b_id}">
-                                Share
-                            </div>
-                        </div>
-                    </div>
-                    <script>
-                        const btn{b_id} = document.getElementById("share-button-{b_id}");
-                        btn{b_id}.addEventListener('click', ()=>{{
-                            const currLink = window.location.href;
-                            const copiedLink = currLink + "?{DOLT_BRANCH_KEYWORD}={active_branch()}";
-                            navigator.clipboard.writeText(copiedLink);
-                            btn{b_id}.textContent = "Copied!"
-                        }});
-                    </script>
-                """
 
 
 class DoltAutoCommitMiddleware:
