@@ -2,18 +2,16 @@
 name = "nautobot-version-control"
 version = "0.1.0"
 description = "Nautobot Version Control"
-authors = ["Andy Arthur <andy@dolthub.com>"]
+authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "LICENSE.txt"
 
 packages = [
-    { include = "dolt" },
+    { include = "nautobot_version_control" },
 ]
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-# TODO(jathan): Once we get to final release, this must be replaced.
-# nautobot = "^1.1.5"
-nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "next" }
+nautobot = "~1.2.0b1"
 # MySQL database adapter
 mysqlclient = "^2.0.3"
 
@@ -23,10 +21,12 @@ black = "*"
 django-debug-toolbar = "*"
 flake8 = "*"
 invoke = "*"
-yamllint = "*"
+myst-parser = "^0.15.2"
 pydocstyle = "*"
 pylint = "*"
 pylint-django = "*"
+Sphinx = "^4.3.0"
+yamllint = "*"
 
 [tool.black]
 line-length = 120

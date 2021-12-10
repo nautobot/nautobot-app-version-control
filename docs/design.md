@@ -46,7 +46,7 @@ When the server receives a request, it looks for this state and uses it to selec
 ![active branch banner](images/active-branch-banner.png)
 
 The business logic to handle branch selection is performed in [middleware](https://docs.djangoproject.com/en/stable/topics/http/middleware/), 
-specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L36) 
+specifically in [DoltBranchMiddleware](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/middleware.py#L36)
 
 ## Database Versioning
 
@@ -55,8 +55,8 @@ Database connections outside of the web server, such as through nbshell are also
 When connecting directly to the database you can check your current branch with the active_branch() function and switch branches with the checkout() method:
 
 ```python
->>> from dolt.models import Branch
->>> from dolt.utils import active_branch
+>>> from nautobot_version_control.models import Branch
+>>> from nautobot_version_control.utils import active_branch
 >>> active_branch()
     'main'
 >>> Branch.objects.get(name="foo").checkout()
@@ -70,13 +70,13 @@ The Version Control app extends the Nautobot's core [REST API](https://nautobot.
 
 ## REST API EndPoints
 
-The top level API endpoint is `/api/plugins/dolt/`. 
+The top level API endpoint is `/api/plugins/version-control/`.
 Below this, there are endpoints for the following models:
 
-- Branch: `api/plugins/dolt/branches`
-- Commit: `api/plugins/dolt/commits`
-- Pull Request: `api/plugins/dolt/pull_requests` 
-- Pull Request Reviews: `api/plugins/dolt/pull_requests_reviews`
+- Branch: `api/plugins/version-control/branches`
+- Commit: `api/plugins/version-control/commits`
+- Pull Request: `api/plugins/version-control/pull_requests`
+- Pull Request Reviews: `api/plugins/version-control/pull_requests_reviews`
 
 The Version Control API shares a common implementation with Nautobot's core API.
 Features suchs as [pagination](https://nautobot.readthedocs.io/en/stable/rest-api/overview/#pagination) and
@@ -96,7 +96,7 @@ For example, the following request will list all the commits from `my-feature-br
 $ curl -s \
 -H "Authorization: Token 90579810c8d2d2e98fb34d69025f6a1cc3fa9943" \
 -H "dolt-branch: my-feature-branch"  \
-0.0.0.0:8080/api/plugins/dolt/commits/
+0.0.0.0:8080/api/plugins/version-control/commits/
 ```
 
 Versioning requests works with all API endpoints, not just models from the Version Control app. This example queries for devices in a `my-branch`: 
@@ -133,18 +133,18 @@ pprint(response.json())
 ## Commit Logic
 
 The committing logic is implemented using a combination of middleware and [Django signals](https://docs.djangoproject.com/en/stable/topics/signals/),
-specifically [DoltAutoCommitMiddleWare](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L118). 
-DoltAutoCommitMiddleWare wraps every server request in a [AutoDoltCommit](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/middleware.py#L134)
+specifically [DoltAutoCommitMiddleWare](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/middleware.py#L118).
+DoltAutoCommitMiddleWare wraps every server request in a [AutoDoltCommit](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/middleware.py#L134)
 context manager which listens for and responds to database writes made while processing the request. 
 AutoDoltCommit listens for signals fired by Django model updates and makes a Dolt commit if updates were made during the lifetime of the context manager. 
 The message for the commit is derived from the model signals that were captured.
 
 ## DoltSystemTables
 
-[DoltSystemTable](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/models.py#L22)
+[DoltSystemTable](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/models.py#L22)
 is an abstract base class that forms the basis of Django models that expose Dolt system tables
 to the Object Relational Mapping (ORM). 
-Plugin models such as *Commit* and *Branch* that inherit from DoltSystemTable are [unmanaged](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/models.py#L31
+Plugin models such as *Commit* and *Branch* that inherit from DoltSystemTable are [unmanaged](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/models.py#L31
 meaning that Django will ignore these models for the purposes of database migrations. 
 This is important because Dolt system tables exist from the time the database is created and cannot be modified or deleted. 
 Internally, Dolt generates system table data on-the-fly rather than reading it from a traditional database index.
@@ -154,7 +154,7 @@ Internally, Dolt generates system table data on-the-fly rather than reading it f
 The Branch model is one such "unmanaged" model. 
 It exposes the dolt_branches system table to the ORM. 
 System tables have a static schema, so additional object fields such as "created by" and "source branch" must be stored in another model. 
-The [BranchMeta](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/models.py#L205) model does exactly that. 
+The [BranchMeta](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/models.py#L205) model does exactly that.
 Each Branch object has an associated BranchMeta object where the `BranchMeta.branch field` is equal to the name field of the associated branch. 
 However, this relationship is not formalized with a Foreign Key due to limitations with the dolt_branches table.
 Branch objects lookup their associated BranchMeta objects on a best-effort basis.
@@ -194,7 +194,7 @@ Non-versioned models:
 ## Global State Router
 
 The business logic for differentiating versioned and non-versioned models is implemented in a Django [database router](https://docs.djangoproject.com/en/stable/topics/db/multi-db/#automatic-database-routing), 
-specifically the [GlobalStateRouter](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/routers.py#L10). 
+specifically the [GlobalStateRouter](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/routers.py#L10).
 The GlobalStateRouter is responsible for choosing a database connection to read an object from or write an object to, depending on its model class. 
 There are two connections to choose from when accessing the database. 
 The “default” connection will access the database on the Dolt branch that was specified in the request. 
@@ -202,7 +202,7 @@ This connection is used to read and write versioned models.
 The “global” connection always accesses the database on the main branch, it is used for non-versioned models.
 
 In order to choose a connection for a model, the router first references the 
-[versioned model registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/__init__.py#L87)
+[versioned model registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/__init__.py#L87)
 to determine if the model is under version control. 
 Currently, this registry is a hardcoded mapping from ContentType to versioned/non-versioned. 
 The versioned model registry is structured as an ["allow-list"](https://help.dnsfilter.com/hc/en-us/articles/1500008111381-Allow-and-Block-Lists).
@@ -211,7 +211,7 @@ If a model is absent from the list, it is assumed to be non-versioned.
 in Nautobot core will make it possible for models to declare themselves whether they should be version controlled.
 
 Database connections for versioned and non-versioned models are defined in 
-[nautobot_config.py](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/development/nautobot_config.py#L55). 
+[nautobot_config.py](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/development/nautobot_config.py#L55).
 The database configuration is as follows:
 ```python
 DATABASES = {
@@ -259,7 +259,7 @@ Custom rendering functions are added to apply diff styling to the list view.
 
 Diff table classes are created dynamically at runtime. 
 When a diff table is needed to display model changes, the core model's table is looked up from the 
-[diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/__init__.py#L179)
+[diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/__init__.py#L179)
 and then a new subclass is created to extend the core table.
 The diff table registry works much like the versioned model registry, it is a mapping from a models content type to its table.
 Tables in Nautobot core are all subclasses of [`django-tables2`](https://django-tables2.readthedocs.io/en/latest/).
@@ -270,8 +270,8 @@ All entries in the diff table registry must also be subclasses of `django-tables
 The Version Control app is designed to be used in coordination with other Nautobot plugins.
 By default, any models registered by other plugins will be considered non-versioned. 
 In order to make use of version control and diff features, plugins must register their models in 
-the [versioned models registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/__init__.py#L143) 
-and the [diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/dolt/__init__.py#L190). 
+the [versioned models registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/__init__.py#L143)
+and the [diff table registry](https://github.com/nautobot/nautobot-plugin-version-control/blob/develop/nautobot_version_control/__init__.py#L190).
 Both of these functions take nested dictionaries as arguments:
 ```python
 register_versioned_models({

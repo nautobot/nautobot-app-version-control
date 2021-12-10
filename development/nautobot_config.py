@@ -61,9 +61,9 @@ DATABASES = {
         "PORT": os.getenv("DOLT_PORT", ""),  # Database port (leave blank for default)
         "ENGINE": "django.db.backends.mysql",
     },
-    # TODO: use `dolt.constants.GLOBAL_STATE_DB`
+    # TODO: use `nautobot_version_control.constants.GLOBAL_STATE_DB`
     "global": {
-        # TODO: use `dolt.constants.DOLT_DEFAULT_BRANCH`
+        # TODO: use `nautobot_version_control.constants.DOLT_DEFAULT_BRANCH`
         "NAME": "nautobot",  # Database username
         "USER": os.getenv("DOLT_USER", ""),  # Database username
         "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Database password
@@ -263,7 +263,7 @@ PAGINATE_COUNT = int(os.environ.get("PAGINATE_COUNT", 50))
 
 # Enable installed plugins. Add the name of each plugin to the list.
 PLUGINS = [
-    "dolt",
+    "nautobot_version_control",
 ]
 
 # Pull the list of routers from environment variable to be able to disable all routers when we are running the migrations

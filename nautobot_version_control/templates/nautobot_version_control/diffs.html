@@ -1,0 +1,17 @@
+{% load django_tables2 %}
+
+<div class="diff" >
+    {% if results %}
+        <div class="row">
+            <div class="col-md-12">
+                {% for obj_type in results %}
+                    <h3 id="{{ obj_type.name|lower }}">{{ obj_type.name }}</h3>
+                    {% include 'nautobot_version_control/diff_panel.html' with table=obj_type.table %}
+                    <div class="clearfix"></div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <h3 class="text-muted text-center">No diffs found</h3>
+    {% endif %}
+ </div>
