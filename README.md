@@ -25,7 +25,7 @@ In addition to this `README` file, there are docs covering the following topics:
 
 There are some special considerations for running the Version Control app:
 
-* Nautobot 1.1.0 or later is required
+* Nautobot 1.2.0 or later is required
 * The Nautobot installation **must** be running a Dolt database
 * There are some [additional configurations](#configuring-nautobot-to-use-version-control) required in `nautobot_config.py`
 
