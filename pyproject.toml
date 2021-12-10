@@ -2,11 +2,11 @@
 name = "nautobot-version-control"
 version = "0.1.0"
 description = "Nautobot Version Control"
-authors = ["Andy Arthur <andy@dolthub.com>"]
+authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "LICENSE.txt"
 
 packages = [
-    { include = "dolt" },
+    { include = "nautobot_version_control" },
 ]
 
 [tool.poetry.dependencies]

@@ -8,7 +8,7 @@ jobs:
   black:
     runs-on: "ubuntu-20.04"
     env:
-      INVOKE_NAUTOBOT_DOLT_LOCAL: "True"
+      INVOKE_NAUTOBOT_VERSION_CONTROL_LOCAL: "True"
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
@@ -19,7 +19,7 @@ jobs:
   bandit:
     runs-on: "ubuntu-20.04"
     env:
-      INVOKE_NAUTOBOT_DOLT_LOCAL: "True"
+      INVOKE_NAUTOBOT_VERSION_CONTROL_LOCAL: "True"
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
@@ -33,7 +33,7 @@ jobs:
   pydocstyle:
     runs-on: "ubuntu-20.04"
     env:
-      INVOKE_NAUTOBOT_DOLT_LOCAL: "True"
+      INVOKE_NAUTOBOT_VERSION_CONTROL_LOCAL: "True"
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
@@ -47,7 +47,7 @@ jobs:
   flake8:
     runs-on: "ubuntu-20.04"
     env:
-      INVOKE_NAUTOBOT_DOLT_LOCAL: "True"
+      INVOKE_NAUTOBOT_VERSION_CONTROL_LOCAL: "True"
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
@@ -61,7 +61,7 @@ jobs:
   yamllint:
     runs-on: "ubuntu-20.04"
     env:
-      INVOKE_NAUTOBOT_DOLT_LOCAL: "True"
+      INVOKE_NAUTOBOT_VERSION_CONTROL_LOCAL: "True"
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"
@@ -110,11 +110,11 @@ jobs:
       fail-fast: true
       matrix:
         python-version: ["3.6", "3.7", "3.8", "3.9"]
-        nautobot-version: ["1.1.2"]
+        nautobot-version: ["1.2.0-beta.1"]
     runs-on: "ubuntu-20.04"
     env:
-      INVOKE_NAUTOBOT_DOLT_PYTHON_VER: "${{ matrix.python-version }}"
-      INVOKE_NAUTOBOT_DOLT_NAUTOBOT_VER: "${{ matrix.nautobot-version }}"
+      INVOKE_NAUTOBOT_VERSION_CONTROL_PYTHON_VER: "${{ matrix.python-version }}"
+      INVOKE_NAUTOBOT_VERSION_CONTROL_NAUTOBOT_VER: "${{ matrix.nautobot-version }}"
     steps:
       - name: "Check out repository code"
         uses: "actions/checkout@v2"

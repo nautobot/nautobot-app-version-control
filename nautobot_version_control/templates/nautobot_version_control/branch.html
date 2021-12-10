@@ -1,0 +1,120 @@
+{% extends 'base.html' %}
+{% load buttons %}
+{% load custom_links %}
+{% load helpers %}
+{% load plugins %}
+{% load static %}
+{% load render_table from django_tables2 %}
+
+{% block header %}
+    <div class="row noprint">
+        <div class="col-sm-8 col-md-9">
+            <ol class="breadcrumb">
+                <li>Dolt</li>
+                <li><a href="{% url 'plugins:nautobot_version_control:branch_list' %}">Branches</a></li>
+                <li>{{ object }}</li>
+            </ol>
+        </div>
+        <div class="col-sm-4 col-md-3">
+            <form action="{% url 'plugins:nautobot_version_control:branch_list' %}" method="get">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="Search branches" />
+                    <span class="input-group-btn">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="mdi mdi-magnify" aria-hidden="true"></span>
+                        </button>
+                    </span>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="pull-right noprint">
+       <a href="{% url 'plugins:nautobot_version_control:branch_checkout' pk=object.name %}" class="btn btn-primary" title="activate">
+           Activate
+       </a>
+    </div>
+    <h1>{% block title %}{{ object }}{% endblock %}</h1>
+    {% include 'inc/created_updated.html' %}
+    <div class="pull-right noprint">
+        {% custom_links object %}
+    </div>
+    <ul class="nav nav-tabs">
+        <li role="presentation"{% if not active_tab %} class="active"{% endif %}>
+            <a href="{{ object.get_absolute_url }}">Branch</a>
+        </li>
+    </ul>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+	<div class="col-md-6">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <strong>Branch</strong>
+            </div>
+            <table class="table table-hover panel-body attr-table">
+                <tr>
+                    <td>Name</td>
+                    <td>{{ object.name|placeholder }}</td>
+                </tr>
+                <tr>
+                    <td>Created By</td>
+                    <td>{{ object.created_by|placeholder }}</td>
+                </tr>
+                <tr>
+                    <td>Created At</td>
+                    <td>{{ object.created_at|placeholder }}</td>
+                </tr>
+                <tr>
+                    <td>Starting Branch</td>
+                    <td>{{ object.source_branch|placeholder }}</td>
+                </tr>
+                <tr>
+                    <td>Commit Hash</td>
+                    <td>{{ object.hash|placeholder }}</td>
+                </tr>
+                <tr>
+                    <td>Latest Committer</td>
+                    <td>{{ object.latest_committer|placeholder }}</td>
+                </tr>
+                <tr>
+                    <td>Latest Committer Email</td>
+                    <td>{{ object.latest_committer_email|placeholder }}</td>
+                </tr>
+                <tr>
+                    <td>Latest Commit Date</td>
+                    <td>{{ object.latest_commit_date|placeholder }}</td>
+                </tr>
+                <tr>
+                    <td>Latest Commit Message</td>
+                    <td>{{ object.latest_commit_message|placeholder }}</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="col-md-3"></div>
+    <div class="col-md-3">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <strong>Diff Summary</strong>
+            </div>
+            <div class="list-group">
+                {% for obj_type in results %}
+                <a href="#{{ obj_type.name|lower }}" class="row list-group-item">
+                    <div class="col-md-6 align-middle">{{ obj_type.name }}</div>
+                    <div class="col-md-6 text-right">
+                        <span class="label label-success">{{ obj_type.added }}</span>
+                        <span class="label label-warning">{{ obj_type.modified }}</span>
+                        <span class="label label-danger">{{ obj_type.removed }}</span>
+                        <span class="badge">{{ obj_type.table.page.paginator.count }}</span>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'nautobot_version_control/diffs.html' with results=results %}
+
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load form_helpers %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 col-md-offset-3">
+        <form action="" method="post" class="form">
+            {% csrf_token %}
+            {% for field in form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
+            {% if conflicts.conflicts and conflicts.conflicts.rows %}
+                <div class="panel panel-danger">
+                    <div class="panel-heading">
+                        Cannot Merge Pull Request <strong>{{ pull_request }}</strong>
+                    </div>
+                    <div class="panel-body">
+                        <p>
+                            Merging <strong>{{ pull_request.source_branch }}</strong>
+                            into <strong>{{ pull_request.destination_branch }}</strong>
+                            causes merge conflicts.
+                            Please resolve these conflicts in <strong>{{ pull_request.source_branch }}</strong>
+                            and reattempt the merge.
+                        </p>
+                        <div class="text-right">
+                            <a href="{{ return_url }}" class="btn btn-danger">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        Merge Pull Request <strong>{{ pull_request }}</strong>?
+                    </div>
+                    <div class="panel-body">
+                        <p>
+                            Are you sure you want to merge <strong>{{ pull_request.source_branch }}</strong>
+                            into <strong>{{ pull_request.destination_branch }}</strong>?
+                        </p>
+                        <div class="text-right">
+                            <button type="submit" name="merge" value="true" class="btn btn-primary">Merge</button>
+                            <button type="submit" name="merge_squash" value="true" class="btn btn-primary">Squash Merge</button>
+                            <a href="{{ return_url }}" class="btn btn-default">Cancel</a>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </form>
+    </div>
+
+    <div class="col-md-10 col-md-offset-1">
+        {% if conflicts.conflicts and conflicts.conflicts.rows %}
+            {% include 'nautobot_version_control/conflicts.html' with conflicts=conflicts %}
+        {% else %}
+            {% include 'nautobot_version_control/diffs.html' with results=diffs %}
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

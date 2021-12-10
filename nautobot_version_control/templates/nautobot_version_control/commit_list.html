@@ -1,0 +1,15 @@
+{% extends 'generic/object_list.html' %}
+{% load helpers %}
+
+{% block buttons %}
+{% endblock %}
+
+{% block title %}
+    Commits in  <label class="label label-primary">{{ active_branch }}</label> branch
+{% endblock %}
+
+{% block bulk_buttons %}
+    <button type="submit" name="_revert" formaction="{% url 'plugins:nautobot_version_control:commit_revert' %}" class="btn btn-warning btn-sm">
+        <span class="mdi mdi-undo-variant" aria-hidden="true"></span> Revert Selected Commits
+    </button>
+{% endblock %}

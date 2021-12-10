@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load form_helpers %}
+{% load render_table from django_tables2 %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 col-md-offset-2">
+        <form action="" method="post" enctype="multipart/form-data" class="form form-horizontal">
+            {% csrf_token %}
+            {% for field in form.hidden_fields %}
+                {{ field }}
+            {% endfor %}
+
+            {% if form.non_field_errors %}
+            <div class="panel panel-danger">
+                <div class="panel-heading"><strong>Errors</strong></div>
+                <div class="panel-body">
+                    {{ form.non_field_errors }}
+                </div>
+            </div>
+            {% endif %}
+
+            {% block form %}
+            <div class="panel panel-warning">
+                <div class="panel-heading"><strong>Confirm Revert Commits</strong></div>
+                <div class="panel-body">
+                    <p>
+                        <strong>Warning:</strong>
+                        The following operation will revert {{ table.rows|length }} commits
+                        on branch <strong>{{ active_branch }}</strong>. Please carefully review
+                        the commits to be reverted and confirm below.</p>
+                    {% block message_extra %}{% endblock %}
+                </div>
+            </div>
+            {% endblock %}
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <strong>
+                        Commits to Revert
+                    </strong>
+                </div>
+                <div class="table table-hover attr-table">
+                    {% render_table table 'inc/table.html' %}
+                </div>
+            </div>
+
+            <div class="text-right">
+                <button type="submit" name="_confirm" formaction="{% url 'plugins:nautobot_version_control:commit_revert' %}" class="btn btn-primary">
+                    Confirm
+                </button>
+                <a href="{{ return_url }}" class="btn btn-default">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

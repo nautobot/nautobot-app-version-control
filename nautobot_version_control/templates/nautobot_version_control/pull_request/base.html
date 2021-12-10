@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% load buttons %}
+{% load static %}
+{% load helpers %}
+{% load plugins %}
+
+{% block title %}{{ object.title }}{% endblock %}
+
+{% block header %}
+    <div class="row noprint">
+        <div class="col-sm-8 col-md-9">
+        <ol class="breadcrumb">
+            <li><a href="{% url 'plugins:nautobot_version_control:pull_request_list' %}">Pull Requests</a></li>
+            <li>{{ object }}</li>
+        </ol>
+        </div>
+    </div>
+    {% if object.open %}
+        <div class="pull-right noprint">
+            <a href="{% url 'plugins:nautobot_version_control:pull_request_add_review' pull_request=object.pk %}" type="button" class="btn btn-success">
+                <span class="mdi mdi-plus-thick" aria-hidden="true"></span> Add Review
+            </a>
+            {% if object.status == "approved" %}
+                <a href="{% url 'plugins:nautobot_version_control:pull_request_merge' pk=object.pk %}" type="button" class="btn btn-info">
+                    Merge
+                </a>
+            {% endif %}
+            <a href="{% url 'plugins:nautobot_version_control:pull_request_edit' pk=object.pk %}" type="button" class="btn btn-warning">
+                Edit
+            </a>
+            <a href="{% url 'plugins:nautobot_version_control:pull_request_close' pk=object.pk %}" type="button" class="btn btn-danger">
+                <span class="mdi mdi-close-thick" aria-hidden="true"></span> Close
+            </a>
+        </div>
+    {% endif %}
+    <h1 id="pull_request_title">
+        {{ object.title }}
+        {% if object.status == "open" %}
+        <span class="label label-primary">Open</span>
+        {% elif object.status == "in-review" %}
+        <span class="label label-primary">In Review</span>
+        {% elif object.status == "blocked" %}
+        <span class="label label-warning">Blocked</span>
+        {% elif object.status == "approved" %}
+        <span class="label label-success">Approved</span>
+        {% elif object.status == "merged" %}
+        <span class="label label-info">Merged</span>
+        {% elif object.status == "closed" %}
+        <span class="label label-danger">Closed</span>
+        {% else %}
+        <span class="label label-danger">Unknown</span>
+        {% endif %}
+    </h1>
+    {% include 'inc/created_updated.html' %}
+    <ul class="nav nav-tabs">
+        <li role="presentation" {% if active_tab == 'diffs' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:nautobot_version_control:pull_request' pk=object.pk %}">Diffs</a>
+        </li>
+        <li role="presentation" {% if active_tab == 'conflicts' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:nautobot_version_control:pull_request_conflicts' pk=object.pk %}">
+                Conflicts <span class="badge badge-danger">{{ counts.num_conflicts }}</span>
+            </a>
+        </li>
+        <li role="presentation" {% if active_tab == 'reviews' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:nautobot_version_control:pull_request_reviews' pk=object.pk %}">
+                Reviews <span class="badge">{{ counts.num_reviews }}</span>
+            </a>
+        </li>
+        <li role="presentation" {% if active_tab == 'commits' %} class="active"{% endif %}>
+            <a href="{% url 'plugins:nautobot_version_control:pull_request_commits' pk=object.pk %}">
+                Commits <span class="badge">{{ counts.num_commits }}</span>
+            </a>
+        </li>
+    </ul>
+{% endblock %}
+
