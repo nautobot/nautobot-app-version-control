@@ -32,13 +32,13 @@ There are some special considerations for running the Version Control app:
 The version control app can be installed with pip3:
 
 ```no-highlight
-pip3 install git+https://github.com/nautobot/nautobot-plugin-version-control
+pip3 install nautobot-version-control
 ```
 
-To ensure the version control app is automatically reinstalled during future upgrades, create a new file named `local_requirements.txt` (if not already existing) in the Nautobot root directory (e.g. `/opt/nautobot`) to include the `nautobot-plugin-version-control` package:
+To ensure the version control app is automatically reinstalled during future upgrades, create a new file named `local_requirements.txt` (if not already existing) in the Nautobot root directory (e.g. `/opt/nautobot`) to include the `nautobot-version-control` package:
 
 ```no-highlight
-echo nautobot-plugin-version-control >> local_requirements.txt
+echo nautobot-version-control >> local_requirements.txt
 ```
 
 ### Configuring Nautobot to use Version Control
@@ -136,6 +136,8 @@ Available tasks:
   pydocstyle          Run pydocstyle to validate docstring formatting adheres to NTC defined standards.
   pylint              Run pylint code analysis.
   restart             Gracefully restart all containers.
+  sphinx              Rebuild Sphinx documentation on changes, with live-reload in the
+                      browser.
   start               Start Nautobot and its dependencies in detached mode.
   stop                Stop Nautobot and its dependencies.
   tests               Run all tests for this plugin.
@@ -147,17 +149,7 @@ Available tasks:
 
 ### Using Docker with Invoke
 
-A development environment can be easily started up from the root of the project using the following commands:
-
-- `invoke build` - Builds Nautobot docker images
-- `invoke migrate` - Performs database migration operation in Django
-- `invoke createsuperuser` - Creates a superuser account for the Nautobot application
-- `invoke debug` - Starts Docker containers for Nautobot, PostgreSQL, Redis, Celery, and the RQ worker in debug mode and attaches their output to the terminal in the foreground. You may enter Control-C to stop the containers.
-
-Additional useful commands for the development environment:
-
-- `invoke start` - Starts all Docker containers to run in the background with debug disabled
-- `invoke stop` - Stops all containers created by invoke start
+A development environment can be easily started up from the root of the project using commands detailed below.
 
 ### Initialize the Local environment
 
