@@ -11,7 +11,10 @@ packages = [
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-nautobot = "~1.2.0b1"
+# TODO(jathan): Pin develop for now because it has upstream fixes that are not yet released. Once
+# v1.2.0 final is out move this to the next version.
+# nautobot = "~1.2.0b1"
+nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop" }
 # MySQL database adapter
 mysqlclient = "^2.0.3"
 
@@ -21,12 +24,14 @@ black = "*"
 django-debug-toolbar = "*"
 flake8 = "*"
 invoke = "*"
-myst-parser = "^0.15.2"
+myst-parser = "0.15.2"
 pydocstyle = "*"
 pylint = "*"
 pylint-django = "*"
-Sphinx = "^4.3.0"
+Sphinx = "4.3.0"
 yamllint = "*"
+sphinx-autobuild = "2021.3.14"
+sphinx-rtd-theme = "1.0.0"
 
 [tool.black]
 line-length = 120
