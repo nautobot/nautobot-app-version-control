@@ -209,7 +209,7 @@ invoke migrate
 invoke start
 ```
 
-After few minutes, Nautobot will be available at `http://0.0.0.0:8080` 
+After a few minutes, Nautobot will be available at `http://0.0.0.0:8080` 
 
 You can connect with:
 
