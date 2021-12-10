@@ -182,7 +182,7 @@ invoke start
 
 > `invoke load-data` can take up to 30 min to run and it will generate many warning messages which may be safely ignored.
 
-After few minutes, Nautobot will be available at `http://0.0.0.0:8080` 
+After a few minutes, Nautobot will be available at `http://0.0.0.0:8080` 
 
 You can connect with either of these 2 accounts:
 
