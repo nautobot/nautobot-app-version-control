@@ -94,7 +94,7 @@ def query_registry(model, registry):
 # may also be a nest dict containing a subset of version-controlled models
 # within the app_label.
 __VERSIONED_MODEL_REGISTRY___ = {
-    "dolt": {
+    "nautobot_version_control": {
         # Pull Requests are not versioned
         "pullrequest": False,
         "pullrequestreviewcomments": False,

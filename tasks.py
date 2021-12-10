@@ -21,13 +21,13 @@ def is_truthy(arg):
 
 
 # Use pyinvoke configuration for default values, see http://docs.pyinvoke.org/en/stable/concepts/configuration.html
-# Variables may be overwritten in invoke.yml or by the environment variables INVOKE_NAUTOBOT-DOLT_xxx
-namespace = Collection("nautobot_dolt")
+# Variables may be overwritten in invoke.yml or by the environment variables INVOKE_NAUTOBOT_VERSION_CONTROL_xxx
+namespace = Collection("nautobot_version_control")
 namespace.configure(
     {
-        "nautobot_dolt": {
+        "nautobot_version_control": {
             "nautobot_ver": "1.2.0-beta.1",
-            "project_name": "dolt",
+            "project_name": "nautobot_version_control",
             "python_ver": "3.6",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
@@ -69,19 +69,19 @@ def docker_compose(context, command, **kwargs):
         **kwargs: Passed through to the context.run() call.
     """
     build_env = {
-        "NAUTOBOT_VER": context.nautobot_dolt.nautobot_ver,
-        "PYTHON_VER": context.nautobot_dolt.python_ver,
+        "NAUTOBOT_VER": context.nautobot_version_control.nautobot_ver,
+        "PYTHON_VER": context.nautobot_version_control.python_ver,
     }
-    compose_command = f'docker-compose --project-name {context.nautobot_dolt.project_name} --project-directory "{context.nautobot_dolt.compose_dir}"'
+    compose_command = f'docker-compose --project-name {context.nautobot_version_control.project_name} --project-directory "{context.nautobot_version_control.compose_dir}"'
 
     if "compose_files" in kwargs:
         compose_files = kwargs["compose_files"]
         del kwargs["compose_files"]
     else:
-        compose_files = context.nautobot_dolt.compose_files
+        compose_files = context.nautobot_version_control.compose_files
 
     for compose_file in compose_files:
-        compose_file_path = os.path.join(context.nautobot_dolt.compose_dir, compose_file)
+        compose_file_path = os.path.join(context.nautobot_version_control.compose_dir, compose_file)
         compose_command += f' -f "{compose_file_path}"'
     compose_command += f" {command}"
     print(f'Running docker-compose command "{command}"')
@@ -90,7 +90,7 @@ def docker_compose(context, command, **kwargs):
 
 def run_command(context, command, **kwargs):
     """Wrapper to run a command locally or inside the nautobot container."""
-    if is_truthy(context.nautobot_dolt.local):
+    if is_truthy(context.nautobot_version_control.local):
         context.run(command, **kwargs)
     else:
         # Check if Nautobot is running, no need to start another Nautobot container to run a command
@@ -122,7 +122,7 @@ def build(context, force_rm=False, cache=True):
     if force_rm:
         command += " --force-rm"
 
-    print(f"Building Nautobot with Python {context.nautobot_dolt.python_ver}...")
+    print(f"Building Nautobot with Python {context.nautobot_version_control.python_ver}...")
     docker_compose(context, command)
 
 
@@ -232,7 +232,7 @@ def migrate(context):
         "docker-compose.base.yml",
     ]
 
-    if is_truthy(context.nautobot_dolt.local):
+    if is_truthy(context.nautobot_version_control.local):
         context.run(command)
     else:
         compose_command = f"run --entrypoint '{command}' nautobot"
@@ -391,7 +391,7 @@ def unittest(context, keepdb=False, label="nautobot_version_control", failfast=F
 @task
 def unittest_coverage(context):
     """Report on code test coverage as measured by 'invoke unittest'."""
-    command = "coverage report --skip-covered --include 'nautobot_dolt/*' --omit *migrations*"
+    command = "coverage report --skip-covered --include 'nautobot_version_control/*' --omit *migrations*"
 
     run_command(context, command)
 
@@ -404,7 +404,7 @@ def unittest_coverage(context):
 def tests(context, failfast=False):
     """Run all tests for this plugin."""
     # If we are not running locally, start the docker containers so we don't have to for each test
-    if not is_truthy(context.nautobot_dolt.local):
+    if not is_truthy(context.nautobot_version_control.local):
         print("Starting Docker Containers...")
         start(context)
     # Sorted loosely from fastest to slowest
