@@ -21,6 +21,8 @@ In addition to this README file, there are docs covering the following topics:
 
 ## Local Dev & Test Environment
 
+In addition to the instructions below, we also have a [demonstration video](https://youtu.be/XHrTHwhbZLc) that walks the user through the dev and test setup process described below. 
+
 ### Getting Started
 
 Getting started with development for the Version Control plugin is pretty straightforward. 
