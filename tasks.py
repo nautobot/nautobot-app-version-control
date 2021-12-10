@@ -214,7 +214,7 @@ def createsuperuser(context, user="admin"):
 )
 def makemigrations(context, name=""):
     """Perform makemigrations operation in Django."""
-    command = "nautobot-server makemigrations dolt"
+    command = "nautobot-server makemigrations nautobot_version_control"
 
     if name:
         command += f" --name {name}"
@@ -313,7 +313,7 @@ def hadolint(context):
 @task
 def pylint(context):
     """Run pylint code analysis."""
-    command = 'pylint --init-hook "import nautobot; nautobot.setup()" --rcfile pyproject.toml dolt'
+    command = 'pylint --init-hook "import nautobot; nautobot.setup()" --rcfile pyproject.toml nautobot_version_control'
     run_command(context, command)
 
 
@@ -359,7 +359,7 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(context, keepdb=False, label="dolt", failfast=False, buffer=True, verbose=False):
+def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=True, verbose=False):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
