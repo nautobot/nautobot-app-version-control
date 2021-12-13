@@ -88,6 +88,8 @@ TBD as we progress towards stable release.
 
 ## Development Environment
 
+In addition to the instructions below, we also have a [demonstration video](https://youtu.be/XHrTHwhbZLc) that walks the user through the dev and test setup process described below. 
+
 ### Getting Started
 
 Getting started with development for the Version Control plugin is straightforward. It is modeled directly after the development environment of Nautobot itself, and should feel very familiar to anyone with Django development experience.
