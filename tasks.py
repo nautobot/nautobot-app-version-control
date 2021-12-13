@@ -276,6 +276,13 @@ def load_data(context):
         docker_compose(context, compose_command, pty=True, compose_files=compose_files)
 
 
+@task
+def sphinx(context):
+    """Rebuild Sphinx documentation on changes, with live-reload in the browser."""
+    command = "sphinx-autobuild docs docs/_build/html"
+    run_command(context, command)
+
+
 # ------------------------------------------------------------------------------
 # TESTS
 # ------------------------------------------------------------------------------
