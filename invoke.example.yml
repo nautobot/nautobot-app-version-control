@@ -1,6 +1,6 @@
 ---
-nautobot_dolt:
-  project_name: "nautobot-dolt"
+nautobot_version_control:
+  project_name: "nautobot-version-control"
   nautobot_ver: "develop-latest"
   local: false
   python_ver: "3.6"
