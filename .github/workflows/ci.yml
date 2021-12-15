@@ -159,6 +159,11 @@ jobs:
         with:
           name: "${{ env.PLUGIN_NAME }}-${{ matrix.nautobot-version }}-py${{ matrix.python-version }}"
           path: "/tmp"
+      - name: "Download the dolt docker image"
+        uses: "actions/download-artifact@v2"
+        with:
+          name: "dolt-latest"
+          path: "/tmp"
       - name: "Display files"
         run: "ls -al /tmp"
       - name: "Load the image"
