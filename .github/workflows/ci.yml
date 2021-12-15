@@ -106,12 +106,12 @@ jobs:
           path: "/tmp/${{ env.PLUGIN_NAME }}-${{ matrix.nautobot-version }}-py${{ matrix.python-version }}.tar"
           retention-days: 1
   build-dolt:
-    # needs:
-    #   - "black"
-    #   - "bandit"
-    #   - "pydocstyle"
-    #   - "flake8"
-    #   - "yamllint"
+    needs:
+      - "black"
+      - "bandit"
+      - "pydocstyle"
+      - "flake8"
+      - "yamllint"
     runs-on: "ubuntu-20.04"
     steps:
       - name: "Check out repository code"
@@ -130,14 +130,6 @@ jobs:
           cache-from: "type=gha,scope=dolt"
           cache-to: "type=gha,scope=dolt"
           outputs: "type=docker,dest=/tmp/dolt.tar"
-      - name: "Tshoot"
-        run: "ls -al /tmp"
-      - name: "Tshoot"
-        run: "docker image ls"
-      - name: "GZIP file"
-        run: "cd /tmp && gzip -k dolt.tar"
-      - name: "Tshoot"
-        run: "ls -al /tmp"
       - name: "Upload the docker image"
         uses: "actions/upload-artifact@v2"
         with:
@@ -167,6 +159,8 @@ jobs:
         with:
           name: "${{ env.PLUGIN_NAME }}-${{ matrix.nautobot-version }}-py${{ matrix.python-version }}"
           path: "/tmp"
+      - name: "Display files"
+        run: "ls -al /tmp"
       - name: "Load the image"
         run: "docker load < /tmp/${{ env.PLUGIN_NAME }}-${{ matrix.nautobot-version }}-py${{ matrix.python-version }}.tar"
       - name: "Load the dolt image"
