@@ -105,9 +105,41 @@ jobs:
           name: "${{ env.PLUGIN_NAME }}-${{ matrix.nautobot-version }}-py${{ matrix.python-version }}"
           path: "/tmp/${{ env.PLUGIN_NAME }}-${{ matrix.nautobot-version }}-py${{ matrix.python-version }}.tar"
           retention-days: 1
+  build-dolt:
+    needs:
+      - "black"
+      - "bandit"
+      - "pydocstyle"
+      - "flake8"
+      - "yamllint"
+    runs-on: "ubuntu-20.04"
+    steps:
+      - name: "Check out repository code"
+        uses: "actions/checkout@v2"
+      - name: "Set up Docker Buildx"
+        id: "buildx"
+        uses: "docker/setup-buildx-action@v1"
+      - name: "Build"
+        uses: "docker/build-push-action@v2"
+        with:
+          builder: "${{ steps.buildx.outputs.name }}"
+          context: "./"
+          push: false
+          tags: "dolt/latest"
+          file: "./development/Dockerfile-dolt"
+          cache-from: "type=gha,scope=dolt"
+          cache-to: "type=gha,scope=dolt"
+          outputs: "type=docker,dest=/tmp/dolt.tar"
+      - name: "Upload the docker image"
+        uses: "actions/upload-artifact@v2"
+        with:
+          name: "dolt/latest"
+          path: "/tmp/dolt.tar"
+          retention-days: 1
   pylint:
     needs:
       - "build"
+      - "build-dolt"
     runs-on: "ubuntu-20.04"
     strategy:
       fail-fast: true
@@ -129,10 +161,14 @@ jobs:
           path: "/tmp"
       - name: "Load the image"
         run: "docker load < /tmp/${{ env.PLUGIN_NAME }}-${{ matrix.nautobot-version }}-py${{ matrix.python-version }}.tar"
+      - name: "Load the dolt image"
+        run: "docker load < /tmp/dolt.tar"
       - name: "Copy credentials"
         run: "cp development/creds.example.env development/creds.env"
       - name: "Linting: pylint"
         run: "poetry run invoke pylint"
+      - name: "Display images"
+        run: "docker image ls"
   unittest:
     needs:
       - "pylint"
