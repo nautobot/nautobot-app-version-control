@@ -125,7 +125,7 @@ jobs:
           builder: "${{ steps.buildx.outputs.name }}"
           context: "./"
           push: false
-          tags: "dolt/latest"
+          tags: "nautobot_version_control_dolt:latest"
           file: "./development/Dockerfile-dolt"
           cache-from: "type=gha,scope=dolt"
           cache-to: "type=gha,scope=dolt"
@@ -164,7 +164,7 @@ jobs:
           file: "./development/Dockerfile-dolt"
           cache-from: "type=gha,scope=dolt"
           cache-to: "type=gha,scope=dolt"
-          outputs: "type=docker,dest=/tmp/dolt.tar.gz"
+          outputs: "type=tar,dest=/tmp/dolt.tar.gz"
       - name: "Tshoot"
         run: "ls -al /tmp"
       - name: "Tshoot"
