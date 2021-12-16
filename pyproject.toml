@@ -26,10 +26,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-# TODO(jathan): Pin develop for now because it has upstream fixes that are not yet released. Once
-# v1.2.0 final is out move this to the next version.
-# nautobot = "~1.2.0b1"
-nautobot = { git = "https://github.com/nautobot/nautobot.git", branch = "develop" }
+nautobot = "~1.2.0"
 # MySQL database adapter
 mysqlclient = "^2.0.3"
 
