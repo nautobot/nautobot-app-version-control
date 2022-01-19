@@ -16,18 +16,14 @@ x-nautobot-base: &nautobot-base
 version: "3.4"
 services:
   nautobot:
-    deploy:
-      replicas: 2
     ports:
-      - "8080"
+      - "8080:8080"
     depends_on:
       - "dolt"
       - "redis"
     <<: *nautobot-build
     <<: *nautobot-base
   worker:
-    deploy:
-      replicas: 2
     entrypoint: "sh -c 'nautobot-server celery worker -l $$NAUTOBOT_LOG_LEVEL'"
     depends_on:
       - "nautobot"
