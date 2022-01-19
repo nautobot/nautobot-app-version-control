@@ -37,4 +37,3 @@ services:
     healthcheck:
       disable: true
     <<: *nautobot-base
-
