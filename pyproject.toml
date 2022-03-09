@@ -26,7 +26,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.6.2"
-nautobot = "~1.2.0"
+nautobot = "~1.2.4"
 # MySQL database adapter
 mysqlclient = "^2.0.3"
 

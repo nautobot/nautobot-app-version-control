@@ -26,9 +26,9 @@ namespace = Collection("nautobot_version_control")
 namespace.configure(
     {
         "nautobot_version_control": {
-            "nautobot_ver": "1.2.0",
+            "nautobot_ver": "1.2.4",
             "project_name": "nautobot_version_control",
-            "python_ver": "3.6",
+            "python_ver": "3.7",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
             "compose_files": [

@@ -5,9 +5,7 @@ FROM ghcr.io/nautobot/nautobot-dev:${NAUTOBOT_VER}-py${PYTHON_VER}
 
 WORKDIR /source
 
-RUN apt update && apt install -y libmariadb-dev gcc
 RUN pip install --upgrade pip
-RUN pip install mysqlclient
 
 # Copy in only pyproject.toml/poetry.lock to help with caching this layer if no updates to dependencies
 COPY poetry.lock pyproject.toml /source/
