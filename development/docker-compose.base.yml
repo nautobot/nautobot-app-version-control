@@ -30,3 +30,10 @@ services:
     healthcheck:
       disable: true
     <<: *nautobot-base
+  beat:
+    entrypoint: "sh -c 'nautobot-server celery beat -l $$NAUTOBOT_LOG_LEVEL'"
+    depends_on:
+      - "nautobot"
+    healthcheck:
+      disable: true
+    <<: *nautobot-base
