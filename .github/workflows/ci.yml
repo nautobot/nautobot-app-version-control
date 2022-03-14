@@ -126,8 +126,8 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        python-version: ["3.6", "3.7", "3.8", "3.9"]
-        nautobot-version: ["1.2.0-beta.1"]
+        python-version: ["3.7", "3.8", "3.9"]
+        nautobot-version: ["1.2.8"]
     runs-on: "ubuntu-20.04"
     env:
       INVOKE_NAUTOBOT_VERSION_CONTROL_PYTHON_VER: "${{ matrix.python-version }}"
