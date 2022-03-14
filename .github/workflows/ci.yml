@@ -103,7 +103,7 @@ jobs:
             PYTHON_VER=${{ matrix.python-version }}
       - name: "List images"
         run: "docker image ls"
-      - name: "Build"
+      - name: "Build Dolt"
         uses: "docker/build-push-action@v2"
         with:
           builder: "${{ steps.buildx.outputs.name }}"
