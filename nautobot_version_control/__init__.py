@@ -60,8 +60,8 @@ config = NautobotVersionControl  # pylint: disable=C0103
 def query_registry(model, registry):
     """Performs a lookup on a content type registry.
     Args:
-        model: a Django model class
-        registry: a python dictionary like
+        model (django.db.models.Model): a Django model class
+        registry (dict): a python dictionary like
             ```
             {
                 "my_app_label": True,
@@ -154,7 +154,7 @@ def is_versioned_model(model):
 def register_versioned_models(registry):
     """Register additional content types to be versioned.
     Args:
-        registry: a python dict of content types that
+        registry (dict): a python dict of content types that
             will be placed under version control:
             ```
             {
@@ -203,7 +203,7 @@ def register_diff_tables(registry):
     Registry values must be subclasses of django_tables2.Table.
 
     Args:
-        registry: a python dict of content types that
+        registry (dict): a python dict of content types that
             will be placed under version control:
             ```
             {
