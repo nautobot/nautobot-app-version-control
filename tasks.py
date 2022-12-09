@@ -26,7 +26,7 @@ namespace = Collection("nautobot_version_control")
 namespace.configure(
     {
         "nautobot_version_control": {
-            "nautobot_ver": "1.2.4",
+            "nautobot_ver": "1.5.0",
             "project_name": "nautobot_version_control",
             "python_ver": "3.7",
             "local": False,
