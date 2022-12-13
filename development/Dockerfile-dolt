@@ -5,24 +5,19 @@ RUN apt update && apt install -y curl mariadb-client && \
     apt-get clean all && \
     rm -rf /var/lib/apt/lists/*
 
-RUN mkdir -p /var/lib/nautobot
-
 ARG DOLT_RELEASE="v0.51.9"
 RUN curl -L https://github.com/dolthub/dolt/releases/download/${DOLT_RELEASE}/install.sh | bash
 
 RUN dolt config --global --add user.name nautobot
 RUN dolt config --global --add user.email opensource@networktocode.COM
-RUN dolt config --global --add init.defaultbranch main
 
-WORKDIR /var/lib/nautobot
+RUN mkdir -p /var/lib/
+WORKDIR /var/lib
+RUN dolt sql -q "CREATE DATABASE nautobot CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
+RUN dolt sql -q "CREATE DATABASE test_nautobot CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;"
 
-COPY ./development/dolt-config.yaml /dolt-config.yaml
+COPY ./development/dolt-config.yaml /var/lib/nautobot/dolt-config.yaml
 
 EXPOSE 3306
 
-ENV DOLT_ENABLE_DB_REVISIONS=true
-
-RUN dolt init
-
-ARG DOLT_TRACE=""
-CMD dolt sql-server --config /dolt-config.yaml ${DOLT_TRACE}
+RUN dolt sql -q "SET @@persist.join_complexity_limit = 13"

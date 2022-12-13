@@ -263,7 +263,7 @@ PAGINATE_COUNT = int(os.environ.get("PAGINATE_COUNT", 50))
 
 # Enable installed plugins. Add the name of each plugin to the list.
 PLUGINS = [
-    "nautobot_version_control",
+    # "nautobot_version_control",
 ]
 
 # Pull the list of routers from environment variable to be able to disable all routers when we are running the migrations

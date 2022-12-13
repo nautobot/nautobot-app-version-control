@@ -6,10 +6,14 @@ services:
     build:
       context: "../"
       dockerfile: "development/Dockerfile-dolt"
+    depends_on:
+      - "golden"
     command:
       - "dolt"
+      - "--ignore-lock-file"
       - "sql-server"
       - "--config=/dolt-config.yaml"
+#      - "--golden=root:mypassword@tcp(golden:3366)/"
     env_file:
       - "dev.env"
       - "creds.env"
@@ -18,6 +22,18 @@ services:
       - "./dolt-config.yaml:/dolt-config.yaml"
     ports:
       - "3306:3306"
+  golden:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: "mypassword"
+      MYSQL_DATABASE: "nautobot"
+      MYSQL_TCP_PORT: "3366"
+    ports:
+      - "3366:3366"
+    volumes:
+      # Unit tests require the createdb permission to clone the database
+      - ./mysql-unittests.sql:/docker-entrypoint-initdb.d/mysql-unittests.sql
+      - mysqldata_nautobot:/var/lib/mysql
   redis:
     image: "redis:6-alpine"
     command:
@@ -31,3 +47,4 @@ services:
       - "6379:6379"
 volumes:
   dolt_data: {}
+  mysqldata_nautobot:

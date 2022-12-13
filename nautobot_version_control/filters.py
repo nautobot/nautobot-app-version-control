@@ -25,9 +25,7 @@ class BranchFilterSet(BaseFilterSet):
             "latest_commit_date",
             "latest_commit_message",
         )
-        exclude = [
-            "id"
-        ]
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
@@ -67,9 +65,7 @@ class CommitFilterSet(BaseFilterSet):
             "date",
             "message",
         )
-        exclude = [
-            "id"
-        ]
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
@@ -109,6 +105,7 @@ class PullRequestFilterSet(BaseFilterSet):
             "description",
             "creator",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
@@ -161,6 +158,7 @@ class PullRequestReviewFilterSet(BaseFilterSet):
             "reviewed_at",
             "summary",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
