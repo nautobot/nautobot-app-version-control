@@ -1,31 +1,17 @@
 {% extends 'generic/object_detail.html' %}
-{% load buttons %}
-{% load custom_links %}
-{% load helpers %}
-{% load static %}
-{% load tz %}
 
-{% block header %}
-<div class="row noprint">
-    <div class="col-sm-8 col-md-9">
-        <ol class="breadcrumb">
-            <li>Diff</li>
-            <li>{{ breadcrumb.model }}</li>
-            <li>From</li>
-            <li>{{ breadcrumb.from }}</li>
-            <li>To</li>
-            <li>{{ breadcrumb.to }}</li>
-        </ol>
-    </div>
-</div>
-<h1>
-    {% block title %}
-    {{ title }}
-    {% endblock %}
-</h1>
+{% block extra_breadcrumbs %}
+    <li>Diff</li>
+    <li>{{ breadcrumb.model }}</li>
+    <li>From</li>
+    <li>{{ breadcrumb.from }}</li>
+    <li>To</li>
+    <li>{{ breadcrumb.to }}</li>
 {% endblock %}
 
-{% block content %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block content_full_width_page %}
 <div class="row">
     <div class="col-md-7">
         <div class="panel panel-default">
