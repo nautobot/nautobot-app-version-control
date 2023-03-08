@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-version-control"
-version = "1.0.0-alpha.0"
+version = "1.0.0-beta.1"
 description = "Nautobot Version Control"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
@@ -26,7 +26,7 @@ include = [
 
 [tool.poetry.dependencies]
 python = "^3.7"
-nautobot = "^1.4.0"
+nautobot = "^1.5.0"
 # MySQL database adapter
 mysqlclient = "^2.0.3"
 
@@ -50,8 +50,6 @@ pylint = {version = "~2.14.5", python = "^3.7.2"}
 pylint-django = {version = "~2.5.3", python = "^3.7.2"}
 Sphinx = "4.3.0"
 yamllint = "*"
-sphinx-autobuild = "2021.3.14"
-sphinx-rtd-theme = "1.0.0"
 
 [tool.black]
 line-length = 120
