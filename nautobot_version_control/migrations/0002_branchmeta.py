@@ -6,7 +6,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ("nautobot_version_control", "0001_initial"),
@@ -16,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="BranchMeta",
             fields=[
-                ("branch", models.TextField(primary_key=True, serialize=False)),
+                ("branch", models.CharField(max_length=240, primary_key=True, serialize=False)),
                 ("source_branch", models.TextField()),
                 ("created", models.DateTimeField(auto_now_add=True, null=True)),
                 (

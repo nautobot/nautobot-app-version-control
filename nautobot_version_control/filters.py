@@ -25,6 +25,7 @@ class BranchFilterSet(BaseFilterSet):
             "latest_commit_date",
             "latest_commit_message",
         )
+        exclude = ["id"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
@@ -64,6 +65,7 @@ class CommitFilterSet(BaseFilterSet):
             "date",
             "message",
         )
+        exclude = ["id"]
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """

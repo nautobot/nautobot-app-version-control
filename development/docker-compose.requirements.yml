@@ -2,6 +2,7 @@
 version: "3.4"
 services:
   dolt:
+    platform: "linux/amd64"
     build:
       context: "../"
       dockerfile: "development/Dockerfile-dolt"
