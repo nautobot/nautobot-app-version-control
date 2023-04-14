@@ -183,16 +183,13 @@ class Branch(DoltSystemTable):
     def save(self, *args, **kwargs):
         """Save overrides the model save method."""
         with connection.cursor() as cursor:
-            cursor.execute(
-                f"""CALL dolt_branch('{self.name}','{self.starting_branch}');"""  # nosec
-            )
+            cursor.execute(f"""CALL dolt_branch('{self.name}','{self.starting_branch}');""")  # nosec
 
     def delete(self, *args, **kwargs):
         """Delete overrides the model delete method."""
         with connection.cursor() as cursor:
-            cursor.execute(
-                f"""CALL dolt_branch('-D','{self.name}');"""  # nosec
-            )
+            cursor.execute(f"""CALL dolt_branch('-D','{self.name}');""")  # nosec
+
 
 @receiver(pre_delete, sender=Branch)
 def delete_branch_pre_hook(sender, instance, using, **kwargs):  # pylint: disable=W0613

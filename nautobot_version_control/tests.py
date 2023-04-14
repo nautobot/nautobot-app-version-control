@@ -21,6 +21,7 @@ class DoltTestCase(TransactionTestCase):
 
     databases = ["default", "global"]
 
+
 class DoltApiTestCase(APITestCase):
     """DoltApiTestCase wraps APITestCase tests and performs common tasks."""
 
@@ -36,6 +37,7 @@ class DoltApiTestCase(APITestCase):
             print(f"user {username} deleted")
         except User.DoesNotExist as exc:
             print(f"user {username} does not exist")
+
 
 class TestBranches(DoltTestCase):
     """TestBranch Tests the creation and deletion of branches."""

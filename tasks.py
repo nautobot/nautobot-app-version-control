@@ -366,7 +366,9 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=False, verbose=False, debug=False):
+def unittest(
+    context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=False, verbose=False, debug=False
+):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 

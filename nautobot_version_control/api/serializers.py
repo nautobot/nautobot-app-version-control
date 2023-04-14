@@ -2,6 +2,7 @@
 from rest_framework import serializers
 from nautobot_version_control.models import Branch, Commit, PullRequest, PullRequestReview
 
+
 class BranchSerializer(serializers.ModelSerializer):
     """BranchSerializer serializes a Branch"""
 
