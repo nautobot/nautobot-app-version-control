@@ -185,7 +185,7 @@ class MergeConflicts:
 
             cursor.execute(
                 f"""SELECT base_id, JSON_OBJECT({fields})
-                    FROM dolt_conflicts_{conflict.table};"""
+                    FROM dolt_conflicts_{conflict.table};"""  # nosec
             )
             model_name = self._model_from_table(conflict.table)
             return [
