@@ -119,7 +119,7 @@ class Branch(DoltSystemTable):
     def checkout(self):
         """Checkout performs a checkout operation to this branch making it the active_branch."""
         with connection.cursor() as cursor:
-            cursor.execute(f"""SELECT dolt_checkout("{self.name}") FROM dual;""")
+            cursor.execute(f"""CALL dolt_checkout("{self.name}");""")
 
     def _branch_meta(self):
         try:
@@ -145,32 +145,32 @@ class Branch(DoltSystemTable):
             cursor.execute("SET dolt_force_transaction_commit = 1;")
             if squash:
                 cursor.execute(
-                    f"""SELECT dolt_merge(
+                    f"""CALL dolt_merge(
                         '--squash',
                         '{merge_branch}'
-                    ) FROM dual;"""
+                    );"""
                 )
             else:
                 cursor.execute(
-                    f"""SELECT dolt_merge(
+                    f"""CALL dolt_merge(
                         '--no-ff',
                         '{merge_branch}'
-                    ) FROM dual;"""
+                    );"""
                 )
-            success = cursor.fetchone()[0] == 1
-            if success:
+            res = cursor.fetchone()
+            if res[0] == 0 and res[1] == 0:
                 # only commit merged data on success
                 msg = f"""merged "{merge_branch}" into "{self.name}"."""
                 cursor.execute(
-                    f"""SELECT dolt_commit(
+                    f"""CALL dolt_commit(
                         '--all',
                         '--allow-empty',
                         '--message', '{msg}',
                         '--author', '{author}'
-                    ) FROM dual;"""
+                    );"""
                 )
             else:
-                cursor.execute("SELECT dolt_merge('--abort') FROM dual;")  # nosec
+                cursor.execute("CALL dolt_merge('--abort');")  # nosec
                 raise DoltError(
                     format_html(
                         "{}",
@@ -184,15 +184,29 @@ class Branch(DoltSystemTable):
         """Save overrides the model save method."""
         with connection.cursor() as cursor:
             cursor.execute(
-                f"""INSERT INTO dolt_branches (name,hash) VALUES ('{self.name}',hashof('{self.starting_branch}'));"""  # nosec
+                f"""CALL dolt_branch('{self.name}','{self.starting_branch}');"""  # nosec
             )
 
+    def delete(self, *args, **kwargs):
+        """Delete overrides the model delete method."""
+        with connection.cursor() as cursor:
+            cursor.execute(
+                f"""CALL dolt_branch('-D','{self.name}');"""  # nosec
+            )
 
 @receiver(pre_delete, sender=Branch)
 def delete_branch_pre_hook(sender, instance, using, **kwargs):  # pylint: disable=W0613
     """
-    delete_branch_pre_hook intercepts the pre_delete signal for a branch. It returns an error if a branch that is about
-    to be delete has pull requests that have not been deleted before.
+    delete_branch_pre_hook intercepts the pre_delete signal for a branch, and always throws an exception.
+
+    delete_branch_pre_hook is called when a QuerySet of branches is about to be deleted.
+    When Django deletes from a QuerySet, Branch.delete is NOT called and instead Django attempts
+    to delete the object directly from the database using SQL. SQL deletion will always fail for Branch.
+    This means that we cannot intercept the delete call and cannot do a proper deletion.
+
+    So we will throw an appropriate exception:
+    - if the branch has pull requests associated with it, we throw an error with the PR information.
+    - otherwise, we throw an error explaining that the Branch objects must be deleted individually.
     """
     # search the pull requests models for the same branch
     prs = PullRequest.objects.filter(Q(source_branch=instance.name) | Q(destination_branch=instance.name))
@@ -201,6 +215,8 @@ def delete_branch_pre_hook(sender, instance, using, **kwargs):  # pylint: disabl
         pr_list = ",".join([f'"{pr}"' for pr in prs])
         raise DoltError(f"Must delete existing pull request(s): [{pr_list}] before deleting branch {instance.name}")
 
+    raise Exception("QuerySet deletion of Branch is not supported, please delete the items individually")
+
 
 class BranchMeta(models.Model):
     """
@@ -208,8 +224,8 @@ class BranchMeta(models.Model):
     the dolt_branches system table.
     """
 
-    branch = models.TextField(primary_key=True)
-    source_branch = models.TextField()
+    branch = models.CharField(primary_key=True, max_length=1024)
+    source_branch = models.CharField(max_length=1024)
     author = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     created = models.DateTimeField(auto_now_add=True, blank=True, null=True)
 
@@ -253,7 +269,7 @@ class Commit(DoltSystemTable):
         """merge_base returns the ancestor commit between two commits."""
         with connection.cursor() as c:
             # author credentials not set
-            c.execute(f"SELECT DOLT_MERGE_BASE('{left}', '{right}') FROM dual;")
+            c.execute(f"SELECT dolt_merge_base('{left}', '{right}');")
             return c.fetchone()[0]
 
     @staticmethod
@@ -263,7 +279,7 @@ class Commit(DoltSystemTable):
         author = author_from_user(user)
         args += f", '--author', '{author}'"
         with connection.cursor() as c:
-            c.execute(f"SELECT DOLT_REVERT({args}) FROM dual;")
+            c.execute(f"CALL dolt_revert({args});")
             return c.fetchone()[0]
 
     @property
@@ -291,12 +307,11 @@ class Commit(DoltSystemTable):
         with conn.cursor() as cursor:
             cursor.execute(
                 f"""
-            SELECT dolt_commit(
+            CALL dolt_commit(
                 '--all',
                 '--allow-empty',
                 '--message', "{msg}",
-                '--author', "{author}")
-            FROM dual;"""
+                '--author', "{author}")"""
             )
 
 
@@ -379,8 +394,8 @@ class PullRequest(BaseModel):
     title = models.CharField(max_length=240)
     state = models.IntegerField(choices=PR_STATE_CHOICES, default=OPEN)
     # can't create Foreign Key to dolt_branches table :(
-    source_branch = models.TextField()
-    destination_branch = models.TextField()
+    source_branch = models.CharField(max_length=1024)
+    destination_branch = models.CharField(max_length=1024)
     description = models.TextField(blank=True, null=True)
     creator = models.ForeignKey(User, on_delete=CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)

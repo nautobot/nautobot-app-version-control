@@ -26,9 +26,9 @@ namespace = Collection("nautobot_version_control")
 namespace.configure(
     {
         "nautobot_version_control": {
-            "nautobot_ver": "1.2.4",
+            "nautobot_ver": "1.5.16",
             "project_name": "nautobot_version_control",
-            "python_ver": "3.7",
+            "python_ver": "3.8",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
             "compose_files": [
@@ -366,7 +366,7 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=True, verbose=False):
+def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=False, verbose=False, debug=False):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
@@ -378,6 +378,8 @@ def unittest(context, keepdb=False, label="nautobot_version_control", failfast=F
         command += " --buffer"
     if verbose:
         command += " --verbosity 2"
+    if debug:
+        command += " --debug-sql"
 
     # Check if Nautobot is running, no need to start another Nautobot container to run a command
     docker_compose_status = "ps --services --filter status=running"

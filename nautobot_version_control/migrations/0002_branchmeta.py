@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="BranchMeta",
             fields=[
-                ("branch", models.TextField(primary_key=True, serialize=False)),
+                ("branch", models.CharField(primary_key=True, max_length=1024, serialize=False)),
                 ("source_branch", models.TextField()),
                 ("created", models.DateTimeField(auto_now_add=True, null=True)),
                 (

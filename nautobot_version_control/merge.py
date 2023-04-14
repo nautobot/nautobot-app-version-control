@@ -104,17 +104,17 @@ def make_merge_candidate(src, dest):
     Branch(name=name, starting_branch=dest).save()
     with connection.cursor() as cursor:
         cursor.execute("SET @@dolt_force_transaction_commit = 1;")
-        cursor.execute("""SELECT dolt_checkout(%s) FROM dual;""", [name])
-        cursor.execute("""SELECT dolt_merge(%s) FROM dual;""", [src])
-        cursor.execute("""SELECT dolt_add("-A") FROM dual;""")
+        cursor.execute("""CALL dolt_checkout(%s);""", [name])
+        cursor.execute("""CALL dolt_merge(%s);""", [src])
+        cursor.execute("""CALL dolt_add("-A");""")
         msg = f"""creating merge candidate with src: "{src}" and dest: "{dest}"."""
         cursor.execute(
-            f"""SELECT dolt_commit(
+            f"""CALL dolt_commit(
                     '--force',
                     '--all',
                     '--allow-empty',
                     '--message', '{msg}',
-                    '--author', '{author_from_user(None)}') FROM dual;"""
+                    '--author', '{author_from_user(None)}');"""
         )
     return Branch.objects.get(name=name)
 
