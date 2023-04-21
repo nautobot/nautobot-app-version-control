@@ -18,3 +18,4 @@ COPY . /source
 RUN poetry install --no-interaction --no-ansi
 
 COPY development/nautobot_config.py /opt/nautobot/nautobot_config.py
+COPY development/hosted_ca.pem /opt/nautobot/hosted_ca.pem

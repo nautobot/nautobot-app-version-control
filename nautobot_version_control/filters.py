@@ -133,12 +133,6 @@ class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
 
     state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
 
-    def __init__(self, data, *args, **kwargs):
-        if not data.get("state"):
-            data = data.copy()
-            data["state"] = PullRequest.OPEN
-        super().__init__(data, *args, **kwargs)
-
 
 class PullRequestReviewFilterSet(BaseFilterSet):
     """PullRequestReviewFilterSet returns a filter for the PullRequestReview model."""

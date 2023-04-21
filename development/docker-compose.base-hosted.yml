@@ -10,7 +10,7 @@ x-nautobot-base: &nautobot-base
   image: "nautobot-dolt/nautobot:${NAUTOBOT_VER}-py${PYTHON_VER}"
   env_file:
     - "dev.env"
-    - "creds.env"
+    - "creds_hosted.env"
   tty: true
 
 version: "3.4"
@@ -19,11 +19,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      - "dolt"
       - "redis"
-    volumes:
-      - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
-      - "../:/source"
     <<: *nautobot-build
     <<: *nautobot-base
   worker:
@@ -32,9 +28,6 @@ services:
       - "nautobot"
     healthcheck:
       disable: true
-    volumes:
-      - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
-      - "../:/source"
     <<: *nautobot-base
   beat:
     entrypoint: "sh -c 'nautobot-server celery beat -l $$NAUTOBOT_LOG_LEVEL'"

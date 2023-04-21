@@ -76,6 +76,12 @@ DATABASES = {
     },
 }
 
+# add SSL options if DOLT_SSL_CA is set
+dolt_ssl_ca = os.getenv("DOLT_SSL_CA", None)
+if dolt_ssl_ca:
+    options = {"ssl": {"ca": dolt_ssl_ca}}
+    DATABASES["default"]["OPTIONS"] = options
+    DATABASES["global"]["OPTIONS"] = options
 
 # Redis variables
 REDIS_HOST = os.getenv("REDIS_HOST")
