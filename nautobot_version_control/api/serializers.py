@@ -1,9 +1,9 @@
 """serializers.py implements serializers for different modules."""
-from nautobot.core.api import ValidatedModelSerializer
+from rest_framework import serializers
 from nautobot_version_control.models import Branch, Commit, PullRequest, PullRequestReview
 
 
-class BranchSerializer(ValidatedModelSerializer):
+class BranchSerializer(serializers.ModelSerializer):
     """BranchSerializer serializes a Branch"""
 
     class Meta:
@@ -11,7 +11,7 @@ class BranchSerializer(ValidatedModelSerializer):
         fields = "__all__"
 
 
-class CommitSerializer(ValidatedModelSerializer):
+class CommitSerializer(serializers.ModelSerializer):
     """CommitSerializer serializes a Commit"""
 
     class Meta:
@@ -19,7 +19,7 @@ class CommitSerializer(ValidatedModelSerializer):
         fields = "__all__"
 
 
-class PullRequestSerializer(ValidatedModelSerializer):
+class PullRequestSerializer(serializers.ModelSerializer):
     """PullRequestSerializer serializes a PullRequest"""
 
     class Meta:
@@ -27,7 +27,7 @@ class PullRequestSerializer(ValidatedModelSerializer):
         fields = "__all__"
 
 
-class PullRequestReviewSerializer(ValidatedModelSerializer):
+class PullRequestReviewSerializer(serializers.ModelSerializer):
     """PullRequestReviewSerializer serializes a PullRequestReview"""
 
     class Meta:

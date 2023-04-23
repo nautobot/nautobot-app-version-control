@@ -25,6 +25,7 @@ class BranchFilterSet(BaseFilterSet):
             "latest_commit_date",
             "latest_commit_message",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
@@ -64,6 +65,7 @@ class CommitFilterSet(BaseFilterSet):
             "date",
             "message",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
@@ -103,6 +105,7 @@ class PullRequestFilterSet(BaseFilterSet):
             "description",
             "creator",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
@@ -130,12 +133,6 @@ class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
 
     state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
 
-    def __init__(self, data, *args, **kwargs):
-        if not data.get("state"):
-            data = data.copy()
-            data["state"] = PullRequest.OPEN
-        super().__init__(data, *args, **kwargs)
-
 
 class PullRequestReviewFilterSet(BaseFilterSet):
     """PullRequestReviewFilterSet returns a filter for the PullRequestReview model."""
@@ -155,6 +152,7 @@ class PullRequestReviewFilterSet(BaseFilterSet):
             "reviewed_at",
             "summary",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """

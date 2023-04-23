@@ -578,7 +578,7 @@ class DiffDetailView(View):
 
 
 class PullRequestListView(generic.ObjectListView):
-    """PullRequestListView is used to render a lit of pull requests."""
+    """PullRequestListView is used to render a list of pull requests."""
 
     queryset = PullRequest.objects.all().order_by("-created_at")
     filterset = filters.PullRequestDefaultOpenFilterSet

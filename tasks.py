@@ -1,9 +1,11 @@
 """Tasks for use with Invoke."""
 
 from distutils.util import strtobool
-from invoke import Collection, task as invoke_task
+from invoke import Collection, task as invoke_task, task, call
 import os
-
+import shutil
+import subprocess
+from dotenv import load_dotenv
 
 def is_truthy(arg):
     """Convert "truthy" strings into Booleans.
@@ -26,9 +28,9 @@ namespace = Collection("nautobot_version_control")
 namespace.configure(
     {
         "nautobot_version_control": {
-            "nautobot_ver": "1.2.4",
+            "nautobot_ver": "1.5.16",
             "project_name": "nautobot_version_control",
-            "python_ver": "3.7",
+            "python_ver": "3.8",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
             "compose_files": [
@@ -36,10 +38,14 @@ namespace.configure(
                 "docker-compose.base.yml",
                 "docker-compose.dev.yml",
             ],
+            "compose_files_hosted": [
+                "docker-compose.requirements-hosted.yml",
+                "docker-compose.base-hosted.yml",
+                "docker-compose.dev.yml",
+            ],
         }
     }
 )
-
 
 def task(function=None, *args, **kwargs):
     """Task decorator to override the default Invoke task decorator and add each task to the invoke namespace."""
@@ -78,7 +84,17 @@ def docker_compose(context, command, **kwargs):
         compose_files = kwargs["compose_files"]
         del kwargs["compose_files"]
     else:
-        compose_files = context.nautobot_version_control.compose_files
+        use_hosted_dolt = False
+        if "use_hosted_dolt" in kwargs:
+            use_hosted_dolt = kwargs.get("use_hosted_dolt", False)
+            del kwargs["use_hosted_dolt"]
+
+        if use_hosted_dolt:
+            compose_files = context.nautobot_version_control.compose_files_hosted
+        else:
+            compose_files = context.nautobot_version_control.compose_files
+
+    print(f"compose_files: {compose_files}")
 
     for compose_file in compose_files:
         compose_file_path = os.path.join(context.nautobot_version_control.compose_dir, compose_file)
@@ -113,7 +129,7 @@ def run_command(context, command, **kwargs):
         "cache": "Whether to use Docker's cache when building the image (defaults to enabled)",
     }
 )
-def build(context, force_rm=False, cache=True):
+def build(context, force_rm=False, cache=True, use_hosted_dolt=False):
     """Build Nautobot docker image."""
     command = "build"
 
@@ -123,7 +139,7 @@ def build(context, force_rm=False, cache=True):
         command += " --force-rm"
 
     print(f"Building Nautobot with Python {context.nautobot_version_control.python_ver}...")
-    docker_compose(context, command)
+    docker_compose(context, command, use_hosted_dolt=use_hosted_dolt)
 
 
 @task
@@ -137,38 +153,38 @@ def generate_packages(context):
 # START / STOP / DEBUG
 # ------------------------------------------------------------------------------
 @task
-def debug(context):
+def debug(context, use_hosted_dolt=False):
     """Start Nautobot and its dependencies in debug mode."""
     print("Starting Nautobot in debug mode...")
-    docker_compose(context, "up")
+    # docker_compose(context, "up", use_hosted_dolt=use_hosted_dolt)
 
 
 @task
-def start(context):
+def start(context, use_hosted_dolt=False):
     """Start Nautobot and its dependencies in detached mode."""
     print("Starting Nautobot in detached mode...")
-    docker_compose(context, "up --detach")
+    docker_compose(context, "up --detach", use_hosted_dolt=use_hosted_dolt)
 
 
 @task
-def restart(context):
+def restart(context, use_hosted_dolt=False):
     """Gracefully restart all containers."""
     print("Restarting Nautobot...")
-    docker_compose(context, "restart")
+    docker_compose(context, "restart", use_hosted_dolt=use_hosted_dolt)
 
 
 @task
-def stop(context):
+def stop(context, use_hosted_dolt=False):
     """Stop Nautobot and its dependencies."""
     print("Stopping Nautobot...")
-    docker_compose(context, "down")
+    docker_compose(context, "down", use_hosted_dolt=use_hosted_dolt)
 
 
-@task
-def destroy(context):
+@task()
+def destroy(context, use_hosted_dolt=False):
     """Destroy all containers and volumes."""
     print("Destroying Nautobot...")
-    docker_compose(context, "down --volumes")
+    docker_compose(context, "down --volumes", use_hosted_dolt=use_hosted_dolt)
 
 
 @task
@@ -223,14 +239,20 @@ def makemigrations(context, name=""):
 
 
 @task
-def migrate(context):
+def migrate(context, use_hosted_dolt=False):
     """Perform migrate operation in Django."""
     command = "nautobot-server migrate"
 
-    compose_files = [
-        "docker-compose.requirements.yml",
-        "docker-compose.base.yml",
-    ]
+    if use_hosted_dolt:
+        compose_files = [
+            "docker-compose.requirements-hosted.yml",
+            "docker-compose.base-hosted.yml",
+        ]
+    else:
+        compose_files = [
+            "docker-compose.requirements.yml",
+            "docker-compose.base.yml",
+        ]
 
     if is_truthy(context.nautobot_version_control.local):
         context.run(command)
@@ -259,17 +281,23 @@ def post_upgrade(context):
 
 
 @task
-def load_data(context):
+def load_data(context, use_hosted_dolt=False):
     """Load data."""
     commands = [
         "nautobot-server cleanup_data",
         "nautobot-server loaddata development/db.json",
     ]
 
-    compose_files = [
-        "docker-compose.requirements.yml",
-        "docker-compose.base.yml",
-    ]
+    if use_hosted_dolt:
+        compose_files = [
+            "docker-compose.requirements-hosted.yml",
+            "docker-compose.base-hosted.yml",
+        ]
+    else:
+        compose_files = [
+            "docker-compose.requirements.yml",
+            "docker-compose.base.yml",
+        ]
 
     for command in commands:
         compose_command = f"run --entrypoint '{command}' nautobot"
@@ -366,7 +394,16 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=True, verbose=False):
+def unittest(
+        context,
+        keepdb=False,
+        label="nautobot_version_control",
+        failfast=False,
+        buffer=False,
+        verbose=False,
+        debug=False,
+        use_hosted_dolt=False
+):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
@@ -378,6 +415,8 @@ def unittest(context, keepdb=False, label="nautobot_version_control", failfast=F
         command += " --buffer"
     if verbose:
         command += " --verbosity 2"
+    if debug:
+        command += " --debug-sql"
 
     # Check if Nautobot is running, no need to start another Nautobot container to run a command
     docker_compose_status = "ps --services --filter status=running"
@@ -387,11 +426,16 @@ def unittest(context, keepdb=False, label="nautobot_version_control", failfast=F
     else:
         compose_command = f"run --entrypoint '{command}' nautobot"
 
-    compose_files = [
-        "docker-compose.requirements.yml",
-        "docker-compose.base.yml",
-        "docker-compose.test.yml",
-    ]
+    if use_hosted_dolt:
+        compose_files = [
+            "docker-compose.requirements-hosted.yml",
+            "docker-compose.base-hosted.yml",
+        ]
+    else:
+        compose_files = [
+            "docker-compose.requirements.yml",
+            "docker-compose.base.yml",
+        ]
     docker_compose(context, compose_command, pty=True, compose_files=compose_files)
 
 
@@ -429,3 +473,88 @@ def tests(context, failfast=False):
     unittest(context, failfast=failfast)
     print("All tests have passed!")
     unittest_coverage(context)
+
+# ------------------------------------------------------------------------------
+# Clean - these tasks are for running tests or starting services, and performs all
+# the necessary steps to do so: destroy, build, migrate, etc.
+# ------------------------------------------------------------------------------
+
+def reset_hosted_db():
+    load_dotenv(dotenv_path="development/creds_hosted.env")
+    dolt_host = os.getenv("DOLT_HOST")
+    dolt_user = os.getenv("DOLT_USER")
+    dolt_password = os.getenv("DOLT_PASSWORD")
+
+    # Check if the required environment variables are loaded and not None
+    required_vars = ["DOLT_HOST", "DOLT_USER", "DOLT_PASSWORD"]
+    missing_vars = []
+
+    for var in required_vars:
+        value = os.getenv(var)
+        if value is None or value.strip() == "":
+            missing_vars.append(var)
+
+    if missing_vars:
+        print(f"Error: The following environment variables are missing or empty: {', '.join(missing_vars)}")
+        return False
+
+    queries = [
+        "DROP DATABASE IF EXISTS nautobot;",
+        "CREATE DATABASE nautobot CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;",
+        "DROP DATABASE IF EXISTS test_nautobot;",
+        "CREATE DATABASE test_nautobot CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;",
+        "DROP DATABASE IF EXISTS test_nautobot_hosted;",
+        "CREATE DATABASE test_nautobot_hosted CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;",
+    ]
+    for query in queries:
+        subprocess.run(
+            [
+                "mysql",
+                "-h",
+                dolt_host,
+                "-u",
+                dolt_user,
+                "-p" + dolt_password,
+                "-e",
+                query,
+            ],
+            check=True,
+        )
+    return True
+
+@task
+def clean_tests(context, use_hosted_dolt=False):
+    """Run all tests for this plugin."""
+    if use_hosted_dolt:
+        print("Running tests with hosted dolt database.")
+    else:
+        print("Running tests with local dolt database.")
+
+    if use_hosted_dolt:
+        if not reset_hosted_db():
+            print("Failed to reset hosted database.")
+            return
+
+    destroy(context, use_hosted_dolt=use_hosted_dolt)
+    build(context, use_hosted_dolt=use_hosted_dolt)
+    unittest(context, keepdb=True, verbose=True, use_hosted_dolt=use_hosted_dolt)
+
+@task
+def clean_start(context, use_hosted_dolt=False):
+    """Start the docker containers."""
+    if use_hosted_dolt:
+        print("Starting nautobot and plugin with hosted dolt database.")
+    else:
+        print("Starting nautobot and plugin with local dolt database.")
+
+    if use_hosted_dolt:
+        if not reset_hosted_db():
+            print("Failed to reset hosted database.")
+            return
+
+    stop(context, use_hosted_dolt=use_hosted_dolt)
+    destroy(context, use_hosted_dolt=use_hosted_dolt)
+    build(context, use_hosted_dolt=use_hosted_dolt)
+    migrate(context, use_hosted_dolt=use_hosted_dolt)
+    load_data(context, use_hosted_dolt=use_hosted_dolt)
+    start(context, use_hosted_dolt=use_hosted_dolt)

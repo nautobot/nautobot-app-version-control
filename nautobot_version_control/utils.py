@@ -48,7 +48,7 @@ def alter_session_branch(sess=None, branch=None):
 def active_branch():
     """active_branch returns the current active_branch from dolt."""
     with connection.cursor() as cursor:
-        cursor.execute("SELECT active_branch() FROM dual;")
+        cursor.execute("SELECT active_branch();")
         return cursor.fetchone()[0]
 
 
@@ -74,6 +74,6 @@ def query_on_branch(branch):
     # TODO: remove in favor of db_for_commit
     with connection.cursor() as cursor:
         prev = active_branch()
-        cursor.execute(f"""SELECT dolt_checkout("{branch}") FROM dual;""")
+        cursor.execute(f"""CALL dolt_checkout("{branch}");""")
         yield
-        cursor.execute(f"""SELECT dolt_checkout("{prev}") FROM dual;""")
+        cursor.execute(f"""CALL dolt_checkout("{prev}");""")

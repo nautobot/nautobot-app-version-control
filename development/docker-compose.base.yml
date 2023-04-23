@@ -21,6 +21,9 @@ services:
     depends_on:
       - "dolt"
       - "redis"
+    volumes:
+      - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
+      - "../:/source"
     <<: *nautobot-build
     <<: *nautobot-base
   worker:
@@ -29,6 +32,9 @@ services:
       - "nautobot"
     healthcheck:
       disable: true
+    volumes:
+      - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
+      - "../:/source"
     <<: *nautobot-base
   beat:
     entrypoint: "sh -c 'nautobot-server celery beat -l $$NAUTOBOT_LOG_LEVEL'"

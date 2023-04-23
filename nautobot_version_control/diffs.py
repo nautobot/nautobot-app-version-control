@@ -49,7 +49,8 @@ def two_dot_diffs(from_commit=None, to_commit=None):
             .objects.filter(
                 pk__in=RawSQL(  # nosec
                     f"""SELECT to_id FROM dolt_commit_diff_{tbl_name}
-                        WHERE to_commit = %s AND from_commit = %s""",
+                        WHERE to_commit = %s
+                        AND from_commit = %s""",  # nosec
                     (to_commit, from_commit),
                 )
             )
@@ -59,7 +60,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                     f"""SELECT JSON_OBJECT("root", "to", {json_diff_fields(tbl_name)})
                         FROM dolt_commit_diff_{tbl_name}
                         WHERE to_commit = %s AND from_commit = %s
-                        AND to_id = {tbl_name}.id """,
+                        AND to_id = {tbl_name}.id """,  # nosec
                     (to_commit, from_commit),
                     output_field=models.JSONField(),
                 )
@@ -75,7 +76,8 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                 # rows in this queryset. modified rows come from the `to_queryset`
                 pk__in=RawSQL(  # nosec
                     f"""SELECT from_id FROM dolt_commit_diff_{tbl_name}
-                        WHERE to_commit = %s AND from_commit = %s AND diff_type = 'removed' """,
+                        WHERE to_commit = %s AND from_commit = %s
+                        AND diff_type = 'removed' """,  # nosec
                     (to_commit, from_commit),
                 )
             )
@@ -85,7 +87,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
                     f"""SELECT JSON_OBJECT("root", "from", {json_diff_fields(tbl_name)})
                         FROM dolt_commit_diff_{tbl_name}
                         WHERE to_commit = %s AND from_commit = %s
-                        AND from_id = {tbl_name}.id """,
+                        AND from_id = {tbl_name}.id """,  # nosec
                     (to_commit, from_commit),
                     output_field=models.JSONField(),
                 )
