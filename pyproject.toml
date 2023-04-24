@@ -12,10 +12,10 @@ classifiers = [
     "Development Status :: 3 - Alpha",
     "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
 ]
 packages = [
     { include = "nautobot_version_control" },
@@ -34,17 +34,33 @@ python-dotenv = "*"
 [tool.poetry.dev-dependencies]
 bandit = "*"
 black = "*"
+coverage = "*"
 django-debug-toolbar = "*"
-flake8 = "*"
+# we need to pin flake8 because of package dependencies that cause it to downgrade and
+# therefore cause issues with linting since older versions do not take .flake8 as config
+flake8 = "^3.9.2"
 invoke = "*"
-myst-parser = "0.15.2"
+ipython = "*"
 pydocstyle = "*"
 pylint = "*"
 pylint-django = "*"
-Sphinx = "4.3.0"
+pytest = "*"
 yamllint = "*"
-sphinx-autobuild = "2021.3.14"
-sphinx-rtd-theme = "1.0.0"
+Markdown = "*"
+toml = "*"
+myst-parser = "0.15.2"
+# Rendering docs to HTML
+mkdocs = "1.3.1"
+# Material for MkDocs theme
+mkdocs-material = "8.4.2"
+# Render custom markdown for version added/changed/remove notes
+mkdocs-version-annotations = "1.0.0"
+# Automatic documentation from sources, for MkDocs
+mkdocstrings = "0.19"
+mkdocstrings-python = "0.7.1"
+
+[tool.poetry.extras]
+nautobot = ["nautobot"]
 
 [tool.black]
 line-length = 120
@@ -72,27 +88,17 @@ exclude = '''
 [tool.pylint.master]
 # Include the pylint_django plugin to avoid spurious warnings about Django patterns
 load-plugins="pylint_django"
+ignore=".venv"
 
 [tool.pylint.basic]
 # No docstrings required for private methods (Pylint default), or for test_ functions, or for inner Meta classes.
 no-docstring-rgx="^(_|test_|Meta$)"
 
-# Allow single letter variable names
-good-names="i,j,k,pk,x,y,v,c,mc,rt,e,id,db,m,pr,b,f,kw,ct,fn"
-
 [tool.pylint.messages_control]
 # Line length is enforced by Black, so pylint doesn't need to check it.
 # Pylint and Black disagree about how to format multi-line arrays; Black wins.
 disable = """,
-    line-too-long,
-    bad-continuation,
-    W0603,
-    W0703,
-    R0903,
-    R0901,
-    R0201,
-    R1705,
-    R0801
+    line-too-long
     """
 
 [tool.pylint.miscellaneous]
@@ -101,6 +107,18 @@ notes = """,
     FIXME,
     XXX,
     """
+
+[tool.pydocstyle]
+convention = "google"
+inherit = false
+match = "(?!__init__).*\\.py"
+match-dir = "(?!tests|migrations|development)[^\\.].*"
+# D212 is enabled by default in google convention, and complains if we have a docstring like:
+# """
+# My docstring is on the line after the opening quotes instead of on the same line as them.
+# """
+# We've discussed and concluded that we consider this to be a valid style choice.
+add_ignore = "D212"
 
 [build-system]
 requires = ["poetry_core>=1.0.0"]
@@ -111,4 +129,3 @@ testpaths = [
     "tests"
 ]
 addopts = "-vv --doctest-modules"
-

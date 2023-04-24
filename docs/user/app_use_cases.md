@@ -1,7 +1,6 @@
-# Common Workflows
+# Using the App
 
-This section covers some common workflows. 
-It is recommended to review the [version control operations](../version-control-operations.md) section prior to this section.
+This section covers some common workflows. It is recommended to review the [getting started](../app_getting_started.md) section prior to this section.
 
 ## Proposing Data Changes
 
@@ -143,10 +142,3 @@ At this point you can either [revert the specific commit](../version-control-ope
 
 At any point during the process of making changes in a branch, reviewing a PR for the changes in a branch, or trying to revert changes already in the main (production) branch, you may want to revert specific commits or revert commits en masse. 
 View how to revert commits [here](../version-control-operations.md#reverting-a-commit).
-
-
-
-
-
-
-

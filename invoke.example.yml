@@ -1,11 +1,12 @@
 ---
 nautobot_version_control:
   project_name: "nautobot-version-control"
-  nautobot_ver: "develop-latest"
+  nautobot_ver: "latest"
   local: false
-  python_ver: "3.6"
+  python_ver: "3.8"
   compose_dir: "development"
   compose_files:
-    - "docker-compose.requirements.yml"
     - "docker-compose.base.yml"
+    - "docker-compose.redis.yml"
+    - "docker-compose.dolt-hosted.yml"
     - "docker-compose.dev.yml"
