@@ -8,14 +8,12 @@ services:
     env_file:
       - "development.env"
       - "creds.env"
-      - "development_dolt.env"
   worker:
     environment:
       - "NAUTOBOT_DB_ENGINE=django.db.backends.mysql"
     env_file:
       - "development.env"
       - "creds.env"
-      - "development_dolt.env"
   db:
     build:
       context: "../"
@@ -29,12 +27,11 @@ services:
     env_file:
       - "development.env"
       - "creds.env"
-      - "development_dolt.env"
     volumes:
       - "dolt_data:/var/lib/nautobot"
       - "./dolt-config.yaml:/dolt-config.yaml"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: dolt sql-client -u $$MYSQL_USER -p $$MYSQL_PASSWORD -q "show databases; select 'healthcheck';" --use-db $$MYSQL_DATABASE
       timeout: "20s"
       retries: 10
 

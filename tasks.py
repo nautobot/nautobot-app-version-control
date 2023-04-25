@@ -161,10 +161,10 @@ def generate_packages(context):
 # START / STOP / DEBUG
 # ------------------------------------------------------------------------------
 @task
-def debug(context):
+def debug(context, service=None):
     """Start Nautobot and its dependencies in debug mode."""
     print("Starting Nautobot in debug mode...")
-    docker_compose(context, "up")
+    docker_compose(context, "up", service=service)
 
 
 @task(help={"service": "If specified, only affect this service."})
@@ -544,3 +544,14 @@ def clean_start(context, use_hosted_dolt=False):
     migrate(context, use_hosted_dolt=use_hosted_dolt)
     load_data(context, use_hosted_dolt=use_hosted_dolt)
     start(context, use_hosted_dolt=use_hosted_dolt)
+
+@task
+def load_data(context, use_hosted_dolt=False):
+    """Load data."""
+    commands = [
+        "nautobot-server cleanup_data",
+        "nautobot-server loaddata development/db.json",
+    ]
+    for command in commands:
+        compose_command = f"run --entrypoint '{command}' nautobot"
+        docker_compose(context, compose_command, pty=True)

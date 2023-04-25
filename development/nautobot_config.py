@@ -39,6 +39,17 @@ DATABASES = {
         ),  # Database port, default to postgres
         "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),  # Database timeout
         "ENGINE": nautobot_db_engine,
+    },
+    "global": {
+        "NAME": os.getenv("NAUTOBOT_DB_NAME", "nautobot"),  # Database name
+        "USER": os.getenv("NAUTOBOT_DB_USER", ""),  # Database username
+        "PASSWORD": os.getenv("NAUTOBOT_DB_PASSWORD", ""),  # Database password
+        "HOST": os.getenv("NAUTOBOT_DB_HOST", "localhost"),  # Database server
+        "PORT": os.getenv(
+            "NAUTOBOT_DB_PORT", default_db_settings[nautobot_db_engine]["NAUTOBOT_DB_PORT"]
+        ),  # Database port, default to postgres
+        "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),  # Database timeout
+        "ENGINE": nautobot_db_engine,
         "TEST": {
             "MIRROR": "default",
         },
