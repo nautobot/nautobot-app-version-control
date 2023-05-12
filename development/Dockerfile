@@ -77,4 +77,5 @@ RUN pip install -c constraints.txt -r poetry_freeze_dev.txt
 COPY development/nautobot_config.py ${NAUTOBOT_ROOT}/nautobot_config.py
 # !!! USE CAUTION WHEN MODIFYING LINES ABOVE
 
-# COPY development/hosted_ca.pem /opt/nautobot/hosted_ca.pem
+# use COPY glob pattern to pick up this optional file
+COPY development/hosted_ca.pe[m] /opt/nautobot/hosted_ca.pem

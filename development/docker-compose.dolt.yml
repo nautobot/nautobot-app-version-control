@@ -18,18 +18,16 @@ services:
     build:
       context: "../"
       dockerfile: "development/Dockerfile-dolt"
-    command:
-      - "dolt"
-      - "--ignore-lock-file"
-      - "sql-server"
-      - "--config=/dolt-config.yaml"
-      # - "--default-authentication-plugin=mysql_native_password"
+    command: /bin/sh -c "dolt --ignore-lock-file sql-server --config=/dolt-config.yaml"
     env_file:
       - "development.env"
       - "creds.env"
     volumes:
       - "dolt_data:/var/lib/nautobot"
       - "./dolt-config.yaml:/dolt-config.yaml"
+    # set the port if you want to connect to the database directly with a client
+    ports:
+      - "3306:3306"
     healthcheck:
       test: dolt sql-client -u $$MYSQL_USER -p $$MYSQL_PASSWORD -q "show databases; select 'healthcheck';" --use-db $$MYSQL_DATABASE
       timeout: "20s"

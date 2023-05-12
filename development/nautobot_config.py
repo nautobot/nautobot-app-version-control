@@ -14,7 +14,6 @@ from nautobot.core.settings_funcs import parse_redis_connection
 ALLOWED_HOSTS = os.getenv("NAUTOBOT_ALLOWED_HOSTS", "").split(" ")
 SECRET_KEY = os.getenv("NAUTOBOT_SECRET_KEY", "")
 
-
 nautobot_db_engine = os.getenv("NAUTOBOT_DB_ENGINE", "django.db.backends.mysql")
 default_db_settings = {
     "django.db.backends.postgresql": {
@@ -25,26 +24,41 @@ default_db_settings = {
     },
 }
 
+OPTIONS = {"charset": "utf8mb4"}
+NAUTOBOT_USE_HOSTED_DOLT = os.getenv("NAUTOBOT_USE_HOSTED_DOLT", "false").lower() == "true"
+# If NAUTOBOT_USE_HOSTED_DOLT is set to true, then we will use the hosted dolt database
+if NAUTOBOT_USE_HOSTED_DOLT:
+    NAUTOBOT_DB_HOST = os.getenv("NAUTOBOT_HOSTED_DB_HOST", "")
+    NAUTOBOT_DB_USER = os.getenv("NAUTOBOT_HOSTED_DB_USER", "")
+    NAUTOBOT_DB_PASSWORD = os.getenv("NAUTOBOT_HOSTED_DB_PASSWORD", "")
+    OPTIONS["ssl"] = {"ca": "/opt/nautobot/hosted_ca.pem" }
+else:
+    NAUTOBOT_DB_HOST = os.getenv("NAUTOBOT_DB_HOST", "localhost")
+    NAUTOBOT_DB_USER = os.getenv("NAUTOBOT_DB_USER", "")
+    NAUTOBOT_DB_PASSWORD = os.getenv("NAUTOBOT_DB_PASSWORD", "")
+
+
 # Dolt database configuration. Dolt is compatible with the MySQL database backend.
 # See the Django documentation for a complete list of available parameters:
 #   https://docs.djangoproject.com/en/stable/ref/settings/#databases
 DATABASES = {
     "default": {
         "NAME": os.getenv("NAUTOBOT_DB_NAME", "nautobot"),  # Database name
-        "USER": os.getenv("NAUTOBOT_DB_USER", ""),  # Database username
-        "PASSWORD": os.getenv("NAUTOBOT_DB_PASSWORD", ""),  # Database password
-        "HOST": os.getenv("NAUTOBOT_DB_HOST", "localhost"),  # Database server
+        "HOST": NAUTOBOT_DB_HOST,  # Database server
+        "USER": NAUTOBOT_DB_USER,  # Database username
+        "PASSWORD": NAUTOBOT_DB_PASSWORD,  # Database password
         "PORT": os.getenv(
             "NAUTOBOT_DB_PORT", default_db_settings[nautobot_db_engine]["NAUTOBOT_DB_PORT"]
         ),  # Database port, default to postgres
         "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),  # Database timeout
         "ENGINE": nautobot_db_engine,
+        "OPTIONS": OPTIONS,
     },
     "global": {
         "NAME": os.getenv("NAUTOBOT_DB_NAME", "nautobot"),  # Database name
-        "USER": os.getenv("NAUTOBOT_DB_USER", ""),  # Database username
-        "PASSWORD": os.getenv("NAUTOBOT_DB_PASSWORD", ""),  # Database password
-        "HOST": os.getenv("NAUTOBOT_DB_HOST", "localhost"),  # Database server
+        "HOST": NAUTOBOT_DB_HOST,  # Database server
+        "USER": NAUTOBOT_DB_USER,  # Database username
+        "PASSWORD": NAUTOBOT_DB_PASSWORD,  # Database password
         "PORT": os.getenv(
             "NAUTOBOT_DB_PORT", default_db_settings[nautobot_db_engine]["NAUTOBOT_DB_PORT"]
         ),  # Database port, default to postgres
@@ -53,18 +67,16 @@ DATABASES = {
         "TEST": {
             "MIRROR": "default",
         },
+        "OPTIONS": OPTIONS,
     }
 }
-
-# Ensure proper Unicode handling for MySQL
-if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
-    DATABASES["default"]["OPTIONS"] = {"charset": "utf8mb4"}
 
 #
 # Debug
 #
 
 DEBUG = True
+TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
 # Django Debug Toolbar
 DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda _request: DEBUG and not TESTING}
@@ -79,8 +91,6 @@ if DEBUG and "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE
 #
 
 LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
-
-TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
 # Verbose logging during normal development operation, but quiet logging during unit test execution
 if not TESTING:
@@ -161,13 +171,17 @@ PLUGINS = ["nautobot_version_control"]
 #     }
 # }
 
-# add SSL options if DOLT_SSL_CA is set
-dolt_ssl_ca = os.getenv("DOLT_SSL_CA", None)
-if dolt_ssl_ca:
-    options = {"ssl": {"ca": dolt_ssl_ca}}
-    DATABASES["default"]["OPTIONS"] = options
-    DATABASES["global"]["OPTIONS"] = options
-
 # Pull the list of routers from environment variable to be able to disable all routers when we are running the migrations
 routers = os.getenv("DATABASE_ROUTERS", "").split(",")
 DATABASE_ROUTERS = routers if routers != [""] else []
+
+# The length of time (in seconds) for which a user will remain logged into the web UI before being prompted to
+# re-authenticate. (Default: 1209600 [14 days])
+SESSION_COOKIE_AGE = 1209600  # 2 weeks, in seconds
+
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+
+# By default, Nautobot will store session data in the database. Alternatively, a file path can be specified here to use
+# local file storage instead. (This can be useful for enabling authentication on a standby instance with read-only
+# database access.) Note that the user as which Nautobot runs must have read and write permissions to this path.
+SESSION_FILE_PATH = None

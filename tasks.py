@@ -11,7 +11,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
-
+import time
 from distutils.util import strtobool
 from invoke import Collection, task as invoke_task
 import os
@@ -47,6 +47,11 @@ namespace.configure(
                 "docker-compose.base.yml",
                 "docker-compose.redis.yml",
                 "docker-compose.dolt.yml",
+                "docker-compose.dev.yml",
+            ],
+            "hosted_compose_files": [
+                "docker-compose.hosted-base.yml",
+                "docker-compose.redis.yml",
                 "docker-compose.dev.yml",
             ],
             "compose_http_timeout": "86400",
@@ -95,7 +100,12 @@ def docker_compose(context, command, **kwargs):
         f'--project-directory "{context.nautobot_version_control.compose_dir}"',
     ]
 
-    for compose_file in context.nautobot_version_control.compose_files:
+    use_hosted_dolt = kwargs.pop("use_hosted_dolt", False)
+    compose_files = context.nautobot_version_control.compose_files
+    if use_hosted_dolt:
+        compose_files = context.nautobot_version_control.hosted_compose_files
+
+    for compose_file in compose_files:
         compose_file_path = os.path.join(context.nautobot_version_control.compose_dir, compose_file)
         compose_command_tokens.append(f' -f "{compose_file_path}"')
 
@@ -106,9 +116,9 @@ def docker_compose(context, command, **kwargs):
     if service is not None:
         compose_command_tokens.append(service)
 
-    print(f'Running docker-compose command "{command}"')
     compose_command = " ".join(compose_command_tokens)
 
+    print(f'Running docker-compose command "{compose_command}"')
     return context.run(compose_command, env=build_env, **kwargs)
 
 
@@ -119,13 +129,13 @@ def run_command(context, command, **kwargs):
     else:
         # Check if nautobot is running, no need to start another nautobot container to run a command
         docker_compose_status = "ps --services --filter status=running"
-        results = docker_compose(context, docker_compose_status, hide="out")
+        results = docker_compose(context, docker_compose_status, hide="out", **kwargs)
         if "nautobot" in results.stdout:
             compose_command = f"exec nautobot {command}"
         else:
             compose_command = f"run --entrypoint '{command}' nautobot"
 
-        docker_compose(context, compose_command, pty=True)
+        docker_compose(context, compose_command, pty=True, **kwargs)
 
 
 # ------------------------------------------------------------------------------
@@ -137,7 +147,7 @@ def run_command(context, command, **kwargs):
         "cache": "Whether to use Docker's cache when building the image (defaults to enabled)",
     }
 )
-def build(context, force_rm=False, cache=True):
+def build(context, force_rm=False, cache=True, use_hosted_dolt=False):
     """Build Nautobot docker image."""
     command = "build"
 
@@ -147,7 +157,7 @@ def build(context, force_rm=False, cache=True):
         command += " --force-rm"
 
     print(f"Building Nautobot with Python {context.nautobot_version_control.python_ver}...")
-    docker_compose(context, command)
+    docker_compose(context, command, use_hosted_dolt=use_hosted_dolt)
 
 
 @task
@@ -168,10 +178,10 @@ def debug(context, service=None):
 
 
 @task(help={"service": "If specified, only affect this service."})
-def start(context, service=None):
+def start(context, service=None, use_hosted_dolt=False):
     """Start Nautobot and its dependencies in detached mode."""
     print("Starting Nautobot in detached mode...")
-    docker_compose(context, "up --detach", service=service)
+    docker_compose(context, "up --detach", service=service, use_hosted_dolt=use_hosted_dolt)
 
 
 @task
@@ -182,17 +192,17 @@ def restart(context):
 
 
 @task
-def stop(context):
+def stop(context, use_hosted_dolt=False):
     """Stop Nautobot and its dependencies."""
     print("Stopping Nautobot...")
-    docker_compose(context, "down")
+    docker_compose(context, "down", use_hosted_dolt=use_hosted_dolt)
 
 
 @task
-def destroy(context):
+def destroy(context, use_hosted_dolt=False):
     """Destroy all containers and volumes."""
     print("Destroying Nautobot...")
-    docker_compose(context, "down --volumes")
+    docker_compose(context, "down --volumes", use_hosted_dolt=use_hosted_dolt)
 
 
 @task
@@ -274,12 +284,22 @@ def makemigrations(context, name=""):
 
 
 @task
-def migrate(context):
+def migrate(context, use_hosted_dolt=False):
     """Perform migrate operation in Django."""
     command = "nautobot-server migrate"
 
-    run_command(context, command)
+    run_command(context, command, use_hosted_dolt=use_hosted_dolt)
 
+@task
+def load_data(context, use_hosted_dolt=False):
+    """Load data."""
+    commands = [
+        "nautobot-server cleanup_data",
+        "nautobot-server loaddata development/db.json",
+    ]
+    for command in commands:
+        compose_command = f"run --entrypoint '{command}' nautobot"
+        docker_compose(context, compose_command, pty=True, use_hosted_dolt=use_hosted_dolt)
 
 @task(help={})
 def post_upgrade(context):
@@ -398,7 +418,7 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=True):
+def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=True, verbose=True, debug=True, use_hosted_dolt=False):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
@@ -408,7 +428,11 @@ def unittest(context, keepdb=False, label="nautobot_version_control", failfast=F
         command += " --failfast"
     if buffer:
         command += " --buffer"
-    run_command(context, command)
+    if verbose:
+        command += " --verbosity 2"
+    if debug:
+        command += " --debug-sql"
+    run_command(context, command, use_hosted_dolt=use_hosted_dolt)
 
 
 @task
@@ -466,35 +490,35 @@ def load_dotenv(path):
         os.environ[key] = val
 
 def reset_hosted_db():
-    load_dotenv(path="development/creds_hosted.env")
-    dolt_host = os.getenv("DOLT_HOST")
-    dolt_user = os.getenv("DOLT_USER")
-    dolt_password = os.getenv("DOLT_PASSWORD")
+    load_dotenv(path="development/creds.env")
 
-    # Check if the required environment variables are loaded and not None
-    required_vars = ["DOLT_HOST", "DOLT_USER", "DOLT_PASSWORD"]
-    missing_vars = []
-
-    for var in required_vars:
-        value = os.getenv(var)
-        if value is None or value.strip() == "":
-            missing_vars.append(var)
-
-    if missing_vars:
-        print(f"Error: The following environment variables are missing or empty: {', '.join(missing_vars)}")
+    dolt_host = os.getenv("NAUTOBOT_HOSTED_DB_HOST")
+    if dolt_host is None:
+        print("Error: NAUTOBOT_HOSTED_DB_HOST environment variable not set")
         return False
+    dolt_user = os.getenv("NAUTOBOT_HOSTED_DB_USER")
+    if dolt_user is None:
+        print("Error: NAUTOBOT_HOSTED_DB_USER environment variable not set")
+        return False
+    dolt_password = os.getenv("NAUTOBOT_HOSTED_DB_PASSWORD")
+    if dolt_password is None:
+        print("Error: NAUTOBOT_HOSTED_DB_PASSWORD environment variable not set")
+        return False
+
+    now = time.localtime()
+    time_stamp = time.strftime("%Y_%m_%d_%H_%M_%S", now)
+    debug_db_name = f"test_nautobot_hosted_{time_stamp}"
 
     queries = [
         "DROP DATABASE IF EXISTS nautobot;",
         "CREATE DATABASE nautobot CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;",
         "DROP DATABASE IF EXISTS test_nautobot;",
         "CREATE DATABASE test_nautobot CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;",
-        "DROP DATABASE IF EXISTS test_nautobot_hosted;",
-        "CREATE DATABASE test_nautobot_hosted CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;",
+        f"DROP DATABASE IF EXISTS {debug_db_name};",
+        f"CREATE DATABASE {debug_db_name} CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;",
     ]
     for query in queries:
-        subprocess.run(
-            [
+        command = [
                 "mysql",
                 "-h",
                 dolt_host,
@@ -503,13 +527,16 @@ def reset_hosted_db():
                 "-p" + dolt_password,
                 "-e",
                 query,
-            ],
+            ]
+        subprocess.run(
+            command,
             check=True,
+            # env=env,
         )
     return True
 
 @task
-def clean_tests(context, use_hosted_dolt=False):
+def clean_tests(context, label="nautobot_version_control", use_hosted_dolt=False):
     """Run all tests for this plugin."""
     if use_hosted_dolt:
         print("Running tests with hosted dolt database.")
@@ -521,9 +548,9 @@ def clean_tests(context, use_hosted_dolt=False):
             print("Failed to reset hosted database.")
             return
 
-    destroy(context, use_hosted_dolt=use_hosted_dolt)
+    destroy(context)
     build(context, use_hosted_dolt=use_hosted_dolt)
-    unittest(context, keepdb=True, verbose=True, use_hosted_dolt=use_hosted_dolt)
+    unittest(context, keepdb=True, use_hosted_dolt=use_hosted_dolt, label=label)
 
 @task
 def clean_start(context, use_hosted_dolt=False):
@@ -538,20 +565,14 @@ def clean_start(context, use_hosted_dolt=False):
             print("Failed to reset hosted database.")
             return
 
-    stop(context, use_hosted_dolt=use_hosted_dolt)
-    destroy(context, use_hosted_dolt=use_hosted_dolt)
+    stop(context, use_hosted_dolt=False)
+    stop(context, use_hosted_dolt=True)
+
+    destroy(context, use_hosted_dolt=False)
+    destroy(context, use_hosted_dolt=True)
+
     build(context, use_hosted_dolt=use_hosted_dolt)
     migrate(context, use_hosted_dolt=use_hosted_dolt)
     load_data(context, use_hosted_dolt=use_hosted_dolt)
     start(context, use_hosted_dolt=use_hosted_dolt)
 
-@task
-def load_data(context, use_hosted_dolt=False):
-    """Load data."""
-    commands = [
-        "nautobot-server cleanup_data",
-        "nautobot-server loaddata development/db.json",
-    ]
-    for command in commands:
-        compose_command = f"run --entrypoint '{command}' nautobot"
-        docker_compose(context, compose_command, pty=True)
