@@ -202,7 +202,7 @@ def stop(context, use_hosted_dolt=False):
 def destroy(context, use_hosted_dolt=False):
     """Destroy all containers and volumes."""
     print("Destroying Nautobot...")
-    docker_compose(context, "down --volumes", use_hosted_dolt=use_hosted_dolt)
+    docker_compose(context, "down --volumes --remove-orphans", use_hosted_dolt=use_hosted_dolt)
 
 
 @task
