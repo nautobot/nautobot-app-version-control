@@ -29,8 +29,8 @@ services:
     ports:
       - "3306:3306"
     healthcheck:
-      test: dolt sql-client -u $$MYSQL_USER -p $$MYSQL_PASSWORD -q "show databases; select 'healthcheck';" --use-db $$MYSQL_DATABASE
-      timeout: "20s"
+      test: dolt sql-client -u $$NAUTOBOT_DB_USER -p $$NAUTOBOT_DB_PASSWORD -q "show databases; select 'healthcheck';" --use-db $$NAUTOBOT_DB_NAME
+      timeout: "10s"
       retries: 10
 
 volumes:
