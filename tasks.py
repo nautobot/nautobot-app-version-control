@@ -50,6 +50,7 @@ namespace.configure(
                 "docker-compose.dev.yml",
             ],
             "compose_http_timeout": "86400",
+            "hosted_db": True,
         }
     }
 )
@@ -398,7 +399,7 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=True):
+def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=True, verbose=True, debug=True):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
@@ -408,6 +409,10 @@ def unittest(context, keepdb=False, label="nautobot_version_control", failfast=F
         command += " --failfast"
     if buffer:
         command += " --buffer"
+    if verbose:
+        command += " --verbosity 2"
+    if debug:
+        command += " --debug-sql"
     run_command(context, command)
 
 
@@ -467,22 +472,17 @@ def load_dotenv(path):
 
 def reset_hosted_db():
     load_dotenv(path="development/creds_hosted.env")
-    dolt_host = os.getenv("DOLT_HOST")
-    dolt_user = os.getenv("DOLT_USER")
-    dolt_password = os.getenv("DOLT_PASSWORD")
-
-    # Check if the required environment variables are loaded and not None
-    required_vars = ["DOLT_HOST", "DOLT_USER", "DOLT_PASSWORD"]
-    missing_vars = []
-
-    for var in required_vars:
-        value = os.getenv(var)
-        if value is None or value.strip() == "":
-            missing_vars.append(var)
-
-    if missing_vars:
-        print(f"Error: The following environment variables are missing or empty: {', '.join(missing_vars)}")
+    dolt_host = os.getenv("NAUTOBOT_DB_HOST")
+    if dolt_host is None:
+        print("Error: NAUTOBOT_DB_HOST environment variable not set")
         return False
+    dolt_user = os.getenv("NAUTOBOT_DB_USER")
+    if dolt_user is None:
+        print("Error: NAUTOBOT_DB_USER environment variable not set")
+        return False
+    dolt_password = os.getenv("NAUTOBOT_DB_PASSWORD")
+    if dolt_password is None:
+        print("Error: NAUTOBOT_DB_PASSWORD environment variable not set")
 
     queries = [
         "DROP DATABASE IF EXISTS nautobot;",
@@ -493,8 +493,7 @@ def reset_hosted_db():
         "CREATE DATABASE test_nautobot_hosted CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci;",
     ]
     for query in queries:
-        subprocess.run(
-            [
+        command = [
                 "mysql",
                 "-h",
                 dolt_host,
@@ -503,50 +502,52 @@ def reset_hosted_db():
                 "-p" + dolt_password,
                 "-e",
                 query,
-            ],
+            ]
+        subprocess.run(
+            command,
             check=True,
         )
     return True
 
 @task
-def clean_tests(context, use_hosted_dolt=False):
+def clean_tests(context):
     """Run all tests for this plugin."""
-    if use_hosted_dolt:
+    if context.nautobot_version_control.hosted_db:
         print("Running tests with hosted dolt database.")
     else:
         print("Running tests with local dolt database.")
 
-    if use_hosted_dolt:
+    if context.nautobot_version_control.hosted_db:
         if not reset_hosted_db():
             print("Failed to reset hosted database.")
             return
 
-    destroy(context, use_hosted_dolt=use_hosted_dolt)
-    build(context, use_hosted_dolt=use_hosted_dolt)
-    unittest(context, keepdb=True, verbose=True, use_hosted_dolt=use_hosted_dolt)
+    destroy(context)
+    build(context)
+    unittest(context, keepdb=True, verbose=True)
 
 @task
-def clean_start(context, use_hosted_dolt=False):
+def clean_start(context):
     """Start the docker containers."""
-    if use_hosted_dolt:
+    if context.nautobot_version_control.hosted_db:
         print("Starting nautobot and plugin with hosted dolt database.")
     else:
         print("Starting nautobot and plugin with local dolt database.")
 
-    if use_hosted_dolt:
+    if context.nautobot_version_control.hosted_db:
         if not reset_hosted_db():
             print("Failed to reset hosted database.")
             return
 
-    stop(context, use_hosted_dolt=use_hosted_dolt)
-    destroy(context, use_hosted_dolt=use_hosted_dolt)
-    build(context, use_hosted_dolt=use_hosted_dolt)
-    migrate(context, use_hosted_dolt=use_hosted_dolt)
-    load_data(context, use_hosted_dolt=use_hosted_dolt)
-    start(context, use_hosted_dolt=use_hosted_dolt)
+    stop(context)
+    destroy(context)
+    build(context)
+    migrate(context)
+    load_data(context)
+    start(context)
 
 @task
-def load_data(context, use_hosted_dolt=False):
+def load_data(context):
     """Load data."""
     commands = [
         "nautobot-server cleanup_data",
