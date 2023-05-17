@@ -12,7 +12,7 @@ services:
     volumes:
       - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
       - "../:/source"
-      - "development/hosted_ca.pem:/opt/nautobot/hosted_ca.pem"
+      - "./hosted_ca.pem:/opt/nautobot/hosted_ca.pem"
   worker:
     depends_on:
       redis:
@@ -25,4 +25,4 @@ services:
     volumes:
       - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
       - "../:/source"
-      - "development/hosted_ca.pem:/opt/nautobot/hosted_ca.pem"
+      - "./hosted_ca.pem:/opt/nautobot/hosted_ca.pem"

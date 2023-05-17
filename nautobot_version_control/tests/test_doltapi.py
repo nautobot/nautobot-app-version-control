@@ -35,7 +35,7 @@ class DoltApiTestCase(APITestCase):
             print(f"user {username} exists, deleting")
             user.delete()
             print(f"user {username} deleted")
-        except User.DoesNotExist as exc:
+        except User.DoesNotExist:
             print(f"user {username} does not exist")
 
 

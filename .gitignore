@@ -310,3 +310,4 @@ public
 # Custom
 hosted_ca.pem
 .idea
+creds_hosted.env

@@ -15,7 +15,8 @@ limitations under the License.
 from distutils.util import strtobool
 from invoke import Collection, task as invoke_task
 import os
-import subprocess
+import subprocess  # nosec
+
 
 def is_truthy(arg):
     """Convert "truthy" strings into Booleans.
@@ -399,7 +400,9 @@ def check_migrations(context):
         "buffer": "Discard output from passing tests",
     }
 )
-def unittest(context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=True, verbose=True, debug=True):
+def unittest(
+    context, keepdb=False, label="nautobot_version_control", failfast=False, buffer=True, verbose=True, debug=True
+):
     """Run Nautobot unit tests."""
     command = f"coverage run --module nautobot.core.cli test {label}"
 
@@ -453,13 +456,14 @@ def tests(context, failfast=False):
     print("All tests have passed!")
     unittest_coverage(context)
 
+
 # ------------------------------------------------------------------------------
 # Clean - these tasks are for running tests or starting services, and performs all
 # the necessary steps to do so: destroy, build, migrate, etc.
 # ------------------------------------------------------------------------------
 
+
 def load_dotenv(path):
-    env_vars = {}
     with open(path) as f:
         env_data = f.read().splitlines()
     for line in env_data:
@@ -469,6 +473,7 @@ def load_dotenv(path):
             continue
         key, val = line.split("=", 1)
         os.environ[key] = val
+
 
 def reset_hosted_db():
     load_dotenv(path="development/creds_hosted.env")
@@ -494,20 +499,21 @@ def reset_hosted_db():
     ]
     for query in queries:
         command = [
-                "mysql",
-                "-h",
-                dolt_host,
-                "-u",
-                dolt_user,
-                "-p" + dolt_password,
-                "-e",
-                query,
-            ]
-        subprocess.run(
+            "mysql",
+            "-h",
+            dolt_host,
+            "-u",
+            dolt_user,
+            "-p" + dolt_password,
+            "-e",
+            query,
+        ]
+        subprocess.run(  # nosec
             command,
             check=True,
         )
     return True
+
 
 @task
 def clean_tests(context):
@@ -525,6 +531,7 @@ def clean_tests(context):
     destroy(context)
     build(context)
     unittest(context, keepdb=True, verbose=True)
+
 
 @task
 def clean_start(context):
@@ -545,6 +552,7 @@ def clean_start(context):
     migrate(context)
     load_data(context)
     start(context)
+
 
 @task
 def load_data(context):

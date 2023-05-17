@@ -4,6 +4,7 @@ from django.db.models.signals import pre_migrate, post_migrate
 import django_tables2
 from nautobot.extras.plugins import PluginConfig
 from nautobot_version_control.migrations import auto_dolt_commit_migration
+
 try:
     from importlib import metadata
 except ImportError:

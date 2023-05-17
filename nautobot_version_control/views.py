@@ -766,47 +766,47 @@ class PullRequestMergeView(generic.ObjectEditView):
     template_name = "nautobot_version_control/pull_request/confirm_merge.html"
 
     def get(self, request, pk):  # pylint: disable=W0613,C0116,W0221 # noqa: D102
-        pr = get_object_or_404(self.queryset, pk=pk)
-        if pr.state != PullRequest.OPEN:
-            msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be merged""")
+        pull_request = get_object_or_404(self.queryset, pk=pk)
+        if pull_request.state != PullRequest.OPEN:
+            msg = mark_safe(f"""Pull request "{pull_request}" is not open and cannot be merged""")
             messages.error(request, msg)
-            return redirect("plugins:nautobot_version_control:pull_request", pk=pr.pk)
-        src = Branch.objects.get(name=pr.source_branch)
-        dest = Branch.objects.get(name=pr.destination_branch)
+            return redirect("plugins:nautobot_version_control:pull_request", pk=pull_request.pk)
+        src = Branch.objects.get(name=pull_request.source_branch)
+        dest = Branch.objects.get(name=pull_request.destination_branch)
         return render(
             request,
             self.template_name,
             {
-                "pull_request": pr,
+                "pull_request": pull_request,
                 "form": self.form,
-                "return_url": pr.get_absolute_url(),
+                "return_url": pull_request.get_absolute_url(),
                 "conflicts": merge.get_conflicts_for_merge(src, dest),
                 "diffs": diffs.three_dot_diffs(from_commit=dest.hash, to_commit=src.hash),
             },
         )
 
     def post(self, request, pk):  # pylint: disable=W0613,C0116,W0221 # noqa: D102
-        pr = get_object_or_404(self.queryset, pk=pk)
+        pull_request = get_object_or_404(self.queryset, pk=pk)
         form = ConfirmationForm(request.POST)
         squash_param = request.POST.get("merge_squash", False)
         if squash_param == "true":
             squash_param = True
 
         if form.is_valid():
-            pr.merge(user=request.user, squash=squash_param)
+            pull_request.merge(user=request.user, squash=squash_param)
             messages.success(
                 request,
-                mark_safe(f"""Pull Request <strong>"{pr}"</strong> has been merged."""),
+                mark_safe(f"""Pull Request <strong>"{pull_request}"</strong> has been merged."""),
             )
-            return redirect("plugins:nautobot_version_control:pull_request", pk=pr.pk)
+            return redirect("plugins:nautobot_version_control:pull_request", pk=pull_request.pk)
 
         return render(
             request,
             self.template_name,
             {
-                "pull_request": pr,
+                "pull_request": pull_request,
                 "form": self.form,
-                "return_url": pr.get_absolute_url(),
+                "return_url": pull_request.get_absolute_url(),
             },
         )
 
@@ -819,42 +819,42 @@ class PullRequestCloseView(generic.ObjectEditView):
     template_name = "nautobot_version_control/pull_request/confirm_close.html"
 
     def get(self, request, pk):  # pylint: disable=W0613,C0116,W0221 # noqa: D102
-        pr = get_object_or_404(self.queryset, pk=pk)
-        if pr.state != PullRequest.OPEN:
-            msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be closed""")
+        pull_request = get_object_or_404(self.queryset, pk=pk)
+        if pull_request.state != PullRequest.OPEN:
+            msg = mark_safe(f"""Pull request "{pull_request}" is not open and cannot be closed""")
             messages.error(request, msg)
-            return redirect("plugins:nautobot_version_control:pull_request", pk=pr.pk)
+            return redirect("plugins:nautobot_version_control:pull_request", pk=pull_request.pk)
 
         return render(
             request,
             self.template_name,
             {
-                "pull_request": pr,
+                "pull_request": pull_request,
                 "form": self.form,
                 "panel_class": "default",
                 "button_class": "primary",
-                "return_url": pr.get_absolute_url(),
+                "return_url": pull_request.get_absolute_url(),
             },
         )
 
     def post(self, request, pk):  # pylint: disable=W0221 # noqa: D102
-        pr = get_object_or_404(self.queryset, pk=pk)
+        pull_request = get_object_or_404(self.queryset, pk=pk)
         form = ConfirmationForm(request.POST)
 
         if form.is_valid():
-            pr.state = PullRequest.CLOSED
-            pr.save()
-            msg = mark_safe(f"""<strong>Pull Request "{pr}" has been closed.</strong>""")
+            pull_request.state = PullRequest.CLOSED
+            pull_request.save()
+            msg = mark_safe(f"""<strong>Pull Request "{pull_request}" has been closed.</strong>""")
             messages.success(request, msg)
-            return redirect("plugins:nautobot_version_control:pull_request", pk=pr.pk)
+            return redirect("plugins:nautobot_version_control:pull_request", pk=pull_request.pk)
 
         return render(
             request,
             self.template_name,
             {
-                "pull_request": pr,
+                "pull_request": pull_request,
                 "form": self.form,
-                "return_url": pr.get_absolute_url(),
+                "return_url": pull_request.get_absolute_url(),
             },
         )
 
@@ -896,8 +896,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
                 messages.success(request, msg)
                 return redirect(self.get_return_url(request))
 
-            else:
-                logger.debug("Form validation failed")
+            logger.debug("Form validation failed")
 
         else:
             form = form_cls(

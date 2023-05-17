@@ -53,7 +53,7 @@ DATABASES = {
         "TEST": {
             "MIRROR": "default",
         },
-    }
+    },
 }
 
 # Ensure proper Unicode handling for MySQL
