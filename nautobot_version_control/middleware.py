@@ -1,4 +1,4 @@
-"""middleware.py contains the middleware add-ons needed for the Version Control plugin to work."""
+"""The middleware add-ons needed for the Version Control plugin to work."""
 
 from django.contrib import messages
 from django.core.exceptions import ObjectDoesNotExist
@@ -18,10 +18,8 @@ from nautobot_version_control.utils import DoltError
 
 
 def dolt_health_check_intercept_middleware(get_response):
-    """
-    Intercept health check calls and disregard.
-    TODO: fix health-check and remove
-    """
+    """Intercept health check calls and disregard."""
+    # TODO: fix health-check and remove
 
     def middleware(request):
         if "/health" in request.path:
@@ -35,6 +33,7 @@ class DoltBranchMiddleware:
     """DoltBranchMiddleware keeps track of which branch the dolt database is on."""
 
     def __init__(self, get_response):
+        """The init method for DoltBranchMiddleware."""
         self.get_response = get_response
 
     def __call__(self, request):
@@ -42,10 +41,7 @@ class DoltBranchMiddleware:
         return self.get_response(request)
 
     def process_view(self, request, view_func, view_args, view_kwargs):  # pylint: disable=R0201
-        """
-        process_view maintains the dolt branch session cookie and verifies authentication. It then returns the
-        view that needs to be rendered.
-        """
+        """This maintains the dolt branch session cookie and verifies authentication. It then returns the view that needs to be rendered."""
         # Check whether the desired branch was passed in as a querystring
         query_string_branch = request.GET.get(DOLT_BRANCH_KEYWORD, None)
         if query_string_branch is not None:
@@ -56,19 +52,19 @@ class DoltBranchMiddleware:
         branch = DoltBranchMiddleware.get_branch(request)
         try:
             branch.checkout()
-        except Exception as e:
-            msg = f"could not checkout branch {branch}: {str(e)}"
+        except Exception as err:  # pylint: disable=broad-except
+            msg = f"could not checkout branch {branch}: {str(err)}"
             messages.error(request, mark_safe(msg))
 
         try:
             return view_func(request, *view_args, **view_kwargs)
-        except DoltError as e:
-            messages.error(request, mark_safe(e))
+        except DoltError as err:
+            messages.error(request, mark_safe(err))
             return redirect(request.path)
 
     @staticmethod
     def get_branch(request):
-        """get_branch returns the Branch object of the branch stored in the session cookie."""
+        """Returns the Branch object of the branch stored in the session cookie."""
         # lookup the active branch in the session cookie
         requested = branch_from_request(request)
         try:
@@ -82,13 +78,15 @@ class DoltBranchMiddleware:
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
 
 
-class DoltAutoCommitMiddleware:
+class DoltAutoCommitMiddleware:  # pylint: disable=too-few-public-methods
     """
     DoltAutoCommitMiddleware calls the AutoDoltCommit class on a request.
+
     - adapted from nautobot.extras.middleware.ObjectChangeMiddleware.
     """
 
     def __init__(self, get_response):
+        """The init method for DoltAutoCommitMiddleware."""
         self.get_response = get_response
 
     def __call__(self, request):
@@ -101,21 +99,25 @@ class DoltAutoCommitMiddleware:
 class AutoDoltCommit:
     """
     AutoDoltCommit handles automatic dolt commits on the case than objects is created or deleted.
+
     - adapted from `nautobot.extras.context_managers`.
     """
 
     def __init__(self, request):
+        """The init methods for dolt commit."""
         self.request = request
         self.commit = False
         self.changes_for_db = {}
 
     def __enter__(self):
+        """Overwrite methods for dolt commit enter."""
         # Connect our receivers to the post_save and post_delete signals.
         post_save.connect(self._handle_update, dispatch_uid="dolt_commit_update")
         m2m_changed.connect(self._handle_update, dispatch_uid="dolt_commit_update")
         pre_delete.connect(self._handle_delete, dispatch_uid="dolt_commit_delete")
 
     def __exit__(self, type, value, traceback):  # pylint: disable=W0622
+        """Overwrite methods for dolt commit exit."""
         if self.commit:
             self.make_commits()
 
@@ -146,24 +148,24 @@ class AutoDoltCommit:
         self.commit = True
 
     def make_commits(self):
-        """make_commits creates and saves a Commit object."""
-        for db, msgs in self.changes_for_db.items():
+        """Create and saves a Commit object."""
+        for database, msgs in self.changes_for_db.items():
             msg = "; ".join(msgs)
             Commit(message=msg).save(
                 user=self.request.user,
-                using=db,
+                using=database,
             )
 
     def collect_change(self, instance, msg):
-        """collect_change stores changes messages for each db."""
-        db = self.database_from_instance(instance)
-        if db not in self.changes_for_db:
-            self.changes_for_db[db] = []
-        self.changes_for_db[db].append(msg)
+        """Stores changes messages for each db."""
+        database = self.database_from_instance(instance)
+        if database not in self.changes_for_db:
+            self.changes_for_db[database] = []
+        self.changes_for_db[database].append(msg)
 
     @staticmethod
     def database_from_instance(instance):
-        """database_from_instance returns a database from an instance type."""
+        """Returns a database from an instance type."""
         return instance._state.db  # pylint: disable=W0212
 
     @staticmethod
@@ -181,7 +183,8 @@ class AutoDoltCommit:
 
 def branch_from_request(request):
     """
-    Returns the active branch from a request
+    Returns the active branch from a request.
+
     :param request: A django request
     :return: Branch name
     """

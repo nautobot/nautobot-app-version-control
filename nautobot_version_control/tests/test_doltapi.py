@@ -1,5 +1,5 @@
 """tests.py contains unittests for the nautobot version control plugin."""
-
+# pylint: disable=too-many-ancestors
 
 from django.test import override_settings, TransactionTestCase
 from django.urls import reverse
@@ -238,15 +238,7 @@ class TestPullRequestApi(DoltApiTestCase, APIViewTestCases):
 
     databases = ["default", "global"]
     model = PullRequest
-    brief_fields = [
-        "title",
-        "state",
-        "source_branch",
-        "destination_branch",
-        "description",
-        "creator",
-        "created_at",
-    ]
+    brief_fields = ["title", "state", "source_branch", "destination_branch", "description", "creator", "created_at"]
 
     @classmethod
     def setUpTestData(cls):

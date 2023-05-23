@@ -18,7 +18,7 @@ services:
     build:
       context: "../"
       dockerfile: "development/Dockerfile-dolt"
-    command: /bin/sh -c "dolt --ignore-lock-file sql-server --config=/dolt-config.yaml"
+    command: /bin/sh -c "dolt --ignore-lock-file sql-server --config=/dolt-config.yaml"  # yamllint disable-line rule:quoted-strings
     env_file:
       - "development.env"
       - "creds.env"
@@ -26,7 +26,7 @@ services:
       - "dolt_data:/var/lib/nautobot"
       - "./dolt-config.yaml:/dolt-config.yaml"
     healthcheck:
-      test: dolt sql-client -u $$NAUTOBOT_DB_USER -p $$NAUTOBOT_DB_PASSWORD -q "show databases; select 'healthcheck';" --use-db $$NAUTOBOT_DB_NAME
+      test: dolt sql-client -u $$NAUTOBOT_DB_USER -p $$NAUTOBOT_DB_PASSWORD -q "show databases; select 'healthcheck';" --use-db $$NAUTOBOT_DB_NAME  # yamllint disable-line rule:quoted-strings
       timeout: "10s"
       retries: 10
 

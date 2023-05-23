@@ -28,6 +28,8 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
     )
 
     class Meta:
+        """Boilerplate form Meta data for BranchForm."""
+
         model = Branch
         fields = [
             "name",
@@ -35,11 +37,12 @@ class BranchForm(forms.ModelForm, BootstrapMixin):
         ]
 
     def __init__(self, *args, **kwargs):
+        """The init method for BranchForm."""
         # self.user = kwargs.pop("user", None)
         super().__init__(*args, **kwargs)
 
     def save(self, *args, **kwargs):
-        """save overrides an superclass method."""
+        """Override the superclass method."""
         self.instance.starting_branch = self.cleaned_data["starting_branch"]
         self.instance.creator = self.cleaned_data["creator"]
         return super().save(*args, **kwargs)
@@ -52,6 +55,8 @@ class MergeForm(forms.Form, BootstrapMixin):
     destination_branch = forms.ModelChoiceField(queryset=Branch.objects.all(), to_field_name="name", required=True)
 
     class Meta:
+        """Boilerplate form Meta data for MergeForm."""
+
         fields = [
             "source_branch",
             "destination_branch",
@@ -73,6 +78,8 @@ class MergePreviewForm(forms.Form, BootstrapMixin):
     )
 
     class Meta:
+        """Boilerplate form Meta data for MergePreviewForm."""
+
         fields = [
             "source_branch",
             "destination_branch",
@@ -83,6 +90,8 @@ class BranchBulkEditForm(forms.Form, BootstrapMixin):
     """BranchBulkEditForm is a small form for the branch bulk edit view."""
 
     class Meta:
+        """Boilerplate form Meta data for BranchBulkEditForm."""
+
         model = Branch
         fields = [
             "name",
@@ -91,14 +100,15 @@ class BranchBulkEditForm(forms.Form, BootstrapMixin):
 
 class BranchBulkDeleteForm(ConfirmationForm):
     """
-    BranchBulkDeleteForm is used for validating the deletion of branches. It has additional checks for preventing
-    deletes of the active branch and the DOLT_DEFAULT_BRANCH.
+    BranchBulkDeleteForm is used for validating the deletion of branches.
+
+    It has additional checks for preventing deletes of the active branch and the DOLT_DEFAULT_BRANCH.
     """
 
     pk = forms.ModelMultipleChoiceField(queryset=Branch.objects.all(), widget=forms.MultipleHiddenInput)
 
     def clean_pk(self):
-        """clean_pk gets the primary key of the cleaned data and protects against active_branch and default_branch deletions."""
+        """Get the primary key of the cleaned data and protects against active_branch and default_branch deletions."""
         # TODO: log error messages
         deletes = [str(b) for b in self.cleaned_data["pk"]]
         if active_branch() in deletes:
@@ -108,6 +118,8 @@ class BranchBulkDeleteForm(ConfirmationForm):
         return self.cleaned_data["pk"]
 
     class Meta:
+        """Boilerplate form Meta data for BranchBulkDeleteForm."""
+
         model = Branch
         fields = [
             "name",
@@ -124,6 +136,7 @@ class BranchFilterForm(forms.Form, BootstrapMixin):
     latest_committer = forms.ChoiceField(choices=[], required=False)
 
     def __init__(self, *args, **kwargs):
+        """The init method for BranchFilterForm."""
         super().__init__(*args, **kwargs)
         self.fields["latest_committer"].choices = add_blank_choice(
             Branch.objects.all().values_list("latest_committer", "latest_committer").distinct()
@@ -139,6 +152,8 @@ class CommitForm(forms.ModelForm, BootstrapMixin):
     """CommitForm is a form used for the CommitEdit view."""
 
     class Meta:
+        """Boilerplate form Meta data for CommitForm."""
+
         model = Commit
         fields = ["message"]
 
@@ -152,6 +167,7 @@ class CommitFilterForm(forms.Form, BootstrapMixin):
     committer = forms.ChoiceField(choices=[], required=False)
 
     def __init__(self, *args, **kwargs):
+        """The init method for CommitFilterForm."""
         super().__init__(*args, **kwargs)
         self.fields["committer"].choices = Commit.objects.all().values_list("committer", "committer").distinct()
 
@@ -162,6 +178,8 @@ class CommitBulkRevertForm(forms.Form, BootstrapMixin):
     pk = forms.ModelMultipleChoiceField(queryset=Commit.objects.all(), widget=forms.MultipleHiddenInput())
 
     class Meta:
+        """Boilerplate form Meta data for CommitBulkRevertForm."""
+
         fields = ["branch"]
 
 
@@ -178,6 +196,8 @@ class PullRequestForm(forms.ModelForm, BootstrapMixin):
     destination_branch = forms.ModelChoiceField(queryset=qs, to_field_name="name", required=True)
 
     class Meta:
+        """Boilerplate form Meta data for PullRequestForm."""
+
         model = PullRequest
         fields = [
             "title",
@@ -193,10 +213,12 @@ class PullRequestDeleteForm(ConfirmationForm):
     pk = forms.ModelMultipleChoiceField(queryset=PullRequest.objects.all(), widget=forms.MultipleHiddenInput)
 
     def clean_pk(self):
-        """clean_pk returns only the pk of the cleaned data"""
+        """Returns only the pk of the cleaned data."""
         return self.cleaned_data["pk"]
 
     class Meta:
+        """Boilerplate form Meta data for PullRequestDeleteForm."""
+
         model = PullRequest
         fields = [
             "pk",
@@ -213,6 +235,7 @@ class PullRequestFilterForm(forms.Form, BootstrapMixin):
     reviewer = forms.ModelChoiceField(required=False, queryset=User.objects.all())
 
     def __init__(self, *args, **kwargs):
+        """The init method for PullRequestFilterForm."""
         super().__init__(*args, **kwargs)
         if args is not None and len(args) > 0:
             if not args[0].get("state", None):
@@ -221,6 +244,8 @@ class PullRequestFilterForm(forms.Form, BootstrapMixin):
                 super().__init__(new_args, **kwargs)
 
     class Meta:
+        """Boilerplate form Meta data for PullRequestFilterForm."""
+
         fields = [
             "state",
             "title",
@@ -234,6 +259,8 @@ class PullRequestReviewForm(forms.ModelForm, BootstrapMixin):
     """PullRequestReviewForm is used to review a pull request."""
 
     class Meta:
+        """Boilerplate form Meta data for PullRequestReviewForm."""
+
         model = PullRequestReview
         fields = [
             "pull_request",

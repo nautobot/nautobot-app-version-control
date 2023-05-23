@@ -1,6 +1,6 @@
 """Tasks for use with Invoke.
 
-(c) 2020-2021 Network To Code
+(c) 2020-2023 Network To Code
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
@@ -464,6 +464,7 @@ def tests(context, failfast=False):
 
 
 def load_dotenv(path):
+    """Custom function to load in an `env` file."""
     with open(path) as f:
         env_data = f.read().splitlines()
     for line in env_data:
@@ -476,6 +477,7 @@ def load_dotenv(path):
 
 
 def reset_hosted_db():
+    """Function to reset the DB if it is hosted."""
     load_dotenv(path="development/creds_hosted.env")
     dolt_host = os.getenv("NAUTOBOT_DB_HOST")
     if dolt_host is None:

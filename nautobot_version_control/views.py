@@ -1,4 +1,4 @@
-"""views.py implements django views for all Version Control plugin features."""
+"""Implements django views for all Version Control plugin features."""
 
 from datetime import datetime
 import logging
@@ -103,12 +103,12 @@ class BranchEditView(generic.ObjectEditView):
 
     @staticmethod
     def _is_success_response(response):
-        """returns if response was successful."""
+        """Returns if response was successful."""
         return response.status_code // 100 in (2, 3)
 
     @staticmethod
     def create_branch_meta(req, form):
-        """creates a BranchMeta object for a Branch."""
+        """Create a BranchMeta object for a Branch."""
         meta, _ = BranchMeta.objects.get_or_create(branch=form.data.get("name"))
         meta.source_branch = form.data.get("starting_branch")
         meta.author = req.user
@@ -157,9 +157,9 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
                 queryset = self.queryset.filter(pk__in=pk_list)
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
-                except Exception as e:
+                except Exception as err:  # pylint: disable=broad-except
                     logger.info("Caught error while attempting to delete objects")
-                    messages.error(request, mark_safe(e))
+                    messages.error(request, mark_safe(err))
                     return redirect(self.get_return_url(request))
 
                 msg = f"Deleted {deleted_count} {model._meta.verbose_name_plural}"
@@ -288,14 +288,11 @@ class CommitView(generic.ObjectView):
     queryset = Commit.objects.all()
 
     def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
-        """
-        Looks up the requested commit using a database revision
-        to ensure the commit is accessible.
-        todo: explain ancestor
-        """
+        """Looks up the requested commit using a database revision to ensure the commit is accessible."""
+        # TODO: todo: explain ancestor
         anc = get_list_or_404(CommitAncestor.objects.all(), **kwargs)[0]
-        db = db_for_commit(anc.commit_hash)
-        instance = self.queryset.using(db).get(commit_hash=anc.commit_hash)
+        database = db_for_commit(anc.commit_hash)
+        instance = self.queryset.using(database).get(commit_hash=anc.commit_hash)
 
         if anc.parent_hash:
             diff = diffs.two_dot_diffs(from_commit=anc.parent_hash, to_commit=instance)
@@ -405,11 +402,11 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
                 msgs = [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
                 try:
                     _ = Commit.revert(commits, request.user)
-                except Exception as e:
+                except Exception as err:  # pylint: disable=broad-except
                     # catch database error
                     messages.error(
                         request,
-                        mark_safe(f"""Error reverting commits {", ".join(msgs)}: {e}"""),
+                        mark_safe(f"""Error reverting commits {", ".join(msgs)}: {err}"""),
                     )
                     return redirect(self.get_return_url(request))
                 else:
@@ -446,7 +443,7 @@ class DiffDetailView(View):
     template_name = "nautobot_version_control/diff_detail.html"
 
     def get_required_permission(self):  # pylint: disable=R0201
-        """returns permissions."""
+        """Returns permissions."""
         return get_permission_for_model(Site, "view")
 
     def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
@@ -463,19 +460,18 @@ class DiffDetailView(View):
             },
         )
 
-    def get_model(self, kwargs):
-        """get_model returns the underlying model."""
+    def get_model(self, kwargs):  # pylint: disable=no-self-use
+        """Returns the underlying model."""
         return ContentType.objects.get(app_label=kwargs["app_label"], model=kwargs["model"]).model_class()
 
     @staticmethod
     def title(before_obj, after_obj):
-        """title returns the title of a diff."""
+        """Returns the title of a diff."""
         if before_obj and after_obj:
             return f"Updated {after_obj}"
-        elif after_obj:
+        if after_obj:
             return f"Added {after_obj}"
-        else:
-            return f"Deleted {before_obj}"
+        return f"Deleted {before_obj}"
 
     def breadcrumb(self, kwargs):
         """Return a breadcrumb."""
@@ -492,33 +488,32 @@ class DiffDetailView(View):
     def match_commit(commit):
         """Replace `commit` with a more semantically meaningful identifier, if possible."""
         if Branch.objects.filter(hash=str(commit)).count() == 1:
-            b = Branch.objects.get(hash=str(commit))
-            url = b.get_absolute_url()
-            return mark_safe(f"<a href='{url}'>{b}</a>")
-        elif Commit.objects.filter(commit_hash=str(commit)).exists():
-            c = Commit.objects.get(commit_hash=str(commit))
-            url = c.get_absolute_url()
-            return mark_safe(f"<a href='{url}'>{c}</a>")
+            branch_obj = Branch.objects.get(hash=str(commit))
+            url = branch_obj.get_absolute_url()
+            return mark_safe(f"<a href='{url}'>{branch_obj}</a>")
+        if Commit.objects.filter(commit_hash=str(commit)).exists():
+            commit_obj = Commit.objects.get(commit_hash=str(commit))
+            url = commit_obj.get_absolute_url()
+            return mark_safe(f"<a href='{url}'>{commit_obj}</a>")
         return commit
 
     def display_name(self, kwargs):
-        """returns the verbose name of the model."""
+        """Returns the verbose name of the model."""
         return self.get_model(kwargs)._meta.verbose_name.capitalize()
 
     def get_objs(self, kwargs):
         """Returns the commit objects for the before and after of a diff."""
-        pk = kwargs["pk"]
         from_commit = kwargs["from_commit"]
         to_commit = kwargs["to_commit"]
         qs = self.model.objects.all()
         before_obj, after_obj = None, None
 
         from_qs = qs.using(db_for_commit(from_commit))
-        if from_qs.filter(pk=pk).exists():
-            before_obj = from_qs.get(pk=pk)
+        if from_qs.filter(pk=kwargs["pk"]).exists():
+            before_obj = from_qs.get(pk=kwargs["pk"])
         to_qs = qs.using(db_for_commit(to_commit))
-        if to_qs.filter(pk=pk).exists():
-            after_obj = to_qs.get(pk=pk)
+        if to_qs.filter(pk=kwargs["pk"]).exists():
+            after_obj = to_qs.get(pk=kwargs["pk"])
         return before_obj, after_obj
 
     def get_json_diff(self, before_obj, after_obj):
@@ -556,7 +551,7 @@ class DiffDetailView(View):
         return json_diff
 
     def serialize_obj(self, obj):
-        """serialize_obj converts a model into a json object."""
+        """Converts a model into a json object."""
         if not obj:
             return {}
         json_obj = {}
@@ -887,7 +882,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
                 queryset = self.queryset.filter(pk__in=pk_list)
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     logger.info("Caught error while attempting to delete objects")
                     return redirect(self.get_return_url(request))
 

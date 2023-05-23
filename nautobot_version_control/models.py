@@ -1,4 +1,4 @@
-"""models.py exposes Dolt primitives such as branches and commits as Django models."""
+"""Dolt primitives such as branches and commits as Django models."""
 
 
 from django.core.exceptions import ObjectDoesNotExist
@@ -65,15 +65,16 @@ class Branch(DoltSystemTable):
         self.creator = creator
 
     def __str__(self):
+        """Return a simple string if model is called."""
         return self.name
 
     def get_absolute_url(self):
-        """get_absolute_urls provide a url to access this branch's view."""
+        """Provide a url to access this branch's view."""
         return reverse("plugins:nautobot_version_control:branch", args=[self.name])
 
     @property
     def present_in_database(self):
-        """present_in_database returns whether the branch exists in the database."""
+        """Returns whether the branch exists in the database."""
         # determines `editing` flag in forms
         return Branch.objects.filter(name=self.name).exists()
 
@@ -85,7 +86,9 @@ class Branch(DoltSystemTable):
     @property
     def ahead_behind(self):
         """
-        ahead_behind computes the ahead/behind. Ahead represents the number of commits since the ancestor of main and this
+        Compute the ahead/behind.
+
+        Ahead represents the number of commits since the ancestor of main and this
         branch. Behind represents how many commits are on main that have diverged passed this branch.
         :return: ahead/behind string.
         """
@@ -100,21 +103,21 @@ class Branch(DoltSystemTable):
 
     @property
     def created_by(self):
-        """created_by returns the branch author."""
-        m = self._branch_meta()
-        return m.author if m else None
+        """Returns the branch author."""
+        meta = self._branch_meta()
+        return meta.author if meta else None
 
     @property
     def created_at(self):
-        """created_at returns the datetime the branch was created."""
-        m = self._branch_meta()
-        return m.created if m else None
+        """Returns the datetime the branch was created."""
+        meta = self._branch_meta()
+        return meta.created if meta else None
 
     @property
     def source_branch(self):
-        """source_branch returns the name of the branch that this branch was originally checked out on."""
-        m = self._branch_meta()
-        return m.source_branch if m else None
+        """Returns the name of the branch that this branch was originally checked out on."""
+        meta = self._branch_meta()
+        return meta.source_branch if meta else None
 
     def checkout(self):
         """Checkout performs a checkout operation to this branch making it the active_branch."""
@@ -133,7 +136,8 @@ class Branch(DoltSystemTable):
 
     def merge(self, merge_branch, user=None, squash=False):
         """
-        Merge performs a merge operation between this branch and the merge_branch
+        Merge performs a merge operation between this branch and the merge_branch.
+
         :param merge_branch: The branch to merge with
         :param user: The User object to associate the merge with
         :param squash: Whether or not to squash the merge thereby making it one commit
@@ -217,8 +221,9 @@ def delete_branch_pre_hook(sender, instance, using, **kwargs):  # pylint: disabl
 
 class BranchMeta(models.Model):
     """
-    BranchMeta class has a 1:1 relation with a Branch. It represents internal of a branch that can't be represented in
-    the dolt_branches system table.
+    BranchMeta class has a 1:1 relation with a Branch.
+
+    It represents internal of a branch that can't be represented in the dolt_branches system table.
     """
 
     branch = models.CharField(primary_key=True, max_length=1024)
@@ -255,49 +260,50 @@ class Commit(DoltSystemTable):
         verbose_name_plural = "commits"
 
     def __str__(self):
+        """Return a simple string if model is called."""
         return self.commit_hash
 
     def get_absolute_url(self):
-        """get_absolute_url returns a link to a view that displays the commit's info."""
+        """Returns a link to a view that displays the commit's info."""
         return reverse("plugins:nautobot_version_control:commit", args=[self.commit_hash])
 
     @staticmethod
     def merge_base(left, right):
-        """merge_base returns the ancestor commit between two commits."""
-        with connection.cursor() as c:
+        """Returns the ancestor commit between two commits."""
+        with connection.cursor() as conn:
             # author credentials not set
-            c.execute(f"SELECT dolt_merge_base('{left}', '{right}');")
-            return c.fetchone()[0]
+            conn.execute(f"SELECT dolt_merge_base('{left}', '{right}');")
+            return conn.fetchone()[0]
 
     @staticmethod
     def revert(commits, user):
-        """revert executes a revert command on a commit which undoes it from the commit log."""
-        args = ", ".join([f"'{c}'" for c in commits])
+        """Revert executes a revert command on a commit which undoes it from the commit log."""
+        args = ", ".join([f"'{commit}'" for commit in commits])
         author = author_from_user(user)
         args += f", '--author', '{author}'"
-        with connection.cursor() as c:
-            c.execute(f"CALL dolt_revert({args});")
-            return c.fetchone()[0]
+        with connection.cursor() as conn:
+            conn.execute(f"CALL dolt_revert({args});")
+            return conn.fetchone()[0]
 
     @property
     def short_message(self):
-        """short_message truncates a commit message."""
+        """Truncates a commit message."""
         split = self.message.split(";")
         return split[0] + f". Total number of changes: {len(split)}"
 
     @property
     def present_in_database(self):
-        """present_in_database returns whether a commit object exists in the Dolt database."""
+        """Returns whether a commit object exists in the Dolt database."""
         # determines `editing` flag in forms
         return Commit.objects.filter(commit_hash=self.commit_hash).exists()
 
     @property
     def parent_commits(self):
-        """parent_commits returns the hashes of the commit ancestor."""
+        """Returns the hashes of the commit ancestor."""
         return CommitAncestor.objects.filter(commit_hash=self.commit_hash).values_list("parent_hash", flat=True)
 
     def save(self, *args, using="default", user=None, **kwargs):  # pylint: disable=W0221
-        """save overrides the Django model save behavior and perform a commit on the database."""
+        """Overrides the Django model save behavior and perform a commit on the database."""
         msg = self.message.replace('"', "")
         author = author_from_user(user)
         conn = connections[using]
@@ -320,11 +326,14 @@ class CommitAncestor(DoltSystemTable):
     parent_index = models.IntegerField()  # primary_key=True
 
     class Meta:
+        """Meta information for CommitAncestor model."""
+
         managed = False
         db_table = "dolt_commit_ancestors"
         verbose_name_plural = "commit_ancestors"
 
     def __str__(self):
+        """Return a simple string if model is called."""
         return f"{self.commit_hash} ancestor[{self.parent_index}]: {self.parent_hash}"
 
     def save(self, *args, **kwargs):
@@ -345,11 +354,14 @@ class Conflicts(DoltSystemTable):
     num_conflicts = models.IntegerField()
 
     class Meta:
+        """Meta information for Conflicts model."""
+
         managed = False
         db_table = "dolt_conflicts"
         verbose_name_plural = "conflicts"
 
     def __str__(self):
+        """Return a simple string if model is called."""
         return f"{self.table} ({self.num_conflicts})"
 
 
@@ -360,11 +372,14 @@ class ConstraintViolations(DoltSystemTable):
     num_violations = models.IntegerField()
 
     class Meta:
+        """Meta information for ConstraintViolations model."""
+
         managed = False
         db_table = "dolt_constraint_violations"
         verbose_name_plural = "constraint violations"
 
     def __str__(self):
+        """Return a simple string if model is called."""
         return f"{self.table} ({self.num_violations})"
 
 
@@ -400,33 +415,36 @@ class PullRequest(BaseModel):
     objects = RestrictedQuerySet.as_manager()
 
     class Meta:
+        """Meta information for PullRequest model."""
+
         # table name cannot start with "dolt"
         db_table = "nautobot_version_control_pull_request"
         verbose_name_plural = "pull requests"
 
     def __str__(self):
+        """Return a simple string if model is called."""
         return self.title
 
     def get_absolute_url(self):
-        """get_absolute_url returns a url to render a view of the pull request."""
+        """Returns a url to render a view of the pull request."""
         return reverse("plugins:nautobot_version_control:pull_request", args=[self.id])
 
     def get_src_dest_branches(self):
-        """get_src_dest_branches returns a tuple of the src and destination branches."""
+        """Returns a tuple of the src and destination branches."""
         src = Branch.objects.get(name=self.source_branch)
         dest = Branch.objects.get(name=self.destination_branch)
         return src, dest
 
     @property
     def open(self):
-        """opens returns whether a pull request is open."""
+        """Returns whether a pull request is open."""
         return self.state == PullRequest.OPEN
 
     @property
     def status(self):  # pylint: disable=R0911
         """
-        The status of a PullRequest is determined by considering
-        both the PullRequest and its PullRequestReviews.
+        The status of a PullRequest is determined by considering both the PullRequest and its PullRequestReviews.
+
         PRs in a closed or merged state have the corresponding status.
         An open PR's state is determined by the last non-comment review.
         """
@@ -452,34 +470,34 @@ class PullRequest(BaseModel):
 
     @property
     def commits(self):
-        """commits returns a queryset of Commit objects that come after the ancestor between the src and des branch."""
+        """Returns a queryset of Commit objects that come after the ancestor between the src and des branch."""
         merge_base = Commit.objects.get(commit_hash=Commit.merge_base(self.source_branch, self.destination_branch))
-        db = db_for_commit(Branch.objects.get(name=self.source_branch).hash)
-        return Commit.objects.filter(date__gt=merge_base.date).using(db)
+        database = db_for_commit(Branch.objects.get(name=self.source_branch).hash)
+        return Commit.objects.filter(date__gt=merge_base.date).using(database)
 
     @property
     def num_commits(self):
-        """num_commits returns the number of commits that are considered in the pull requests."""
+        """Returns the number of commits that are considered in the pull requests."""
         return self.commits.count()
 
     @property
     def num_reviews(self):
-        """num_reviews returns the number of PullRRequestReview(s) created on top of the PR."""
+        """Returns the number of PullRRequestReview(s) created on top of the PR."""
         return PullRequestReview.objects.filter(pull_request=self.pk).count()
 
     @property
     def summary_description(self):
-        """summary_description returns a small summary of the pull request action."""
+        """Returns a small summary of the pull request action."""
         return f"""Merging {self.num_commits} commits from "{self.source_branch}" into "{self.destination_branch}" """
 
     def merge(self, user=None, squash=False):
-        """merge executes a merge between a destination and src branch."""
+        """Execute a merge between a destination and src branch."""
         try:
             src = Branch.objects.get(name=self.source_branch)
             dest = Branch.objects.get(name=self.destination_branch)
             dest.merge(src, user=user, squash=squash)
-        except ObjectDoesNotExist as e:
-            raise DoltError(f"error merging Pull Request {self}: {e}") from e
+        except ObjectDoesNotExist as err:
+            raise DoltError(f"error merging Pull Request {self}: {err}") from err
         self.state = PullRequest.MERGED
         self.save()
 
@@ -506,13 +524,16 @@ class PullRequestReview(BaseModel):
     summary = models.TextField(blank=True, null=True)
 
     class Meta:
+        """Meta information for PullRequestReview model."""
+
         # table name cannot start with "dolt"
         db_table = "nautobot_version_control_pull_request_review"
         verbose_name_plural = "pull request reviews"
 
     def __str__(self):
+        """Return a simple string if model is called."""
         return f""""{self.pull_request}" reviewed by {self.reviewer}"""
 
     def get_absolute_url(self):
-        """get_absolute_url returns a link to a view of a pull request review."""
+        """Returns a link to a view of a pull request review."""
         return reverse("plugins:nautobot_version_control:pull_request", args=[self.pull_request.id])

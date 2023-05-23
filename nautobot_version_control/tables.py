@@ -1,4 +1,5 @@
-"""tables.py contains modules for implementing view tables for different models."""
+"""Django Tables2 classes for version_control plugin."""
+# pylint: disable=too-few-public-methods
 
 import django_tables2 as tables
 from django_tables2 import A
@@ -61,6 +62,8 @@ class BranchTable(BaseTable):
     starting_branch = tables.Column(accessor=A("source_branch"), verbose_name="Starting Branch")
 
     class Meta(BaseTable.Meta):
+        """Metaclass attributes of BranchTable."""
+
         model = Branch
         fields = (
             "pk",
@@ -99,6 +102,8 @@ class CommitTable(BaseTable):
     short_message = tables.LinkColumn(verbose_name="Commit Message")
 
     class Meta(BaseTable.Meta):
+        """Metaclass attributes of CommitTable."""
+
         model = Commit
         fields = (
             "pk",
@@ -117,6 +122,8 @@ class CommitRevertTable(BaseTable):
     short_message = tables.LinkColumn(verbose_name="Commit Message")
 
     class Meta(BaseTable.Meta):
+        """Metaclass attributes of CommitRevertTable."""
+
         model = Commit
         fields = (
             "short_message",
@@ -137,6 +144,8 @@ class ConflictsSummaryTable(BaseTable):
     """Summary table for `Conflicts` and `ConstraintViolations`."""
 
     class Meta(BaseTable.Meta):
+        """Metaclass attributes of ConflictsSummaryTable."""
+
         model = Conflicts
         fields = ("table", "num_conflicts", "num_violations")
         default_columns = fields
@@ -159,6 +168,8 @@ class ConflictsTable(BaseTable):
     )
 
     class Meta(BaseTable.Meta):
+        """Metaclass attributes of ConflictsTable."""
+
         model = Conflicts
         fields = (
             "model",
@@ -172,6 +183,8 @@ class ConstraintViolationsTable(BaseTable):
     """ConstraintViolations renders the table in the constraint violations table."""
 
     class Meta(BaseTable.Meta):
+        """Metaclass attributes of ConstraintViolationsTable."""
+
         model = Conflicts
         fields = (
             "model",
@@ -217,6 +230,8 @@ class PullRequestTable(BaseTable):
     title = tables.LinkColumn()
 
     class Meta(BaseTable.Meta):
+        """Metaclass attributes of PullRequestTable."""
+
         model = PullRequest
         fields = (
             "pk",

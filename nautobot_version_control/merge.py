@@ -33,16 +33,16 @@ def get_conflicts_count_for_merge(src, dest):
         constraint violations.
     """
     try:
-        mc = get_or_make_merge_candidate(src, dest)
-        with query_on_branch(mc):
-            c = Conflicts.objects.all().aggregate(Sum("num_conflicts"))
-            v = ConstraintViolations.objects.all().aggregate(Sum("num_violations"))
-            num_conflicts = c["num_conflicts__sum"] if c["num_conflicts__sum"] else 0
-            num_violations = v["num_violations__sum"] if v["num_violations__sum"] else 0
+        merge_candidate = get_or_make_merge_candidate(src, dest)
+        with query_on_branch(merge_candidate):
+            _conflicts = Conflicts.objects.all().aggregate(Sum("num_conflicts"))
+            violations = ConstraintViolations.objects.all().aggregate(Sum("num_violations"))
+            num_conflicts = _conflicts["num_conflicts__sum"] if _conflicts["num_conflicts__sum"] else 0
+            num_violations = violations["num_violations__sum"] if violations["num_violations__sum"] else 0
             return num_conflicts + num_violations
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         # best effort
-        # todo: fix dolt merge bug
+        # TODO: fix dolt merge bug
         return 0
 
 
@@ -55,8 +55,8 @@ def get_conflicts_for_merge(src, dest):
         constraint violations.
     """
     try:
-        mc = get_or_make_merge_candidate(src, dest)
-        with query_on_branch(mc):
+        merge_candidate = get_or_make_merge_candidate(src, dest)
+        with query_on_branch(merge_candidate):
             conflicts = MergeConflicts(src, dest)
             return {
                 "summary": conflicts.make_conflict_summary_table(),
@@ -64,33 +64,33 @@ def get_conflicts_for_merge(src, dest):
                 "violations": conflicts.make_constraint_violations_table(),
             }
 
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         # best effort
         # todo: fix dolt merge bug
         return {}
 
 
 def merge_candidate_exists(src, dest):
-    """merge_candidate_exists returns true if there exist a merge_candidate branch between src and dest."""
+    """Returns true if there exist a merge_candidate branch between src and dest."""
     name = _merge_candidate_name(src, dest)
     try:
-        mc = Branch.objects.get(name=name)
-        return merge_candidate_is_fresh(mc, src, dest)
+        merge_candidate = Branch.objects.get(name=name)
+        return merge_candidate_is_fresh(merge_candidate, src, dest)
     except Branch.DoesNotExist:
         return False
 
 
-def merge_candidate_is_fresh(mc, src, dest):
+def merge_candidate_is_fresh(merge_candidate, src, dest):
     """A merge candidate (MC) is considered "fresh" if the source and destination branches used to create the MC are unchanged since the MC was created."""
-    if not mc:
+    if not merge_candidate:
         return False
-    src_stable = Commit.merge_base(mc, src) == src.hash
-    dest_stable = Commit.merge_base(mc, dest) == dest.hash
+    src_stable = Commit.merge_base(merge_candidate, src) == src.hash
+    dest_stable = Commit.merge_base(merge_candidate, dest) == dest.hash
     return src_stable and dest_stable
 
 
 def get_merge_candidate(src, dest):
-    """get_merge_candidate returns a merge candidate branch if it exists."""
+    """Returns a merge candidate branch if it exists."""
     if merge_candidate_exists(src, dest):
         name = _merge_candidate_name(src, dest)
         return Branch.objects.get(name=name)
@@ -98,7 +98,7 @@ def get_merge_candidate(src, dest):
 
 
 def make_merge_candidate(src, dest):
-    """make_merge_candidate create a merge candidate branch between src and dest."""
+    """Create a merge candidate branch between src and dest."""
     name = _merge_candidate_name(src, dest)
     # force updates the merge-candidate branch
     Branch(name=name, starting_branch=dest).save()
@@ -121,10 +121,10 @@ def make_merge_candidate(src, dest):
 
 def get_or_make_merge_candidate(src, dest):
     """Gets or creates a merge candidate branch between src and dest."""
-    mc = get_merge_candidate(src, dest)
-    if not mc:
-        mc = make_merge_candidate(src, dest)
-    return mc
+    merge_candidate = get_merge_candidate(src, dest)
+    if not merge_candidate:
+        merge_candidate = make_merge_candidate(src, dest)
+    return merge_candidate
 
 
 def _merge_candidate_name(src, dest):
@@ -156,28 +156,28 @@ class MergeConflicts:
             }
             for c in conflicts
         }
-        for v in violations:
-            if v.table not in summary:
-                summary[v.table] = {"model": self._model_from_table(v.table)}
-            summary[v.table]["num_violations"] = v.num_violations
+        for val in violations:
+            if val.table not in summary:
+                summary[val.table] = {"model": self._model_from_table(val.table)}
+            summary[val.table]["num_violations"] = val.num_violations
         return list(summary.values())
 
     def make_conflict_table(self):
         """Create a table that represents conflicts on a table between src and dest."""
         rows = []
-        for c in Conflicts.objects.all():
-            rows.extend(self.get_rows_level_conflicts(c))
+        for conflict in Conflicts.objects.all():
+            rows.extend(self.get_rows_level_conflicts(conflict))
         return ConflictsTable(rows)
 
     def make_constraint_violations_table(self):
-        """make_constraint_violations_table creates a table to store constraint violations between two tables."""
+        """Creates a table to store constraint violations between two tables."""
         rows = []
-        for v in ConstraintViolations.objects.all():
-            rows.extend(self.get_rows_level_violations(v))
+        for val in ConstraintViolations.objects.all():
+            rows.extend(self.get_rows_level_violations(val))
         return ConstraintViolationsTable(rows)
 
     def get_rows_level_conflicts(self, conflict):
-        """get_row_level_conflicts returns each conflict row in a table as a JSON object."""
+        """Returns each conflict row in a table as a JSON object."""
         with connection.cursor() as cursor:
             # introspect table schema to query conflict data as json
             cursor.execute(f"DESCRIBE dolt_conflicts_{conflict.table}")
@@ -220,7 +220,7 @@ class MergeConflicts:
         return obj2
 
     def get_rows_level_violations(self, violation):
-        """get_row_level_violations returns each constrain violation in a JSON row."""
+        """Returns each constrain violation in a JSON row."""
         with connection.cursor() as cursor:
             rows = []
             model_name = self._model_from_table(violation.table)
@@ -260,8 +260,8 @@ class MergeConflicts:
 
         if v_type == "foreign key":
             if "ReferencedTable" in v_info:
-                rt = v_info["ReferencedTable"]
-                ref_model_name = self._model_from_table(rt)
+                reference_table = v_info["ReferencedTable"]
+                ref_model_name = self._model_from_table(reference_table)
                 return f"""
                     The {model_name} "{obj_name}" references a
                     missing "{ref_model_name}" object
