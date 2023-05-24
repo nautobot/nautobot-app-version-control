@@ -1,4 +1,4 @@
-"""views.py implements views for the api."""
+"""Django views for Nautobot Version Control."""
 
 from rest_framework.routers import APIRootView
 from nautobot.extras.api.views import CustomFieldModelViewSet
@@ -13,7 +13,7 @@ class VCSRootView(APIRootView):
     """VCS API root view."""
 
     def get_view_name(self):
-        """returns the name of the view."""
+        """Returns the name of the view."""
         return "VCS"
 
 
@@ -22,7 +22,7 @@ class VCSRootView(APIRootView):
 #
 
 
-class BranchViewSet(CustomFieldModelViewSet):
+class BranchViewSet(CustomFieldModelViewSet):  # pylint: disable=too-many-ancestors
     """BranchViewSet render a view for the Branch model."""
 
     queryset = Branch.objects.all()
@@ -35,7 +35,7 @@ class BranchViewSet(CustomFieldModelViewSet):
 #
 
 
-class CommitViewSet(CustomFieldModelViewSet):
+class CommitViewSet(CustomFieldModelViewSet):  # pylint: disable=too-many-ancestors
     """CommitViewSet render a view for the Commit model."""
 
     queryset = Commit.objects.all()
@@ -48,7 +48,7 @@ class CommitViewSet(CustomFieldModelViewSet):
 #
 
 
-class PullRequestViewSet(CustomFieldModelViewSet):
+class PullRequestViewSet(CustomFieldModelViewSet):  # pylint: disable=too-many-ancestors
     """PullRequestViewSet render a view for the PullRequest model."""
 
     queryset = PullRequest.objects.all()
@@ -61,7 +61,7 @@ class PullRequestViewSet(CustomFieldModelViewSet):
 #
 
 
-class PullRequestReviewViewSet(CustomFieldModelViewSet):
+class PullRequestReviewViewSet(CustomFieldModelViewSet):  # pylint: disable=too-many-ancestors
     """PullRequestReviewViewSet render a view for the PullRequestReviewV model."""
 
     queryset = PullRequestReview.objects.all()

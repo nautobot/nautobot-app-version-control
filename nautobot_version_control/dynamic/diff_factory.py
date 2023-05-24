@@ -1,4 +1,4 @@
-"""diff_factory wraps a model's diff and returns a queryable DiffModel."""
+"""The diff_factory wraps a model's diff and returns a queryable DiffModel."""
 
 import copy
 
@@ -18,21 +18,22 @@ class DiffListViewFactory:
     """DiffListViewFactory dynamically generate diff models."""
 
     def __init__(self, content_type):
-        self.ct = content_type
+        """The DiffListViewFactory init methods."""
+        self.content_type = content_type
 
     def get_table_model(self):
-        """get_table_model returns the underlying the underlying model."""
+        """Returns the underlying the underlying model."""
         try:
             return apps.get_model("nautobot_version_control", self.table_model_name)
         except LookupError:
             return self.make_table_model()
 
     def make_table_model(self):
-        """make_table_model creates a DiffList of a model."""
+        """Create a DiffList of a model."""
         try:
             # lookup the list view table for this content type
             # todo: once available, use https://github.com/nautobot/nautobot/issues/747
-            model = self.ct.model_class()
+            model = self.content_type.model_class()
             ModelViewTable = diff_table_for_model(model)  # pylint: disable=C0103
 
             return type(
@@ -45,13 +46,14 @@ class DiffListViewFactory:
                     "__module__": "nautobot_version_control.tables",
                     "_declared": timezone.now(),
                     "Meta": self._get_table_meta(ModelViewTable),
-                    "content_type": self.ct,
+                    "content_type": self.content_type,
                 },
             )
-        except KeyError as e:
-            raise e
+        except KeyError as exc:
+            raise exc
 
-    def _get_table_meta(self, table):
+    @staticmethod
+    def _get_table_meta(table):
         meta = copy.deepcopy(table._meta)
         # add diff styling
         meta.row_attrs = {"class": row_attrs_for_record}
@@ -60,12 +62,12 @@ class DiffListViewFactory:
 
     @property
     def table_model_name(self):
-        """return the diff table for the model."""
-        return f"diff_{str(self.ct.app_label)}_{str(self.ct.model)}"
+        """Return the diff table for the model."""
+        return f"diff_{str(self.content_type.app_label)}_{str(self.content_type.model)}"
 
 
 def row_attrs_for_record(record):  # pylint: disable=R1710
-    """row_attrs_for_record returns button attributes per diff type."""
+    """The row_attrs_for_record returns button attributes per diff type."""
     if not record.diff:
         return ""
     if record.diff["diff_type"] == "added":
@@ -85,10 +87,13 @@ class DiffListViewBase(tables.Table):
 
     diff = tables.Column(verbose_name="Diff Type")
 
-    class Meta:
+    class Meta:  # pylint: disable=too-few-public-methods
+        """Metaclass attributes of DiffListViewBase."""
+
         abstract = True
 
     def __init__(self, *args, **kwargs):
+        """Overwrite init method on DiffListViewBase."""
         super().__init__(*args, **kwargs)
         for col in self.columns:
             if col.name == "diff":
@@ -97,12 +102,12 @@ class DiffListViewBase(tables.Table):
 
     def render_diff(self, value, record):  # pylint: disable=W0613
         """Custom rendering for the the `Diff Type` columns."""
-        ct = ContentType.objects.get_for_model(self.Meta.model)  # pylint: disable=E1101
+        content_type = ContentType.objects.get_for_model(self.Meta.model)  # pylint: disable=E1101
         href = reverse(
             "plugins:nautobot_version_control:diff_detail",
             kwargs={
-                "app_label": ct.app_label,
-                "model": ct.model,
+                "app_label": content_type.app_label,
+                "model": content_type.model,
                 "from_commit": record.diff["from_commit"],
                 "to_commit": record.diff["to_commit"],
                 "pk": record.pk,
@@ -115,23 +120,23 @@ class DiffListViewBase(tables.Table):
                     <span class="label label-success">added</span>
                 </a>"""
             )
-        elif record.diff["diff_type"] == "removed":
+        if record.diff["diff_type"] == "removed":
             return format_html(
                 f"""<a href="{ href }">
                     <span class="label label-danger">removed</span>
                 </a>"""
             )
-        else:  # diff_type == "modified"
-            cnt = self.count_diffs(record.diff)
-            return format_html(
-                f"""<a href="{ href }">
-                    <span class="label label-primary">changed ({ cnt })</span>
-                </a>"""
-            )
+        # diff_type == "modified"
+        cnt = self.count_diffs(record.diff)
+        return format_html(
+            f"""<a href="{ href }">
+                <span class="label label-primary">changed ({ cnt })</span>
+            </a>"""
+        )
 
     @staticmethod
     def count_diffs(diff):
-        """count_diffs counts the numbers of diffs."""
+        """Count the numbers of diffs."""
         skip_fields = (
             "root",
             "diff_type",
@@ -141,18 +146,18 @@ class DiffListViewBase(tables.Table):
             "from_commit_date",
         )
         cnt = 0
-        for k, v in diff.items():
-            if k in skip_fields:
+        for key, val in diff.items():
+            if key in skip_fields:
                 continue
-            if k.startswith("to_"):
+            if key.startswith("to_"):
                 # compare to and from values
-                from_key = f"from_{k[3:]}"
-                if v != diff[from_key]:
+                from_key = f"from_{key[3:]}"
+                if val != diff[from_key]:
                     cnt += 1
         return cnt
 
     @staticmethod
-    def wrap_render_func(fn):
+    def wrap_render_func(func):
         """Wraps an existing cell rendering function with diff styling."""
 
         def render_before_after_diff(value, record, column, bound_column, bound_row, table):  # pylint: disable=R0913
@@ -168,8 +173,8 @@ class DiffListViewBase(tables.Table):
             }
             try:
                 # render the existing column function with best effort.
-                cell = call_with_appropriate(fn, kwargs)
-            except Exception:
+                cell = call_with_appropriate(func, kwargs)
+            except Exception:  # pylint: disable=broad-except
                 # In particular, rendering TemplateColumns for deleted rows
                 # causes errors. Deleted rows are accessed with "time-travel"
                 # queries, but are templates rendered from the current tip of
@@ -193,7 +198,7 @@ class DiffListViewBase(tables.Table):
 
             # re-render the cell value with its before value
             kwargs["value"] = record.diff[before_name]
-            before_cell = call_with_appropriate(fn, kwargs)
+            before_cell = call_with_appropriate(func, kwargs)
 
             if before_cell == cell:
                 # no change

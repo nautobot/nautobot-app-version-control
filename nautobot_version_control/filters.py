@@ -16,6 +16,8 @@ class BranchFilterSet(BaseFilterSet):
     )
 
     class Meta:
+        """Meta class attributes for BranchFilterSet."""
+
         model = Branch
         fields = (
             "name",
@@ -29,7 +31,8 @@ class BranchFilterSet(BaseFilterSet):
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
-        search performs an ORM filter on the Branch model
+        Search performs an ORM filter on the Branch model.
+
         :param queryset: The Branch queryset
         :param name: The modelname
         :param value: The value to be searched for
@@ -57,6 +60,8 @@ class CommitFilterSet(BaseFilterSet):
     )
 
     class Meta:
+        """Meta class attributes for BranchFilterSet."""
+
         model = Commit
         fields = (
             "commit_hash",
@@ -69,7 +74,8 @@ class CommitFilterSet(BaseFilterSet):
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
-        search performs an ORM filter on the Commit model
+        Search performs an ORM filter on the Commit model.
+
         :param queryset: The Commit queryset
         :param name: The modelname
         :param value: The value to be searched for
@@ -96,6 +102,8 @@ class PullRequestFilterSet(BaseFilterSet):
     )
 
     class Meta:
+        """Meta class attributes for PullRequestFilterSet."""
+
         model = PullRequest
         fields = (
             "title",
@@ -109,7 +117,8 @@ class PullRequestFilterSet(BaseFilterSet):
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
-        search performs an ORM filter on the PullRequestFilterSet model
+        Search performs an ORM filter on the PullRequestFilterSet model.
+
         :param queryset: The PullRequestFilterSet queryset
         :param name: The modelname
         :param value: The value to be searched for
@@ -144,6 +153,8 @@ class PullRequestReviewFilterSet(BaseFilterSet):
     state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
 
     class Meta:
+        """Meta class attributes for PullRequestReviewFilterSet."""
+
         model = PullRequestReview
         fields = (
             "pull_request",
@@ -156,7 +167,8 @@ class PullRequestReviewFilterSet(BaseFilterSet):
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
-        search performs an ORM filter on the PullRequestReviewFilterSet model
+        Search performs an ORM filter on the PullRequestReviewFilterSet model.
+
         :param queryset: The PullRequestReviewFilterSet queryset
         :param name: The modelname
         :param value: The value to be searched for

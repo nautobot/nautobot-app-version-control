@@ -1,4 +1,4 @@
-"""navigation.py contains the navigation items for the top level nav bar."""
+"""Navigation items for the top level nav bar."""
 
 
 from nautobot.core.apps import NavMenuAddButton, NavMenuGroup, NavMenuItem, NavMenuTab

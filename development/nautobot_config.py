@@ -14,16 +14,18 @@ from nautobot.core.settings_funcs import parse_redis_connection
 ALLOWED_HOSTS = os.getenv("NAUTOBOT_ALLOWED_HOSTS", "").split(" ")
 SECRET_KEY = os.getenv("NAUTOBOT_SECRET_KEY", "")
 
+# The length of time (in seconds) for which a user will remain logged into the web UI before being prompted to
+# re-authenticate. (Default: 1209600 [14 days])
+SESSION_COOKIE_AGE = 1209600  # 2 weeks, in seconds
+
+SESSION_ENGINE = "django.contrib.sessions.backends.signed_cookies"
+
+# By default, Nautobot will store session data in the database. Alternatively, a file path can be specified here to use
+# local file storage instead. (This can be useful for enabling authentication on a standby instance with read-only
+# database access.) Note that the user as which Nautobot runs must have read and write permissions to this path.
+SESSION_FILE_PATH = None
 
 nautobot_db_engine = os.getenv("NAUTOBOT_DB_ENGINE", "django.db.backends.mysql")
-default_db_settings = {
-    "django.db.backends.postgresql": {
-        "NAUTOBOT_DB_PORT": "5432",
-    },
-    "django.db.backends.mysql": {
-        "NAUTOBOT_DB_PORT": "3306",
-    },
-}
 
 # Dolt database configuration. Dolt is compatible with the MySQL database backend.
 # See the Django documentation for a complete list of available parameters:
@@ -34,26 +36,24 @@ DATABASES = {
         "USER": os.getenv("NAUTOBOT_DB_USER", ""),  # Database username
         "PASSWORD": os.getenv("NAUTOBOT_DB_PASSWORD", ""),  # Database password
         "HOST": os.getenv("NAUTOBOT_DB_HOST", "localhost"),  # Database server
-        "PORT": os.getenv(
-            "NAUTOBOT_DB_PORT", default_db_settings[nautobot_db_engine]["NAUTOBOT_DB_PORT"]
-        ),  # Database port, default to postgres
+        "PORT": os.getenv("NAUTOBOT_DB_PORT", "3306"),  # Database port
         "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),  # Database timeout
         "ENGINE": nautobot_db_engine,
+        "OPTIONS": {"charset": "utf8mb4"},
     },
     "global": {
         "NAME": os.getenv("NAUTOBOT_DB_NAME", "nautobot"),  # Database name
         "USER": os.getenv("NAUTOBOT_DB_USER", ""),  # Database username
         "PASSWORD": os.getenv("NAUTOBOT_DB_PASSWORD", ""),  # Database password
         "HOST": os.getenv("NAUTOBOT_DB_HOST", "localhost"),  # Database server
-        "PORT": os.getenv(
-            "NAUTOBOT_DB_PORT", default_db_settings[nautobot_db_engine]["NAUTOBOT_DB_PORT"]
-        ),  # Database port, default to postgres
+        "PORT": os.getenv("NAUTOBOT_DB_PORT", "3306"),  # Database port
         "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),  # Database timeout
         "ENGINE": nautobot_db_engine,
+        "OPTIONS": {"charset": "utf8mb4"},
         "TEST": {
             "MIRROR": "default",
         },
-    }
+    },
 }
 
 # Ensure proper Unicode handling for MySQL
@@ -65,6 +65,7 @@ if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
 #
 
 DEBUG = True
+TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
 # Django Debug Toolbar
 DEBUG_TOOLBAR_CONFIG = {"SHOW_TOOLBAR_CALLBACK": lambda _request: DEBUG and not TESTING}
@@ -79,8 +80,6 @@ if DEBUG and "debug_toolbar.middleware.DebugToolbarMiddleware" not in MIDDLEWARE
 #
 
 LOG_LEVEL = "DEBUG" if DEBUG else "INFO"
-
-TESTING = len(sys.argv) > 1 and sys.argv[1] == "test"
 
 # Verbose logging during normal development operation, but quiet logging during unit test execution
 if not TESTING:

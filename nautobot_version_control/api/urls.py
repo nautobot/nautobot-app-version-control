@@ -1,4 +1,4 @@
-"""urls.py implements api urls."""
+"""API urls for version_control app."""
 
 from nautobot.core.api import OrderedDefaultRouter
 from . import views

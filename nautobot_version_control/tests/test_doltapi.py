@@ -1,5 +1,5 @@
 """tests.py contains unittests for the nautobot version control plugin."""
-
+# pylint: disable=too-many-ancestors
 
 from django.test import override_settings, TransactionTestCase
 from django.urls import reverse
@@ -35,7 +35,7 @@ class DoltApiTestCase(APITestCase):
             print(f"user {username} exists, deleting")
             user.delete()
             print(f"user {username} deleted")
-        except User.DoesNotExist as exc:
+        except User.DoesNotExist:
             print(f"user {username} does not exist")
 
 
@@ -238,15 +238,7 @@ class TestPullRequestApi(DoltApiTestCase, APIViewTestCases):
 
     databases = ["default", "global"]
     model = PullRequest
-    brief_fields = [
-        "title",
-        "state",
-        "source_branch",
-        "destination_branch",
-        "description",
-        "creator",
-        "created_at",
-    ]
+    brief_fields = ["title", "state", "source_branch", "destination_branch", "description", "creator", "created_at"]
 
     @classmethod
     def setUpTestData(cls):

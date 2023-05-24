@@ -1,4 +1,4 @@
-"""routers.py manages the GlobalStateRouter."""
+"""The routers.py manages the GlobalStateRouter."""
 
 from django.utils.safestring import mark_safe
 from nautobot_version_control.constants import DOLT_DEFAULT_BRANCH, GLOBAL_DB
@@ -15,6 +15,7 @@ class GlobalStateRouter:
     def db_for_read(self, model, **hints):  # pylint: disable=W0613
         """
         Directs read queries to the global state db for non-versioned models.
+
         Versioned models use the 'default' database and the Dolt branch that
         was checked out in `DoltBranchMiddleware`.
         """
@@ -29,6 +30,7 @@ class GlobalStateRouter:
     def db_for_write(self, model, **hints):  # pylint: disable=W0613
         """
         Directs write queries to the global state db for non-versioned models.
+
         Versioned models use the 'default' database and the Dolt branch that
         was checked out in `DoltBranchMiddleware`.
         Prevents writes of non-versioned models on non-primary branches.
@@ -58,10 +60,10 @@ class GlobalStateRouter:
         return self.global_db
 
     def allow_relation(self, obj1, obj2, **hints):  # pylint: disable=W0613.R0201
-        """allow_relation allows a relation between obj1 and obj2 too exist."""
+        """Allow a relation between obj1 and obj2 too exist."""
         return True
 
     @staticmethod
     def branch_is_not_primary():
-        """branch_is_not_primary returns whether the active_branch is the default branch."""
+        """Returns whether the active_branch is the default branch."""
         return active_branch() != DOLT_DEFAULT_BRANCH

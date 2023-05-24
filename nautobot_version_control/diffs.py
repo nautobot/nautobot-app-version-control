@@ -20,7 +20,7 @@ from . import diff_table_for_model, register_diff_tables
 
 
 def three_dot_diffs(from_commit=None, to_commit=None):
-    """three_dot_diffs returns a diff between the ancestor of from_to_commit with to_commit."""
+    """Returns a diff between the ancestor of from_to_commit with to_commit."""
     if not (from_commit and to_commit):
         raise ValueError("must specify both a to_commit and from_commit")
     merge_base = Commit.merge_base(from_commit, to_commit)
@@ -28,7 +28,7 @@ def three_dot_diffs(from_commit=None, to_commit=None):
 
 
 def two_dot_diffs(from_commit=None, to_commit=None):
-    """two_dot_diffs returns the diff between from_commit and to_commit via the dolt diff table interface."""
+    """Returns the diff between from_commit and to_commit via the dolt diff table interface."""
     if not (from_commit and to_commit):
         raise ValueError("must specify both a to_commit and from_commit")
 
@@ -111,7 +111,7 @@ def two_dot_diffs(from_commit=None, to_commit=None):
 
 
 def diff_summary_for_table(table, from_commit, to_commit):
-    """diff_summary_for_table returns the diff summary for table, for the commits from_commit and to_commit."""
+    """Returns the diff summary for table, for the commits from_commit and to_commit."""
     summary = {
         "added": 0,
         "modified": 0,
@@ -130,10 +130,7 @@ def diff_summary_for_table(table, from_commit, to_commit):
 
 
 def json_diff_fields(tbl_name):
-    """
-    json_diff_fields returns all of the column names for a model
-    and turns them into to_ and from_ fields.
-    """
+    """Returns all of the column names for a model and turns them into to_ and from_ fields."""
     with connection.cursor() as cursor:
         cursor.execute(f"DESCRIBE dolt_commit_diff_{tbl_name}")
         cols = cursor.fetchall()
