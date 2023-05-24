@@ -157,7 +157,7 @@ jobs:
       - name: "Copy credentials"
         run: "cp development/creds.example.env development/creds.env"
       - name: "Run Tests"
-        run: "poetry run invoke unittest"
+        run: "poetry run invoke unittest --keepdb"
   publish_gh:
     needs:
       - "unittest"
