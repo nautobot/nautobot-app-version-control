@@ -4,6 +4,7 @@
 {% load helpers %}
 {% load static %}
 {% load tz %}
+<!-- This view comes from clicking on the "Diff Type" icon, e.g. changed/added in a diff view -->
 
 {% block header %}
 <div class="row noprint">
@@ -19,9 +20,9 @@
     </div>
 </div>
 <h1>
-    {% block title %}
+  {% block title %}
     {{ title }}
-    {% endblock %}
+  {% endblock %}
 </h1>
 {% endblock %}
 

@@ -306,6 +306,8 @@ class CommitView(generic.ObjectView):
             {
                 "object": instance,
                 "results": diff,
+                # TODO: This should not be needed but did not render Tab in detail view without
+                "verbose_name": Commit._meta.verbose_name, 
             },
         )
 
