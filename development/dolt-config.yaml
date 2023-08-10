@@ -15,9 +15,3 @@ listener:
   max_connections: 128
   read_timeout_millis: 28800000
   write_timeout_millis: 28800000
-
-databases:
-  - name: "nautobot"
-    path: "./nautobot"
-  - name: "test_nautobot"
-    path: "./test_nautobot"
