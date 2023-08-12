@@ -31,10 +31,10 @@ services:
     volumes:
       - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
       - "../:/source"
-# To expose postgres or redis to the host uncomment the following
-# postgres:
+# To expose dolt or redis to the host uncomment the following
+# db:
 #   ports:
-#     - "5432:5432"
+#     - "3306:3306"
 # redis:
 #   ports:
 #     - "6379:6379"

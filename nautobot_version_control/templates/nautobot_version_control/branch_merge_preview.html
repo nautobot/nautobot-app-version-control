@@ -1,8 +1,9 @@
-nautobot_version_control extends 'base.html' %}
+{% extends 'base.html' %}
 {% load form_helpers %}
 {% load helpers %}
 
 {% block content %}
+
 <form action="" method="post" enctype="multipart/form-data" class="form form-horizontal">
     {% csrf_token %}
     {% for field in form.hidden_fields %}
@@ -56,6 +57,6 @@ nautobot_version_control extends 'base.html' %}
 {% include 'nautobot_version_control/diffs.html' with results=results %}
 
 {% if obj and settings.DOCS_ROOT %}
-{% include 'inc/modal.html' with name='docs' content=obj|get_docs %}
+
 {% endif %}
 {% endblock %}

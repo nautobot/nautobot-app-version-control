@@ -70,7 +70,7 @@ class Branch(DoltSystemTable):
 
     def get_absolute_url(self):
         """Provide a url to access this branch's view."""
-        return reverse("plugins:nautobot_version_control:branch", args=[self.name])
+        return reverse("plugins:nautobot_version_control:branch", args=[self.pk])
 
     @property
     def present_in_database(self):
@@ -427,7 +427,7 @@ class PullRequest(BaseModel):
 
     def get_absolute_url(self):
         """Returns a url to render a view of the pull request."""
-        return reverse("plugins:nautobot_version_control:pull_request", args=[self.id])
+        return reverse("plugins:nautobot_version_control:pull_request", args=[self.pk])
 
     def get_src_dest_branches(self):
         """Returns a tuple of the src and destination branches."""
