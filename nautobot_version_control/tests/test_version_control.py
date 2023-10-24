@@ -179,6 +179,7 @@ class TestApp(APITestCase):
 
 
 @override_settings(DATABASE_ROUTERS=["nautobot_version_control.routers.GlobalStateRouter"])
+# pylint: disable-next=too-many-ancestors
 class TestBranchesApi(APITestCase, APIViewTestCases):
     """TestBranchesApi tests the get,create,delete,etc. of the Branches api."""
 
@@ -212,6 +213,7 @@ class TestBranchesApi(APITestCase, APIViewTestCases):
         self.assertTrue(data["count"] > 0)
 
 
+# pylint: disable-next=too-many-ancestors
 class TestPullRequestApi(APITestCase, APIViewTestCases):
     """TestPullRequestApi tests the PullRequest api."""
 
@@ -311,6 +313,7 @@ class TestPullRequests(DoltTestCase):
 
 
 @override_settings(DATABASE_ROUTERS=["nautobot_version_control.routers.GlobalStateRouter"])
+# pylint: disable-next=too-many-ancestors
 class TestPullRequestReviewsApi(APITestCase, APIViewTestCases):
     """TestPullRequestReviewsApi tests whether the PullRequestReview model api."""
 
@@ -349,6 +352,7 @@ class TestPullRequestReviewsApi(APITestCase, APIViewTestCases):
 
 
 @override_settings(DATABASE_ROUTERS=["nautobot_version_control.routers.GlobalStateRouter"])
+# pylint: disable-next=too-many-ancestors
 class TestCommitsApi(APITestCase, APIViewTestCases):
     """TestCommitsApi tests the Commit model Api."""
 

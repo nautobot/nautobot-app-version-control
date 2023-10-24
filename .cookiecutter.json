@@ -10,7 +10,7 @@
         "project_slug": "nautobot-plugin-version-control",
         "repo_url": "https://github.com/nautobot/nautobot-plugin-version-control",
         "base_url": "version-control",
-        "min_nautobot_version": "1.2.4",
+        "min_nautobot_version": "1.6.0",
         "max_nautobot_version": "1.9999",
         "camel_name": "NautobotVersionControl",
         "project_short_description": "Nautobot Version Control with Dolt",

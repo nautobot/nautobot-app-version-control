@@ -46,15 +46,16 @@ namespace = Collection("nautobot_version_control")
 namespace.configure(
     {
         "nautobot_version_control": {
-            "nautobot_ver": "1.2.4",
+            "nautobot_ver": "1.6.0",
             "project_name": "nautobot-version-control",
             "python_ver": "3.11",
             "local": False,
             "compose_dir": os.path.join(os.path.dirname(__file__), "development"),
             "compose_files": [
+                "docker-compose.requirements.yml",
                 "docker-compose.base.yml",
                 "docker-compose.redis.yml",
-                "docker-compose.postgres.yml",
+                # "docker-compose.postgres.yml",
                 "docker-compose.dev.yml",
             ],
             "compose_http_timeout": "86400",
@@ -108,7 +109,13 @@ def docker_compose(context, command, **kwargs):
         f'--project-directory "{context.nautobot_version_control.compose_dir}"',
     ]
 
-    for compose_file in context.nautobot_version_control.compose_files:
+    if "compose_files" in kwargs:
+        compose_files = kwargs["compose_files"]
+        del kwargs["compose_files"]
+    else:
+        compose_files = context.nautobot_version_control.compose_files
+
+    for compose_file in compose_files:
         compose_file_path = os.path.join(context.nautobot_version_control.compose_dir, compose_file)
         compose_command_tokens.append(f' -f "{compose_file_path}"')
 
@@ -512,6 +519,13 @@ def backup_db(context, db_name="", output_file="dump.sql", readable=True):
 # DOCS
 # ------------------------------------------------------------------------------
 @task
+def sphinx(context):
+    """Rebuild Sphinx documentation on changes, with live-reload in the browser."""
+    command = "sphinx-autobuild docs docs/_build/html"
+    run_command(context, command)
+
+
+@task
 def docs(context):
     """Build and serve docs locally for development."""
     command = "mkdocs serve -v"
@@ -691,10 +705,31 @@ def tests(context, failfast=False, keepdb=False, lint_only=False):
     check_migrations(context)
     print("Running pylint...")
     pylint(context)
-    print("Running mkdocs...")
-    build_and_check_docs(context)
+    # print("Running mkdocs...")
+    # build_and_check_docs(context)
     if not lint_only:
         print("Running unit tests...")
         unittest(context, failfast=failfast, keepdb=keepdb)
         unittest_coverage(context)
     print("All tests have passed!")
+
+
+# ------------------------------------------------------------------------------
+# App Specific
+# ------------------------------------------------------------------------------
+@task
+def load_data(context):
+    """Load data."""
+    commands = [
+        "nautobot-server cleanup_data",
+        "nautobot-server loaddata development/db.json",
+    ]
+
+    compose_files = [
+        "docker-compose.requirements.yml",
+        "docker-compose.base.yml",
+    ]
+
+    for command in commands:
+        compose_command = f"run --entrypoint '{command}' nautobot"
+        docker_compose(context, compose_command, pty=True, compose_files=compose_files)

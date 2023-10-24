@@ -1,7 +1,7 @@
 ---
 nautobot_version_control:
   project_name: "nautobot-version-control"
-  nautobot_ver: "1.2.4"
+  nautobot_ver: "1.6.0"
   local: false
   python_ver: "3.11"
   compose_dir: "development"

@@ -22,6 +22,7 @@ class VCSRootView(APIRootView):
 #
 
 
+# pylint: disable-next=too-many-ancestors
 class BranchViewSet(CustomFieldModelViewSet):
     """BranchViewSet render a view for the Branch model."""
 
@@ -35,6 +36,7 @@ class BranchViewSet(CustomFieldModelViewSet):
 #
 
 
+# pylint: disable-next=too-many-ancestors
 class CommitViewSet(CustomFieldModelViewSet):
     """CommitViewSet render a view for the Commit model."""
 
@@ -48,6 +50,7 @@ class CommitViewSet(CustomFieldModelViewSet):
 #
 
 
+# pylint: disable-next=too-many-ancestors
 class PullRequestViewSet(CustomFieldModelViewSet):
     """PullRequestViewSet render a view for the PullRequest model."""
 
@@ -61,6 +64,7 @@ class PullRequestViewSet(CustomFieldModelViewSet):
 #
 
 
+# pylint: disable-next=too-many-ancestors
 class PullRequestReviewViewSet(CustomFieldModelViewSet):
     """PullRequestReviewViewSet render a view for the PullRequestReviewV model."""
 

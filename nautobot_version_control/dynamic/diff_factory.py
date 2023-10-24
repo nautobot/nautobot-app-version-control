@@ -85,6 +85,7 @@ class DiffListViewBase(tables.Table):
 
     diff = tables.Column(verbose_name="Diff Type")
 
+    # pylint: disable-next=too-few-public-methods
     class Meta:
         abstract = True
 
@@ -115,19 +116,19 @@ class DiffListViewBase(tables.Table):
                     <span class="label label-success">added</span>
                 </a>"""
             )
-        elif record.diff["diff_type"] == "removed":
+        if record.diff["diff_type"] == "removed":
             return format_html(
                 f"""<a href="{ href }">
                     <span class="label label-danger">removed</span>
                 </a>"""
             )
-        else:  # diff_type == "modified"
-            cnt = self.count_diffs(record.diff)
-            return format_html(
-                f"""<a href="{ href }">
-                    <span class="label label-primary">changed ({ cnt })</span>
-                </a>"""
-            )
+        # diff_type == "modified"
+        cnt = self.count_diffs(record.diff)
+        return format_html(
+            f"""<a href="{ href }">
+                <span class="label label-primary">changed ({ cnt })</span>
+            </a>"""
+        )
 
     @staticmethod
     def count_diffs(diff):
@@ -169,6 +170,7 @@ class DiffListViewBase(tables.Table):
             try:
                 # render the existing column function with best effort.
                 cell = call_with_appropriate(fn, kwargs)
+            # pylint: disable-next=broad-exception-caught
             except Exception:
                 # In particular, rendering TemplateColumns for deleted rows
                 # causes errors. Deleted rows are accessed with "time-travel"

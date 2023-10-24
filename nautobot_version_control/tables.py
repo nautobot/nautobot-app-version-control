@@ -60,6 +60,7 @@ class BranchTable(BaseTable):
     ahead_behind = tables.Column(accessor=A("ahead_behind"), verbose_name="Ahead / Behind")
     starting_branch = tables.Column(accessor=A("source_branch"), verbose_name="Starting Branch")
 
+    # pylint: disable-next=too-few-public-methods
     class Meta(BaseTable.Meta):
         model = Branch
         fields = (
@@ -98,6 +99,7 @@ class CommitTable(BaseTable):
     pk = ToggleColumn(visible=True)
     short_message = tables.LinkColumn(verbose_name="Commit Message")
 
+    # pylint: disable-next=too-few-public-methods
     class Meta(BaseTable.Meta):
         model = Commit
         fields = (
@@ -116,6 +118,7 @@ class CommitRevertTable(BaseTable):
 
     short_message = tables.LinkColumn(verbose_name="Commit Message")
 
+    # pylint: disable-next=too-few-public-methods
     class Meta(BaseTable.Meta):
         model = Commit
         fields = (
@@ -136,6 +139,7 @@ class CommitRevertTable(BaseTable):
 class ConflictsSummaryTable(BaseTable):
     """Summary table for `Conflicts` and `ConstraintViolations`."""
 
+    # pylint: disable-next=too-few-public-methods
     class Meta(BaseTable.Meta):
         model = Conflicts
         fields = ("table", "num_conflicts", "num_violations")
@@ -158,6 +162,7 @@ class ConflictsTable(BaseTable):
         verbose_name="Conflicts",
     )
 
+    # pylint: disable-next=too-few-public-methods
     class Meta(BaseTable.Meta):
         model = Conflicts
         fields = (
@@ -171,6 +176,7 @@ class ConflictsTable(BaseTable):
 class ConstraintViolationsTable(BaseTable):
     """ConstraintViolations renders the table in the constraint violations table."""
 
+    # pylint: disable-next=too-few-public-methods
     class Meta(BaseTable.Meta):
         model = Conflicts
         fields = (
@@ -216,6 +222,7 @@ class PullRequestTable(BaseTable):
     )
     title = tables.LinkColumn()
 
+    # pylint: disable-next=too-few-public-methods
     class Meta(BaseTable.Meta):
         model = PullRequest
         fields = (

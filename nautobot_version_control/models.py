@@ -41,6 +41,7 @@ class DoltSystemTable(models.Model):
 #
 
 
+# pylint: disable-next=nb-incorrect-base-class
 class Branch(DoltSystemTable):
     """Branch represents a model over the dolt_branches system table."""
 
@@ -202,6 +203,7 @@ def delete_branch_pre_hook(sender, instance, using, **kwargs):  # pylint: disabl
         raise DoltError(f"Must delete existing pull request(s): [{pr_list}] before deleting branch {instance.name}")
 
 
+# pylint: disable-next=nb-incorrect-base-class
 class BranchMeta(models.Model):
     """
     BranchMeta class has a 1:1 relation with a Branch. It represents internal of a branch that can't be represented in
@@ -225,6 +227,7 @@ class BranchMeta(models.Model):
 #
 
 
+# pylint: disable-next=nb-incorrect-base-class
 class Commit(DoltSystemTable):
     """Commit represents a Dolt Commit primitive."""
 
@@ -300,6 +303,7 @@ class Commit(DoltSystemTable):
             )
 
 
+# pylint: disable-next=nb-incorrect-base-class
 class CommitAncestor(DoltSystemTable):
     """CommitAncestor models the set of ancestors or parents that precede a Commit."""
 
@@ -326,6 +330,7 @@ class CommitAncestor(DoltSystemTable):
 #
 
 
+# pylint: disable-next=nb-incorrect-base-class
 class Conflicts(DoltSystemTable):
     """Conflicts represents the dolt_conflicts system table and the conflicts from a merge it contains."""
 
@@ -341,6 +346,7 @@ class Conflicts(DoltSystemTable):
         return f"{self.table} ({self.num_conflicts})"
 
 
+# pylint: disable-next=nb-incorrect-base-class
 class ConstraintViolations(DoltSystemTable):
     """Foreign Key and Unique Key Constraint Violations."""
 
@@ -381,6 +387,7 @@ class PullRequest(BaseModel):
     # can't create Foreign Key to dolt_branches table :(
     source_branch = models.TextField()
     destination_branch = models.TextField()
+    # pylint: disable-next=nb-string-field-blank-null
     description = models.TextField(blank=True, null=True)
     creator = models.ForeignKey(User, on_delete=CASCADE)
     created_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
@@ -491,6 +498,7 @@ class PullRequestReview(BaseModel):
     reviewer = models.ForeignKey(User, on_delete=CASCADE)
     reviewed_at = models.DateTimeField(auto_now_add=True, blank=True, null=True)
     state = models.IntegerField(choices=REVIEW_STATE_CHOICES, null=True)
+    # pylint: disable-next=nb-string-field-blank-null
     summary = models.TextField(blank=True, null=True)
 
     class Meta:

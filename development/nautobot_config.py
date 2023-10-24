@@ -2,8 +2,23 @@
 import os
 import sys
 
+from django.core.exceptions import ImproperlyConfigured
 from nautobot.core.settings import *  # noqa: F403  # pylint: disable=wildcard-import,unused-wildcard-import
 from nautobot.core.settings_funcs import is_truthy, parse_redis_connection
+
+# Enforce required configuration parameters
+for key in [
+    # "ALLOWED_HOSTS",
+    "DOLT_DB",
+    "DOLT_USER",
+    "DOLT_HOST",
+    "DOLT_PASSWORD",
+    # "REDIS_HOST",
+    # "REDIS_PASSWORD",
+    # "SECRET_KEY",
+]:
+    if not os.environ.get(key):
+        raise ImproperlyConfigured(f"Required environment variable {key} is missing.")
 
 #
 # Debug
@@ -31,33 +46,36 @@ SECRET_KEY = os.getenv("NAUTOBOT_SECRET_KEY", "")
 # Database
 #
 
-nautobot_db_engine = os.getenv("NAUTOBOT_DB_ENGINE", "django.db.backends.postgresql")
-default_db_settings = {
-    "django.db.backends.postgresql": {
-        "NAUTOBOT_DB_PORT": "5432",
-    },
-    "django.db.backends.mysql": {
-        "NAUTOBOT_DB_PORT": "3306",
-    },
-}
+# Dolt database configuration. Dolt is compatible with the MySQL database backend.
+# See the Django documentation for a complete list of available parameters:
+#   https://docs.djangoproject.com/en/stable/ref/settings/#databases
 DATABASES = {
     "default": {
-        "NAME": os.getenv("NAUTOBOT_DB_NAME", "nautobot"),  # Database name
-        "USER": os.getenv("NAUTOBOT_DB_USER", ""),  # Database username
-        "PASSWORD": os.getenv("NAUTOBOT_DB_PASSWORD", ""),  # Database password
-        "HOST": os.getenv("NAUTOBOT_DB_HOST", "localhost"),  # Database server
-        "PORT": os.getenv(
-            "NAUTOBOT_DB_PORT", default_db_settings[nautobot_db_engine]["NAUTOBOT_DB_PORT"]
-        ),  # Database port, default to postgres
-        "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),  # Database timeout
-        "ENGINE": nautobot_db_engine,
-    }
+        "NAME": "nautobot",  # Database name
+        "USER": os.getenv("DOLT_USER", ""),  # Database username
+        "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Database password
+        "HOST": os.getenv("DOLT_HOST", "localhost"),  # Database server
+        "PORT": os.getenv("DOLT_PORT", ""),  # Database port (leave blank for default)
+        "ENGINE": "django.db.backends.mysql",
+    },
+    # TODO: use `nautobot_version_control.constants.GLOBAL_STATE_DB`
+    "global": {
+        # TODO: use `nautobot_version_control.constants.DOLT_DEFAULT_BRANCH`
+        "NAME": "nautobot",  # Database username
+        "USER": os.getenv("DOLT_USER", ""),  # Database username
+        "PASSWORD": os.getenv("DOLT_PASSWORD", ""),  # Database password
+        "HOST": os.getenv("DOLT_HOST", "localhost"),  # Database server
+        "PORT": os.getenv("DOLT_PORT", ""),  # Database port (leave blank for default)
+        "ENGINE": "django.db.backends.mysql",
+        "TEST": {
+            "MIRROR": "default",
+        },
+    },
 }
 
-# Ensure proper Unicode handling for MySQL
-if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
-    DATABASES["default"]["OPTIONS"] = {"charset": "utf8mb4"}
-
+# # Ensure proper Unicode handling for MySQL
+# if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
+#     DATABASES["default"]["OPTIONS"] = {"charset": "utf8mb4"}
 #
 # Redis
 #
@@ -129,7 +147,13 @@ if not _TESTING:
 #
 
 # Enable installed Apps. Add the name of each App to the list.
-PLUGINS = ["nautobot_version_control"]
+PLUGINS = [
+    "nautobot_version_control",
+]
+
+# Pull the list of routers from environment variable to be able to disable all routers when we are running the migrations
+routers = os.getenv("DATABASE_ROUTERS", "").split(",")
+DATABASE_ROUTERS = routers if routers != [""] else []
 
 # Apps configuration settings. These settings are used by various Apps that the user may have installed.
 # Each key in the dictionary is the name of an installed App and its value is a dictionary of settings.

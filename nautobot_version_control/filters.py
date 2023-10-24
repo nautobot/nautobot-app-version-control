@@ -1,3 +1,4 @@
+# pylint: disable=duplicate-code
 """Filters.py defines a set of Filters needed for each model defined in models.py."""
 
 import django_filters
@@ -26,7 +27,7 @@ class BranchFilterSet(BaseFilterSet):
             "latest_commit_message",
         )
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """
         search performs an ORM filter on the Branch model
         :param queryset: The Branch queryset
@@ -38,6 +39,7 @@ class BranchFilterSet(BaseFilterSet):
         if not value:
             return queryset
         return queryset.filter(
+            # pylint: disable-next=unsupported-binary-operation
             Q(name__icontains=value)
             | Q(hash__icontains=value)
             | Q(latest_committer__icontains=value)
@@ -65,7 +67,7 @@ class CommitFilterSet(BaseFilterSet):
             "message",
         )
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """
         search performs an ORM filter on the Commit model
         :param queryset: The Commit queryset
@@ -77,6 +79,7 @@ class CommitFilterSet(BaseFilterSet):
         if not value:
             return queryset
         return queryset.filter(
+            # pylint: disable-next=unsupported-binary-operation
             Q(commit_hash__icontains=value)
             | Q(committer__icontains=value)
             | Q(email__icontains=value)
@@ -88,10 +91,7 @@ class CommitFilterSet(BaseFilterSet):
 class PullRequestFilterSet(BaseFilterSet):
     """PullRequestFilterSet returns a filter for the PullRequest model."""
 
-    q = django_filters.CharFilter(
-        method="search",
-        label="Search",
-    )
+    q = django_filters.CharFilter(method="search", label="Search")
 
     class Meta:
         model = PullRequest
@@ -104,7 +104,7 @@ class PullRequestFilterSet(BaseFilterSet):
             "creator",
         )
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """
         search performs an ORM filter on the PullRequestFilterSet model
         :param queryset: The PullRequestFilterSet queryset
@@ -116,6 +116,7 @@ class PullRequestFilterSet(BaseFilterSet):
         if not value:
             return queryset
         return queryset.filter(
+            # pylint: disable-next=unsupported-binary-operation
             Q(title__icontains=value)
             | Q(state__icontains=value)
             | Q(source_branch__icontains=value)
@@ -156,7 +157,7 @@ class PullRequestReviewFilterSet(BaseFilterSet):
             "summary",
         )
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """
         search performs an ORM filter on the PullRequestReviewFilterSet model
         :param queryset: The PullRequestReviewFilterSet queryset
@@ -168,6 +169,7 @@ class PullRequestReviewFilterSet(BaseFilterSet):
         if not value:
             return queryset
         return queryset.filter(
+            # pylint: disable-next=unsupported-binary-operation
             Q(reviewer__icontains=value)
             | Q(reviewed_at__icontains=value)
             | Q(state__icontains=value)

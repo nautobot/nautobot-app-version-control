@@ -60,6 +60,7 @@ def db_for_commit(commit):
     """
     cm_hash = str(commit)
     if len(cm_hash) != 32:
+        # pylint: disable-next=broad-exception-raised
         raise Exception("commit hash length is incorrect")
     db = deepcopy(connections.databases["default"])
     db["id"] = cm_hash

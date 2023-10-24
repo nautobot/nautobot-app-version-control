@@ -41,7 +41,7 @@ class DoltBranchMiddleware:
         """Override __call__."""
         return self.get_response(request)
 
-    def process_view(self, request, view_func, view_args, view_kwargs):  # pylint: disable=R0201
+    def process_view(self, request, view_func, view_args, view_kwargs):
         """
         process_view maintains the dolt branch session cookie and verifies authentication. It then returns the
         view that needs to be rendered.
@@ -56,6 +56,7 @@ class DoltBranchMiddleware:
         branch = DoltBranchMiddleware.get_branch(request)
         try:
             branch.checkout()
+        # pylint: disable-next=broad-exception-caught
         except Exception as e:
             msg = f"could not checkout branch {branch}: {str(e)}"
             messages.error(request, mark_safe(msg))
@@ -82,6 +83,7 @@ class DoltBranchMiddleware:
             return Branch.objects.get(pk=DOLT_DEFAULT_BRANCH)
 
 
+# pylint: disable-next=too-few-public-methods
 class DoltAutoCommitMiddleware:
     """
     DoltAutoCommitMiddleware calls the AutoDoltCommit class on a request.

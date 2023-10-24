@@ -157,6 +157,7 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
                 queryset = self.queryset.filter(pk__in=pk_list)
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
+                # pylint: disable-next=broad-exception-caught
                 except Exception as e:
                     logger.info("Caught error while attempting to delete objects")
                     messages.error(request, mark_safe(e))
@@ -267,7 +268,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
         alter_session_branch(sess=request.session, branch=dest)
         return redirect("/")
 
-    def get_extra_context(self, request, src, dest):  # pylint: disable=W0613,C0116,R0201 # noqa: D102
+    def get_extra_context(self, request, src, dest):  # pylint: disable=W0613,C0116 # noqa: D102
         merge_base_c = Commit.merge_base(src, dest)
         source_head = src.hash
         return {
@@ -405,6 +406,7 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
                 msgs = [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
                 try:
                     _ = Commit.revert(commits, request.user)
+                # pylint: disable-next=broad-exception-caught
                 except Exception as e:
                     # catch database error
                     messages.error(
@@ -412,11 +414,11 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
                         mark_safe(f"""Error reverting commits {", ".join(msgs)}: {e}"""),
                     )
                     return redirect(self.get_return_url(request))
-                else:
-                    messages.success(
-                        request,
-                        mark_safe(f"""Successfully reverted commits {", ".join(msgs)}"""),
-                    )
+
+                messages.success(
+                    request,
+                    mark_safe(f"""Successfully reverted commits {", ".join(msgs)}"""),
+                )
 
         return redirect(self.get_return_url(request))
 
@@ -445,7 +447,7 @@ class DiffDetailView(View):
 
     template_name = "nautobot_version_control/diff_detail.html"
 
-    def get_required_permission(self):  # pylint: disable=R0201
+    def get_required_permission(self):
         """returns permissions."""
         return get_permission_for_model(Site, "view")
 
@@ -472,10 +474,9 @@ class DiffDetailView(View):
         """title returns the title of a diff."""
         if before_obj and after_obj:
             return f"Updated {after_obj}"
-        elif after_obj:
+        if after_obj:
             return f"Added {after_obj}"
-        else:
-            return f"Deleted {before_obj}"
+        return f"Deleted {before_obj}"
 
     def breadcrumb(self, kwargs):
         """Return a breadcrumb."""
@@ -495,7 +496,7 @@ class DiffDetailView(View):
             b = Branch.objects.get(hash=str(commit))
             url = b.get_absolute_url()
             return mark_safe(f"<a href='{url}'>{b}</a>")
-        elif Commit.objects.filter(commit_hash=str(commit)).exists():
+        if Commit.objects.filter(commit_hash=str(commit)).exists():
             c = Commit.objects.get(commit_hash=str(commit))
             url = c.get_absolute_url()
             return mark_safe(f"<a href='{url}'>{c}</a>")
@@ -885,8 +886,10 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
 
                 # Delete objects
                 queryset = self.queryset.filter(pk__in=pk_list)
+                # pylint: disable-next=broad-exception-caught
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
+                # pylint: disable-next=broad-exception-caught
                 except Exception:
                     logger.info("Caught error while attempting to delete objects")
                     return redirect(self.get_return_url(request))
@@ -896,8 +899,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
                 messages.success(request, msg)
                 return redirect(self.get_return_url(request))
 
-            else:
-                logger.debug("Form validation failed")
+            logger.debug("Form validation failed")
 
         else:
             form = form_cls(

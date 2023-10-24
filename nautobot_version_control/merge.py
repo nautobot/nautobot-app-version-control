@@ -40,6 +40,7 @@ def get_conflicts_count_for_merge(src, dest):
             num_conflicts = c["num_conflicts__sum"] if c["num_conflicts__sum"] else 0
             num_violations = v["num_violations__sum"] if v["num_violations__sum"] else 0
             return num_conflicts + num_violations
+    # pylint: disable-next=broad-exception-caught
     except Exception:
         # best effort
         # todo: fix dolt merge bug
@@ -64,6 +65,7 @@ def get_conflicts_for_merge(src, dest):
                 "violations": conflicts.make_constraint_violations_table(),
             }
 
+    # pylint: disable-next=broad-exception-caught
     except Exception:
         # best effort
         # todo: fix dolt merge bug
