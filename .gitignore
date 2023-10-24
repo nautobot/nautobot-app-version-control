@@ -3,18 +3,6 @@
 
 # Swap files
 *.swp
-.idea
-/site/
-/venv/
-/dist/
-/*.sh
-local_requirements.txt
-fabfile.py
-gunicorn.py
-invoke.yml
-nautobot.log
-nautobot.pid
-.DS_Store
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -309,6 +297,13 @@ fabric.properties
 
 # Rando
 creds.env
+development/*.txt
 
 # Invoke overrides
 invoke.yml
+
+# Docs
+public
+/compose.yaml
+/dump.sql
+/nautobot_version_control/static/nautobot_version_control/docs

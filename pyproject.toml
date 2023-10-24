@@ -1,53 +1,63 @@
 [tool.poetry]
 name = "nautobot-version-control"
-version = "1.0.0-alpha.0"
-description = "Nautobot Version Control"
+version = "0.1.0"
+description = "Nautobot Version Control with Dolt"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
-repository = "https://github.com/nautobot/nautobot-plugin-version-control"
-documentation = "https://nautobot-version-control.readthedocs.io"
 readme = "README.md"
+homepage = "https://github.com/nautobot/nautobot-plugin-version-control"
+repository = "https://github.com/nautobot/nautobot-plugin-version-control"
+keywords = ["nautobot", "nautobot-plugin"]
 classifiers = [
     "Intended Audience :: Developers",
-    "Development Status :: 3 - Alpha",
-    "License :: OSI Approved :: Apache Software License",
+    "Development Status :: 5 - Production/Stable",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.6",
-    "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+]
+include = [
+    "LICENSE",
+    "README.md",
 ]
 packages = [
     { include = "nautobot_version_control" },
 ]
-include = [
-    "LICENSE.txt",
-]
 
 [tool.poetry.dependencies]
-python = "^3.6.2"
-nautobot = "~1.2.4"
-# MySQL database adapter
-mysqlclient = "^2.0.3"
+python = ">=3.8,<3.12"
+# Used for local development
+nautobot = "^1.2.4"
 
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 bandit = "*"
 black = "*"
+coverage = "*"
 django-debug-toolbar = "*"
 flake8 = "*"
 invoke = "*"
-myst-parser = "0.15.2"
+ipython = "*"
 pydocstyle = "*"
 pylint = "*"
 pylint-django = "*"
-Sphinx = "4.3.0"
+pylint-nautobot = "*"
 yamllint = "*"
-sphinx-autobuild = "2021.3.14"
-sphinx-rtd-theme = "1.0.0"
+toml = "*"
+Markdown = "*"
+# Rendering docs to HTML
+mkdocs = "1.5.2"
+# Material for MkDocs theme
+mkdocs-material = "9.1.15"
+# Render custom markdown for version added/changed/remove notes
+mkdocs-version-annotations = "1.0.0"
+# Automatic documentation from sources, for MkDocs
+mkdocstrings = "0.22.0"
+mkdocstrings-python = "1.5.2"
 
 [tool.black]
 line-length = 120
-target-version = ['py37']
+target-version = ['py38', 'py39', 'py310', 'py311']
 include = '\.pyi?$'
 exclude = '''
 (
@@ -70,28 +80,18 @@ exclude = '''
 
 [tool.pylint.master]
 # Include the pylint_django plugin to avoid spurious warnings about Django patterns
-load-plugins="pylint_django"
+load-plugins="pylint_django, pylint_nautobot"
+ignore=".venv"
 
 [tool.pylint.basic]
 # No docstrings required for private methods (Pylint default), or for test_ functions, or for inner Meta classes.
 no-docstring-rgx="^(_|test_|Meta$)"
 
-# Allow single letter variable names
-good-names="i,j,k,pk,x,y,v,c,mc,rt,e,id,db,m,pr,b,f,kw,ct,fn"
-
 [tool.pylint.messages_control]
 # Line length is enforced by Black, so pylint doesn't need to check it.
 # Pylint and Black disagree about how to format multi-line arrays; Black wins.
 disable = """,
-    line-too-long,
-    bad-continuation,
-    W0603,
-    W0703,
-    R0903,
-    R0901,
-    R0201,
-    R1705,
-    R0801
+    line-too-long
     """
 
 [tool.pylint.miscellaneous]
@@ -101,13 +101,23 @@ notes = """,
     XXX,
     """
 
+[tool.pylint-nautobot]
+supported_nautobot_versions = [
+    "1.2.4"
+]
+
+[tool.pydocstyle]
+convention = "google"
+inherit = false
+match = "(?!__init__).*\\.py"
+match-dir = "(?!tests|migrations|development)[^\\.].*"
+# D212 is enabled by default in google convention, and complains if we have a docstring like:
+# """
+# My docstring is on the line after the opening quotes instead of on the same line as them.
+# """
+# We've discussed and concluded that we consider this to be a valid style choice.
+add_ignore = "D212"
+
 [build-system]
 requires = ["poetry_core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.pytest.ini_options]
-testpaths = [
-    "tests"
-]
-addopts = "-vv --doctest-modules"
-

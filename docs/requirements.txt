@@ -1,3 +1,5 @@
-myst-parser==0.15.2
-sphinx==4.3.0
-sphinx-rtd-theme==1.0.0
+mkdocs==1.5.2
+mkdocs-material==9.1.15
+mkdocs-version-annotations==1.0.0
+mkdocstrings-python==1.5.2
+mkdocstrings==0.22.0
