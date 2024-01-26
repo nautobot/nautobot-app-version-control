@@ -13,7 +13,7 @@ class Command(BaseCommand):
     help = "Cleanup Database after migrations."
 
     def handle(self, *args, **kwargs):
-        """Override handle."""
+        """Override handle."""  # TODO: what is the point of this?
         Status.objects.all().delete()
         ContentType.objects.all().delete()
         Permission.objects.all().delete()

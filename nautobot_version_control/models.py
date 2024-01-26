@@ -122,7 +122,7 @@ class Branch(DoltSystemTable):
     def checkout(self):
         """Checkout performs a checkout operation to this branch making it the active_branch."""
         with connection.cursor() as cursor:
-            cursor.execute(f"""CALL dolt_checkout("{self.name}");""")
+            cursor.execute(f"""CALL dolt_checkout("{self.name}");""")  # TODO: not safe
 
     def _branch_meta(self):
         try:
@@ -148,14 +148,14 @@ class Branch(DoltSystemTable):
         with connection.cursor() as cursor:
             cursor.execute("SET dolt_force_transaction_commit = 1;")
             if squash:
-                cursor.execute(
+                cursor.execute(  # TODO: not safe
                     f"""CALL dolt_merge(
                         '--squash',
                         '{merge_branch}'
                     );"""
                 )
             else:
-                cursor.execute(
+                cursor.execute(  # TODO: not safe
                     f"""CALL dolt_merge(
                         '--no-ff',
                         '{merge_branch}'
@@ -165,7 +165,7 @@ class Branch(DoltSystemTable):
             if res[0] == 0 and res[1] == 0:
                 # only commit merged data on success
                 msg = f"""merged "{merge_branch}" into "{self.name}"."""
-                cursor.execute(
+                cursor.execute(  # TODO: not safe
                     f"""CALL dolt_commit(
                         '--all',
                         '--allow-empty',
@@ -187,12 +187,12 @@ class Branch(DoltSystemTable):
     def save(self, *args, **kwargs):
         """Save overrides the model save method."""
         with connection.cursor() as cursor:
-            cursor.execute(f"""CALL dolt_branch('{self.name}','{self.starting_branch}');""")  # nosec
+            cursor.execute(f"""CALL dolt_branch('{self.name}','{self.starting_branch}');""")  # nosec  # TODO: not safe
 
     def delete(self, *args, **kwargs):
         """Delete overrides the model delete method."""
         with connection.cursor() as cursor:
-            cursor.execute(f"""CALL dolt_branch('-D','{self.name}');""")  # nosec
+            cursor.execute(f"""CALL dolt_branch('-D','{self.name}');""")  # nosec  # TODO: not safe
 
 
 @receiver(pre_delete, sender=Branch)
@@ -308,7 +308,7 @@ class Commit(DoltSystemTable):
         author = author_from_user(user)
         conn = connections[using]
         with conn.cursor() as cursor:
-            cursor.execute(
+            cursor.execute(  # TODO: not safe
                 f"""
             CALL dolt_commit(
                 '--all',

@@ -108,7 +108,7 @@ def make_merge_candidate(src, dest):
         cursor.execute("""CALL dolt_merge(%s);""", [src])
         cursor.execute("""CALL dolt_add("-A");""")
         msg = f"""creating merge candidate with src: "{src}" and dest: "{dest}"."""
-        cursor.execute(
+        cursor.execute(  # TODO: not safe
             f"""CALL dolt_commit(
                     '--force',
                     '--all',
@@ -180,10 +180,10 @@ class MergeConflicts:
         """Returns each conflict row in a table as a JSON object."""
         with connection.cursor() as cursor:
             # introspect table schema to query conflict data as json
-            cursor.execute(f"DESCRIBE dolt_conflicts_{conflict.table}")
+            cursor.execute(f"DESCRIBE dolt_conflicts_{conflict.table}")  # TODO: not safe
             fields = ",".join([f"'{tup[0]}', {tup[0]}" for tup in cursor.fetchall()])
 
-            cursor.execute(
+            cursor.execute(  # TODO: not safe
                 f"""SELECT base_id, JSON_OBJECT({fields})
                     FROM dolt_conflicts_{conflict.table};"""  # nosec
             )
@@ -224,7 +224,7 @@ class MergeConflicts:
         with connection.cursor() as cursor:
             rows = []
             model_name = self._model_from_table(violation.table)
-            cursor.execute(
+            cursor.execute(  # TODO: not safe
                 mark_safe(
                     """SELECT id, violation_type, violation_info
                     FROM dolt_constraint_violations_{violation.table};"""

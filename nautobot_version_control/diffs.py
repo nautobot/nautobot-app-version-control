@@ -118,7 +118,7 @@ def diff_summary_for_table(table, from_commit, to_commit):
         "removed": 0,
     }
     with connection.cursor() as cursor:
-        cursor.execute(
+        cursor.execute(  # TODO: not safe
             f"""SELECT diff_type, count(diff_type) FROM dolt_commit_diff_{table}  # nosec
                 WHERE to_commit = %s AND from_commit = %s
                 GROUP BY diff_type ORDER BY diff_type""",  # nosec
@@ -132,7 +132,7 @@ def diff_summary_for_table(table, from_commit, to_commit):
 def json_diff_fields(tbl_name):
     """Returns all of the column names for a model and turns them into to_ and from_ fields."""
     with connection.cursor() as cursor:
-        cursor.execute(f"DESCRIBE dolt_commit_diff_{tbl_name}")
+        cursor.execute(f"DESCRIBE dolt_commit_diff_{tbl_name}")  # TODO: not safe
         cols = cursor.fetchall()
     pairs = (f"'{c[0]}', dolt_commit_diff_{tbl_name}.{c[0]}" for c in cols)
     return ", ".join(pairs)

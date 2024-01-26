@@ -67,6 +67,6 @@ def query_on_branch(branch):
     # TODO: remove in favor of db_for_commit
     with connection.cursor() as cursor:
         prev = active_branch()
-        cursor.execute(f"""CALL dolt_checkout("{branch}");""")
+        cursor.execute(f"""CALL dolt_checkout("{branch}");""")  # TODO: not safe
         yield
-        cursor.execute(f"""CALL dolt_checkout("{prev}");""")
+        cursor.execute(f"""CALL dolt_checkout("{prev}");""")  # TODO: not safe
