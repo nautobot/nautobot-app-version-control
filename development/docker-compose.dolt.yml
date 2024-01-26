@@ -26,7 +26,7 @@ services:
       - "dolt_data:/var/lib/nautobot"
       - "./dolt-config.yaml:/dolt-config.yaml"
     healthcheck:
-      test: dolt sql-client -u $$NAUTOBOT_DB_USER -p $$NAUTOBOT_DB_PASSWORD -q "show databases; select 'healthcheck';" --use-db $$NAUTOBOT_DB_NAME  # yamllint disable-line rule:quoted-strings
+      test: dolt -u $$NAUTOBOT_DB_USER -p $$NAUTOBOT_DB_PASSWORD --use-db $$NAUTOBOT_DB_NAME sql -q "show databases; select 'healthcheck';"  # yamllint disable-line rule:quoted-strings
       timeout: "10s"
       retries: 10
 

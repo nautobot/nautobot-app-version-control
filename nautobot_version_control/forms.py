@@ -3,7 +3,7 @@
 from django import forms
 
 from nautobot.users.models import User
-from nautobot.utilities.forms import BootstrapMixin, ConfirmationForm, add_blank_choice
+from nautobot.core.forms import BootstrapMixin, ConfirmationForm, add_blank_choice
 
 from nautobot_version_control.models import Branch, Commit, PullRequest, PullRequestReview
 from nautobot_version_control.utils import active_branch, DoltError

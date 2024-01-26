@@ -6,7 +6,7 @@ from django.db import models
 from django.db.models.expressions import RawSQL
 
 from nautobot.circuits import tables as circuits_tables
-from nautobot.dcim.tables import cables, devices, devicetypes, power, racks, sites
+from nautobot.dcim.tables import cables, devices, devicetypes, power, racks, locations
 from nautobot.extras import tables as extras_tables
 from nautobot.ipam import tables as ipam_tables
 from nautobot.tenancy import tables as tenancy_tables
@@ -169,7 +169,6 @@ register_diff_tables(
             # "devicepoweroutlet": devices.DevicePowerOutletTable,
             # "devicepowerport": devices.DevicePowerPortTable,
             # "devicerearport": devices.DeviceRearPortTable,
-            "devicerole": devices.DeviceRoleTable,
             "devicetype": devicetypes.DeviceTypeTable,
             "frontport": devices.FrontPortTable,
             "frontporttemplate": devicetypes.FrontPortTemplateTable,
@@ -189,23 +188,21 @@ register_diff_tables(
             # "rackdetail": racks.RackDetailTable,
             "rackgroup": racks.RackGroupTable,
             "rackreservation": racks.RackReservationTable,
-            "rackrole": racks.RackRoleTable,
             "rearport": devices.RearPortTable,
             "rearporttemplate": devicetypes.RearPortTemplateTable,
-            "region": sites.RegionTable,
-            "site": sites.SiteTable,
+            "locationtype": locations.LocationTypeTable,
+            "location": locations.LocationTable,
             "virtualchassis": devices.VirtualChassisTable,
         },
         "extras": {
             "secret": extras_tables.SecretTable,
             "secretsgroup": extras_tables.SecretsGroupTable,
+            "role": extras_tables.RoleTable,
         },
         "ipam": {
-            "aggregate": ipam_tables.AggregateTable,
             "ipaddress": ipam_tables.IPAddressTable,
             "prefix": ipam_tables.PrefixTable,
             "rir": ipam_tables.RIRTable,
-            "role": ipam_tables.RoleTable,
             "routetarget": ipam_tables.RouteTargetTable,
             "service": ipam_tables.ServiceTable,
             "vlan": ipam_tables.VLANTable,

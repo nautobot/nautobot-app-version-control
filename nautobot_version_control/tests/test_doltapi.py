@@ -5,7 +5,7 @@ from django.test import override_settings, TransactionTestCase
 from django.urls import reverse
 from django.db import connection
 
-from nautobot.utilities.testing import APITestCase, APIViewTestCases
+from nautobot.core.testing import APITestCase, APIViewTestCases
 from nautobot.users.models import User
 from nautobot.dcim.models import Manufacturer
 

@@ -13,7 +13,7 @@ from django.db.models.signals import pre_delete
 from nautobot.core.models import BaseModel
 from nautobot.extras.utils import extras_features
 from nautobot.users.models import User
-from nautobot.utilities.querysets import RestrictedQuerySet
+from nautobot.core.models.querysets import RestrictedQuerySet
 
 from nautobot_version_control.utils import author_from_user, DoltError, db_for_commit, active_branch
 from nautobot_version_control.constants import DOLT_DEFAULT_BRANCH

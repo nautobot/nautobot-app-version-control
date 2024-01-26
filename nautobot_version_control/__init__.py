@@ -5,11 +5,7 @@ import django_tables2
 from nautobot.extras.plugins import PluginConfig
 from nautobot_version_control.migrations import auto_dolt_commit_migration
 
-try:
-    from importlib import metadata
-except ImportError:
-    # Python version < 3.8
-    import importlib_metadata as metadata
+from importlib import metadata
 
 __version__ = metadata.version(__name__)
 
@@ -25,7 +21,7 @@ class NautobotVersionControl(PluginConfig):
     author = "Network to Code, LLC"
     author_email = "opensource@networktocode.com"
     min_version = "1.2.0-beta.1"
-    max_version = "1.999"
+    max_version = "2.999"
     required_settings = []
     default_settings = {
         # TODO: are these respected?

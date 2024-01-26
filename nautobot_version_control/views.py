@@ -11,10 +11,10 @@ from django.utils.safestring import mark_safe
 from django.views import View
 
 from nautobot.core.views import generic
-from nautobot.dcim.models.sites import Site
-from nautobot.utilities.forms import ConfirmationForm
-from nautobot.utilities.permissions import get_permission_for_model
-from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequiredMixin
+from nautobot.dcim.models.locations import Location
+from nautobot.core.forms import ConfirmationForm
+from nautobot.core.utils.permissions import get_permission_for_model
+from nautobot.core.views.mixins import GetReturnURLMixin, ObjectPermissionRequiredMixin
 
 from nautobot_version_control import diffs, filters, forms, merge, tables
 from nautobot_version_control.constants import DOLT_DEFAULT_BRANCH
@@ -444,7 +444,7 @@ class DiffDetailView(View):
 
     def get_required_permission(self):  # pylint: disable=R0201
         """Returns permissions."""
-        return get_permission_for_model(Site, "view")
+        return get_permission_for_model(Location, "view")  # TODO: what is this doing?
 
     def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         self.model = self.get_model(kwargs)  # pylint: disable=W0201

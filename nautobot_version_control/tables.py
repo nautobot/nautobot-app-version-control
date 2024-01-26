@@ -3,7 +3,7 @@
 
 import django_tables2 as tables
 from django_tables2 import A
-from nautobot.utilities.tables import BaseTable, ToggleColumn, ButtonsColumn
+from nautobot.core.tables import BaseTable, ToggleColumn, ButtonsColumn
 
 from nautobot_version_control.models import (
     Branch,
