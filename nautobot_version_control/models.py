@@ -162,7 +162,10 @@ class Branch(DoltSystemTable):
                     );"""
                 )
             res = cursor.fetchone()
-            if res[0] == 0 and res[1] == 0:  # magic???
+            # dolt_merge returns a signature that is at the time of this writing:
+            # ws, h.String(), noConflictsOrViolations, fastForwardMerge, str, nil
+            # test the noConflictsOrViolations and fastForwardMerge is good 
+            if res[1] == 0 and res[2] == 0:  # magic???
                 # only commit merged data on success
                 msg = f"""merged "{merge_branch}" into "{self.name}"."""
                 cursor.execute(  # TODO: not safe
