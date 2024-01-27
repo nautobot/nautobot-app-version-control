@@ -5,6 +5,7 @@ import logging
 
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
@@ -29,12 +30,59 @@ from nautobot_version_control.models import (
 )
 
 
+class DoltObjectView(generic.ObjectView):
+    """
+    Retrieve a single object for display.
+
+    Note: This view is an override of the core provided generic.ObjectView to remove unsafe assumptions
+    """
+
+    def get(self, request, *args, **kwargs):
+        """Generic GET handler for accessing an object."""
+        instance = get_object_or_404(self.queryset, **kwargs)
+
+        # This is the main purpose of the override
+        created_by, last_updated_by = None, None
+
+        # TODO: this feels inelegant - should the tabs lookup be a dedicated endpoint rather than piggybacking
+        # on the object-retrieve endpoint?
+        # TODO: similar functionality probably needed in NautobotUIViewSet as well, not currently present
+        if request.GET.get("viewconfig", None) == "true":
+            # TODO: we shouldn't be importing a private-named function from another module. Should it be renamed?
+            from nautobot.extras.templatetags.plugins import _get_registered_content
+
+            temp_fake_context = {
+                "object": instance,
+                "request": request,
+                "settings": {},
+                "csrf_token": "",
+                "perms": {},
+            }
+
+            plugin_tabs = _get_registered_content(instance, "detail_tabs", temp_fake_context, return_html=False)
+            resp = {"tabs": plugin_tabs}
+            return JsonResponse(resp)
+        else:
+            return render(
+                request,
+                self.get_template_name(),
+                {
+                    "object": instance,
+                    "verbose_name": self.queryset.model._meta.verbose_name,
+                    "verbose_name_plural": self.queryset.model._meta.verbose_name_plural,
+                    "created_by": created_by,
+                    "last_updated_by": last_updated_by,
+                    **self.get_extra_context(request, instance),
+                },
+            )
+
+
 #
 # Branches
 #
 
 
-class BranchView(generic.ObjectView):
+class BranchView(DoltObjectView):
     """BranchView renders a view of a Branch object."""
 
     queryset = Branch.objects.all()
@@ -282,7 +330,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
 #
 
 
-class CommitView(generic.ObjectView):
+class CommitView(DoltObjectView):
     """CommitView is used to render a commit."""
 
     queryset = Commit.objects.all()
@@ -583,7 +631,7 @@ class PullRequestListView(generic.ObjectListView):
     template_name = "nautobot_version_control/pull_request_list.html"
 
 
-class PullRequestBase(generic.ObjectView):
+class PullRequestBase(DoltObjectView):
     """PullRequestBase contains the base information about a PullRequest."""
 
     queryset = PullRequest.objects.all()

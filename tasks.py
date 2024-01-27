@@ -580,9 +580,7 @@ def hadolint(context):
 @task
 def pylint(context):
     """Run pylint code analysis."""
-    command = (
-        'pylint --init-hook "import nautobot; nautobot.setup()" --rcfile pyproject.toml nautobot_version_control'
-    )
+    command = 'pylint --init-hook "import nautobot; nautobot.setup()" --rcfile pyproject.toml nautobot_version_control'
     run_command(context, command)
 
 

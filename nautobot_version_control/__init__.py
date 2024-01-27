@@ -20,7 +20,7 @@ class NautobotVersionControl(PluginConfig):
     version = __version__
     author = "Network to Code, LLC"
     author_email = "opensource@networktocode.com"
-    min_version = "1.2.0-beta.1"
+    min_version = "2.0.0"
     max_version = "2.999"
     required_settings = []
     default_settings = {

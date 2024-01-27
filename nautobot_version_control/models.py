@@ -162,7 +162,7 @@ class Branch(DoltSystemTable):
                     );"""
                 )
             res = cursor.fetchone()
-            if res[0] == 0 and res[1] == 0:
+            if res[0] == 0 and res[1] == 0:  # magic???
                 # only commit merged data on success
                 msg = f"""merged "{merge_branch}" into "{self.name}"."""
                 cursor.execute(  # TODO: not safe
