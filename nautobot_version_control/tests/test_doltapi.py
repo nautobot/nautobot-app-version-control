@@ -1,11 +1,11 @@
 """tests.py contains unittests for the nautobot version control plugin."""
-
+# pylint: disable=too-many-ancestors
 
 from django.test import override_settings, TransactionTestCase
 from django.urls import reverse
 from django.db import connection
 
-from nautobot.utilities.testing import APITestCase, APIViewTestCases
+from nautobot.core.testing import APITestCase, APIViewTestCases
 from nautobot.users.models import User
 from nautobot.dcim.models import Manufacturer
 
@@ -22,6 +22,23 @@ class DoltTestCase(TransactionTestCase):
     databases = ["default", "global"]
 
 
+class DoltApiTestCase(APITestCase):
+    """DoltApiTestCase wraps APITestCase tests and performs common tasks."""
+
+    def _pre_setup(self):
+        """_pre_setup runs before every testcase."""
+        super()._pre_setup()
+        # APITestCase always creates the same user in setup, so to avoid a conflict we delete it first.
+        username = "nautobotuser"
+        try:
+            user = User.objects.get(username=username)
+            print(f"user {username} exists, deleting")
+            user.delete()
+            print(f"user {username} deleted")
+        except User.DoesNotExist:
+            print(f"user {username} does not exist")
+
+
 class TestBranches(DoltTestCase):
     """TestBranch Tests the creation and deletion of branches."""
 
@@ -36,7 +53,9 @@ class TestBranches(DoltTestCase):
 
     def tearDown(self):
         """tearDown is ran after every testcase."""
-        Branch.objects.exclude(name=self.default).delete()
+        # Branch QuerySet deletes are not supported, delete branches individually.
+        for branch in Branch.objects.exclude(name=self.default):
+            branch.delete()
 
     def test_default_branch(self):
         """test_default_branch asserts that the main branch exists and is preinitialized as the active branch."""
@@ -69,7 +88,9 @@ class TestBranches(DoltTestCase):
 
         # Delete the pr and try again
         PullRequest.objects.filter(title="My Review").delete()
-        Branch.objects.filter(name="todelete").delete()
+        # Branch QuerySet deletes are not supported, delete branches individually.
+        for branch in Branch.objects.filter(name="todelete"):
+            branch.delete()
         self.assertEqual(Branch.objects.filter(name="todelete").count(), 0)
 
     def test_merge_ff(self):
@@ -165,7 +186,7 @@ class TestBranches(DoltTestCase):
 
 
 @override_settings(DATABASE_ROUTERS=["nautobot_version_control.routers.GlobalStateRouter"])
-class TestApp(APITestCase):
+class TestApp(DoltApiTestCase):
     """TestApp tests the availability of the root api endpoint."""
 
     databases = ["default", "global"]
@@ -179,7 +200,7 @@ class TestApp(APITestCase):
 
 
 @override_settings(DATABASE_ROUTERS=["nautobot_version_control.routers.GlobalStateRouter"])
-class TestBranchesApi(APITestCase, APIViewTestCases):
+class TestBranchesApi(DoltApiTestCase, APIViewTestCases):
     """TestBranchesApi tests the get,create,delete,etc. of the Branches api."""
 
     databases = ["default", "global"]
@@ -212,20 +233,12 @@ class TestBranchesApi(APITestCase, APIViewTestCases):
         self.assertTrue(data["count"] > 0)
 
 
-class TestPullRequestApi(APITestCase, APIViewTestCases):
+class TestPullRequestApi(DoltApiTestCase, APIViewTestCases):
     """TestPullRequestApi tests the PullRequest api."""
 
     databases = ["default", "global"]
     model = PullRequest
-    brief_fields = [
-        "title",
-        "state",
-        "source_branch",
-        "destination_branch",
-        "description",
-        "creator",
-        "created_at",
-    ]
+    brief_fields = ["title", "state", "source_branch", "destination_branch", "description", "creator", "created_at"]
 
     @classmethod
     def setUpTestData(cls):
@@ -282,7 +295,9 @@ class TestPullRequests(DoltTestCase):
     def tearDown(self):
         """tearDown runs after every test case."""
         PullRequest.objects.all().delete()
-        Branch.objects.exclude(name=self.default).delete()
+        # Branch QuerySet deletes are not supported, delete branches individually.
+        for branch in Branch.objects.exclude(name=self.default):
+            branch.delete()
 
     def test_pull_requests_write_to_main(self):
         """test_pull_requests_write_to_main asserts that pull request objects hit the global db."""
@@ -311,7 +326,7 @@ class TestPullRequests(DoltTestCase):
 
 
 @override_settings(DATABASE_ROUTERS=["nautobot_version_control.routers.GlobalStateRouter"])
-class TestPullRequestReviewsApi(APITestCase, APIViewTestCases):
+class TestPullRequestReviewsApi(DoltApiTestCase, APIViewTestCases):
     """TestPullRequestReviewsApi tests whether the PullRequestReview model api."""
 
     databases = ["default", "global"]
@@ -349,7 +364,7 @@ class TestPullRequestReviewsApi(APITestCase, APIViewTestCases):
 
 
 @override_settings(DATABASE_ROUTERS=["nautobot_version_control.routers.GlobalStateRouter"])
-class TestCommitsApi(APITestCase, APIViewTestCases):
+class TestCommitsApi(DoltApiTestCase, APIViewTestCases):
     """TestCommitsApi tests the Commit model Api."""
 
     databases = ["default", "global"]

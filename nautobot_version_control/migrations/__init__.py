@@ -5,13 +5,11 @@ def auto_dolt_commit_migration(sender, **kwargs):
     msg = "Completed database migration"
     author = "system <nautobot@nautobot.invalid>"
     with connection.cursor() as cursor:
-        cursor.execute("SELECT dolt_add('-A') FROM dual;")
+        cursor.execute("CALL dolt_add('-A');")
         cursor.execute(
             f"""
-            SELECT dolt_commit(
+            CALL dolt_commit(
                 '--all',
-                '--allow-empty',
                 '--message', '{msg}',
-                '--author', '{author}')
-            FROM dual;"""
+                '--author', '{author}');"""
         )

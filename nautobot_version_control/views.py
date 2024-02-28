@@ -1,20 +1,21 @@
-"""views.py implements django views for all Version Control plugin features."""
+"""Implements django views for all Version Control plugin features."""
 
 from datetime import datetime
 import logging
 
 from django.contrib import messages
 from django.contrib.contenttypes.models import ContentType
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, get_list_or_404, render, redirect
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 from django.views import View
 
 from nautobot.core.views import generic
-from nautobot.dcim.models.sites import Site
-from nautobot.utilities.forms import ConfirmationForm
-from nautobot.utilities.permissions import get_permission_for_model
-from nautobot.utilities.views import GetReturnURLMixin, ObjectPermissionRequiredMixin
+from nautobot.dcim.models.locations import Location
+from nautobot.core.forms import ConfirmationForm
+from nautobot.core.utils.permissions import get_permission_for_model
+from nautobot.core.views.mixins import GetReturnURLMixin, ObjectPermissionRequiredMixin
 
 from nautobot_version_control import diffs, filters, forms, merge, tables
 from nautobot_version_control.constants import DOLT_DEFAULT_BRANCH
@@ -29,12 +30,59 @@ from nautobot_version_control.models import (
 )
 
 
+class DoltObjectView(generic.ObjectView):
+    """
+    Retrieve a single object for display.
+
+    Note: This view is an override of the core provided generic.ObjectView to remove unsafe assumptions
+    """
+
+    def get(self, request, *args, **kwargs):
+        """Generic GET handler for accessing an object."""
+        instance = get_object_or_404(self.queryset, **kwargs)
+
+        # This is the main purpose of the override
+        created_by, last_updated_by = None, None
+
+        # TODO: this feels inelegant - should the tabs lookup be a dedicated endpoint rather than piggybacking
+        # on the object-retrieve endpoint?
+        # TODO: similar functionality probably needed in NautobotUIViewSet as well, not currently present
+        if request.GET.get("viewconfig", None) == "true":
+            # TODO: we shouldn't be importing a private-named function from another module. Should it be renamed?
+            from nautobot.extras.templatetags.plugins import _get_registered_content
+
+            temp_fake_context = {
+                "object": instance,
+                "request": request,
+                "settings": {},
+                "csrf_token": "",
+                "perms": {},
+            }
+
+            plugin_tabs = _get_registered_content(instance, "detail_tabs", temp_fake_context, return_html=False)
+            resp = {"tabs": plugin_tabs}
+            return JsonResponse(resp)
+        else:
+            return render(
+                request,
+                self.get_template_name(),
+                {
+                    "object": instance,
+                    "verbose_name": self.queryset.model._meta.verbose_name,
+                    "verbose_name_plural": self.queryset.model._meta.verbose_name_plural,
+                    "created_by": created_by,
+                    "last_updated_by": last_updated_by,
+                    **self.get_extra_context(request, instance),
+                },
+            )
+
+
 #
 # Branches
 #
 
 
-class BranchView(generic.ObjectView):
+class BranchView(DoltObjectView):
     """BranchView renders a view of a Branch object."""
 
     queryset = Branch.objects.all()
@@ -103,12 +151,12 @@ class BranchEditView(generic.ObjectEditView):
 
     @staticmethod
     def _is_success_response(response):
-        """returns if response was successful."""
+        """Returns if response was successful."""
         return response.status_code // 100 in (2, 3)
 
     @staticmethod
     def create_branch_meta(req, form):
-        """creates a BranchMeta object for a Branch."""
+        """Create a BranchMeta object for a Branch."""
         meta, _ = BranchMeta.objects.get_or_create(branch=form.data.get("name"))
         meta.source_branch = form.data.get("starting_branch")
         meta.author = req.user
@@ -157,9 +205,9 @@ class BranchBulkDeleteView(generic.BulkDeleteView):
                 queryset = self.queryset.filter(pk__in=pk_list)
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
-                except Exception as e:
+                except Exception as err:  # pylint: disable=broad-except
                     logger.info("Caught error while attempting to delete objects")
-                    messages.error(request, mark_safe(e))
+                    messages.error(request, mark_safe(err))
                     return redirect(self.get_return_url(request))
 
                 msg = f"Deleted {deleted_count} {model._meta.verbose_name_plural}"
@@ -282,20 +330,17 @@ class BranchMergePreView(GetReturnURLMixin, View):
 #
 
 
-class CommitView(generic.ObjectView):
+class CommitView(DoltObjectView):
     """CommitView is used to render a commit."""
 
     queryset = Commit.objects.all()
 
     def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
-        """
-        Looks up the requested commit using a database revision
-        to ensure the commit is accessible.
-        todo: explain ancestor
-        """
+        """Looks up the requested commit using a database revision to ensure the commit is accessible."""
+        # TODO: todo: explain ancestor
         anc = get_list_or_404(CommitAncestor.objects.all(), **kwargs)[0]
-        db = db_for_commit(anc.commit_hash)
-        instance = self.queryset.using(db).get(commit_hash=anc.commit_hash)
+        database = db_for_commit(anc.commit_hash)
+        instance = self.queryset.using(database).get(commit_hash=anc.commit_hash)
 
         if anc.parent_hash:
             diff = diffs.two_dot_diffs(from_commit=anc.parent_hash, to_commit=instance)
@@ -405,11 +450,11 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
                 msgs = [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
                 try:
                     _ = Commit.revert(commits, request.user)
-                except Exception as e:
+                except Exception as err:  # pylint: disable=broad-except
                     # catch database error
                     messages.error(
                         request,
-                        mark_safe(f"""Error reverting commits {", ".join(msgs)}: {e}"""),
+                        mark_safe(f"""Error reverting commits {", ".join(msgs)}: {err}"""),
                     )
                     return redirect(self.get_return_url(request))
                 else:
@@ -446,8 +491,8 @@ class DiffDetailView(View):
     template_name = "nautobot_version_control/diff_detail.html"
 
     def get_required_permission(self):  # pylint: disable=R0201
-        """returns permissions."""
-        return get_permission_for_model(Site, "view")
+        """Returns permissions."""
+        return get_permission_for_model(Location, "view")  # TODO: what is this doing?
 
     def get(self, request, *args, **kwargs):  # pylint: disable=W0613,C0116 # noqa: D102
         self.model = self.get_model(kwargs)  # pylint: disable=W0201
@@ -463,19 +508,18 @@ class DiffDetailView(View):
             },
         )
 
-    def get_model(self, kwargs):
-        """get_model returns the underlying model."""
+    def get_model(self, kwargs):  # pylint: disable=no-self-use
+        """Returns the underlying model."""
         return ContentType.objects.get(app_label=kwargs["app_label"], model=kwargs["model"]).model_class()
 
     @staticmethod
     def title(before_obj, after_obj):
-        """title returns the title of a diff."""
+        """Returns the title of a diff."""
         if before_obj and after_obj:
             return f"Updated {after_obj}"
-        elif after_obj:
+        if after_obj:
             return f"Added {after_obj}"
-        else:
-            return f"Deleted {before_obj}"
+        return f"Deleted {before_obj}"
 
     def breadcrumb(self, kwargs):
         """Return a breadcrumb."""
@@ -492,33 +536,32 @@ class DiffDetailView(View):
     def match_commit(commit):
         """Replace `commit` with a more semantically meaningful identifier, if possible."""
         if Branch.objects.filter(hash=str(commit)).count() == 1:
-            b = Branch.objects.get(hash=str(commit))
-            url = b.get_absolute_url()
-            return mark_safe(f"<a href='{url}'>{b}</a>")
-        elif Commit.objects.filter(commit_hash=str(commit)).exists():
-            c = Commit.objects.get(commit_hash=str(commit))
-            url = c.get_absolute_url()
-            return mark_safe(f"<a href='{url}'>{c}</a>")
+            branch_obj = Branch.objects.get(hash=str(commit))
+            url = branch_obj.get_absolute_url()
+            return mark_safe(f"<a href='{url}'>{branch_obj}</a>")
+        if Commit.objects.filter(commit_hash=str(commit)).exists():
+            commit_obj = Commit.objects.get(commit_hash=str(commit))
+            url = commit_obj.get_absolute_url()
+            return mark_safe(f"<a href='{url}'>{commit_obj}</a>")
         return commit
 
     def display_name(self, kwargs):
-        """returns the verbose name of the model."""
+        """Returns the verbose name of the model."""
         return self.get_model(kwargs)._meta.verbose_name.capitalize()
 
     def get_objs(self, kwargs):
         """Returns the commit objects for the before and after of a diff."""
-        pk = kwargs["pk"]
         from_commit = kwargs["from_commit"]
         to_commit = kwargs["to_commit"]
         qs = self.model.objects.all()
         before_obj, after_obj = None, None
 
         from_qs = qs.using(db_for_commit(from_commit))
-        if from_qs.filter(pk=pk).exists():
-            before_obj = from_qs.get(pk=pk)
+        if from_qs.filter(pk=kwargs["pk"]).exists():
+            before_obj = from_qs.get(pk=kwargs["pk"])
         to_qs = qs.using(db_for_commit(to_commit))
-        if to_qs.filter(pk=pk).exists():
-            after_obj = to_qs.get(pk=pk)
+        if to_qs.filter(pk=kwargs["pk"]).exists():
+            after_obj = to_qs.get(pk=kwargs["pk"])
         return before_obj, after_obj
 
     def get_json_diff(self, before_obj, after_obj):
@@ -556,7 +599,7 @@ class DiffDetailView(View):
         return json_diff
 
     def serialize_obj(self, obj):
-        """serialize_obj converts a model into a json object."""
+        """Converts a model into a json object."""
         if not obj:
             return {}
         json_obj = {}
@@ -578,7 +621,7 @@ class DiffDetailView(View):
 
 
 class PullRequestListView(generic.ObjectListView):
-    """PullRequestListView is used to render a lit of pull requests."""
+    """PullRequestListView is used to render a list of pull requests."""
 
     queryset = PullRequest.objects.all().order_by("-created_at")
     filterset = filters.PullRequestDefaultOpenFilterSet
@@ -588,7 +631,7 @@ class PullRequestListView(generic.ObjectListView):
     template_name = "nautobot_version_control/pull_request_list.html"
 
 
-class PullRequestBase(generic.ObjectView):
+class PullRequestBase(DoltObjectView):
     """PullRequestBase contains the base information about a PullRequest."""
 
     queryset = PullRequest.objects.all()
@@ -766,47 +809,47 @@ class PullRequestMergeView(generic.ObjectEditView):
     template_name = "nautobot_version_control/pull_request/confirm_merge.html"
 
     def get(self, request, pk):  # pylint: disable=W0613,C0116,W0221 # noqa: D102
-        pr = get_object_or_404(self.queryset, pk=pk)
-        if pr.state != PullRequest.OPEN:
-            msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be merged""")
+        pull_request = get_object_or_404(self.queryset, pk=pk)
+        if pull_request.state != PullRequest.OPEN:
+            msg = mark_safe(f"""Pull request "{pull_request}" is not open and cannot be merged""")
             messages.error(request, msg)
-            return redirect("plugins:nautobot_version_control:pull_request", pk=pr.pk)
-        src = Branch.objects.get(name=pr.source_branch)
-        dest = Branch.objects.get(name=pr.destination_branch)
+            return redirect("plugins:nautobot_version_control:pull_request", pk=pull_request.pk)
+        src = Branch.objects.get(name=pull_request.source_branch)
+        dest = Branch.objects.get(name=pull_request.destination_branch)
         return render(
             request,
             self.template_name,
             {
-                "pull_request": pr,
+                "pull_request": pull_request,
                 "form": self.form,
-                "return_url": pr.get_absolute_url(),
+                "return_url": pull_request.get_absolute_url(),
                 "conflicts": merge.get_conflicts_for_merge(src, dest),
                 "diffs": diffs.three_dot_diffs(from_commit=dest.hash, to_commit=src.hash),
             },
         )
 
     def post(self, request, pk):  # pylint: disable=W0613,C0116,W0221 # noqa: D102
-        pr = get_object_or_404(self.queryset, pk=pk)
+        pull_request = get_object_or_404(self.queryset, pk=pk)
         form = ConfirmationForm(request.POST)
         squash_param = request.POST.get("merge_squash", False)
         if squash_param == "true":
             squash_param = True
 
         if form.is_valid():
-            pr.merge(user=request.user, squash=squash_param)
+            pull_request.merge(user=request.user, squash=squash_param)
             messages.success(
                 request,
-                mark_safe(f"""Pull Request <strong>"{pr}"</strong> has been merged."""),
+                mark_safe(f"""Pull Request <strong>"{pull_request}"</strong> has been merged."""),
             )
-            return redirect("plugins:nautobot_version_control:pull_request", pk=pr.pk)
+            return redirect("plugins:nautobot_version_control:pull_request", pk=pull_request.pk)
 
         return render(
             request,
             self.template_name,
             {
-                "pull_request": pr,
+                "pull_request": pull_request,
                 "form": self.form,
-                "return_url": pr.get_absolute_url(),
+                "return_url": pull_request.get_absolute_url(),
             },
         )
 
@@ -819,42 +862,42 @@ class PullRequestCloseView(generic.ObjectEditView):
     template_name = "nautobot_version_control/pull_request/confirm_close.html"
 
     def get(self, request, pk):  # pylint: disable=W0613,C0116,W0221 # noqa: D102
-        pr = get_object_or_404(self.queryset, pk=pk)
-        if pr.state != PullRequest.OPEN:
-            msg = mark_safe(f"""Pull request "{pr}" is not open and cannot be closed""")
+        pull_request = get_object_or_404(self.queryset, pk=pk)
+        if pull_request.state != PullRequest.OPEN:
+            msg = mark_safe(f"""Pull request "{pull_request}" is not open and cannot be closed""")
             messages.error(request, msg)
-            return redirect("plugins:nautobot_version_control:pull_request", pk=pr.pk)
+            return redirect("plugins:nautobot_version_control:pull_request", pk=pull_request.pk)
 
         return render(
             request,
             self.template_name,
             {
-                "pull_request": pr,
+                "pull_request": pull_request,
                 "form": self.form,
                 "panel_class": "default",
                 "button_class": "primary",
-                "return_url": pr.get_absolute_url(),
+                "return_url": pull_request.get_absolute_url(),
             },
         )
 
     def post(self, request, pk):  # pylint: disable=W0221 # noqa: D102
-        pr = get_object_or_404(self.queryset, pk=pk)
+        pull_request = get_object_or_404(self.queryset, pk=pk)
         form = ConfirmationForm(request.POST)
 
         if form.is_valid():
-            pr.state = PullRequest.CLOSED
-            pr.save()
-            msg = mark_safe(f"""<strong>Pull Request "{pr}" has been closed.</strong>""")
+            pull_request.state = PullRequest.CLOSED
+            pull_request.save()
+            msg = mark_safe(f"""<strong>Pull Request "{pull_request}" has been closed.</strong>""")
             messages.success(request, msg)
-            return redirect("plugins:nautobot_version_control:pull_request", pk=pr.pk)
+            return redirect("plugins:nautobot_version_control:pull_request", pk=pull_request.pk)
 
         return render(
             request,
             self.template_name,
             {
-                "pull_request": pr,
+                "pull_request": pull_request,
                 "form": self.form,
-                "return_url": pr.get_absolute_url(),
+                "return_url": pull_request.get_absolute_url(),
             },
         )
 
@@ -887,7 +930,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
                 queryset = self.queryset.filter(pk__in=pk_list)
                 try:
                     deleted_count = queryset.delete()[1][model._meta.label]
-                except Exception:
+                except Exception:  # pylint: disable=broad-except
                     logger.info("Caught error while attempting to delete objects")
                     return redirect(self.get_return_url(request))
 
@@ -896,8 +939,7 @@ class PullRequestBulkDeleteView(generic.BulkDeleteView):
                 messages.success(request, msg)
                 return redirect(self.get_return_url(request))
 
-            else:
-                logger.debug("Form validation failed")
+            logger.debug("Form validation failed")
 
         else:
             form = form_cls(

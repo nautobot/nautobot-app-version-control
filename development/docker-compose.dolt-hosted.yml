@@ -1,0 +1,28 @@
+---
+services:
+  nautobot:
+    depends_on:
+      redis:
+        condition: "service_started"
+    environment:
+      - "NAUTOBOT_USE_HOSTED_DOLT=True"
+    env_file:
+      - "development.env"
+      - "creds_hosted.env"
+    volumes:
+      - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
+      - "../:/source"
+      - "./hosted_ca.pem:/opt/nautobot/hosted_ca.pem"
+  worker:
+    depends_on:
+      redis:
+        condition: "service_started"
+    environment:
+      - "NAUTOBOT_USE_HOSTED_DOLT=True"
+    env_file:
+      - "development.env"
+      - "creds_hosted.env"
+    volumes:
+      - "./nautobot_config.py:/opt/nautobot/nautobot_config.py"
+      - "../:/source"
+      - "./hosted_ca.pem:/opt/nautobot/hosted_ca.pem"

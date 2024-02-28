@@ -3,7 +3,7 @@
 import django_filters
 from django.db.models import Q
 
-from nautobot.utilities.filters import BaseFilterSet
+from nautobot.core.filters import BaseFilterSet
 from nautobot_version_control.models import Branch, Commit, PullRequest, PullRequestReview
 
 
@@ -16,6 +16,8 @@ class BranchFilterSet(BaseFilterSet):
     )
 
     class Meta:
+        """Meta class attributes for BranchFilterSet."""
+
         model = Branch
         fields = (
             "name",
@@ -25,10 +27,12 @@ class BranchFilterSet(BaseFilterSet):
             "latest_commit_date",
             "latest_commit_message",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
-        search performs an ORM filter on the Branch model
+        Search performs an ORM filter on the Branch model.
+
         :param queryset: The Branch queryset
         :param name: The modelname
         :param value: The value to be searched for
@@ -56,6 +60,8 @@ class CommitFilterSet(BaseFilterSet):
     )
 
     class Meta:
+        """Meta class attributes for BranchFilterSet."""
+
         model = Commit
         fields = (
             "commit_hash",
@@ -64,10 +70,12 @@ class CommitFilterSet(BaseFilterSet):
             "date",
             "message",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
-        search performs an ORM filter on the Commit model
+        Search performs an ORM filter on the Commit model.
+
         :param queryset: The Commit queryset
         :param name: The modelname
         :param value: The value to be searched for
@@ -94,6 +102,8 @@ class PullRequestFilterSet(BaseFilterSet):
     )
 
     class Meta:
+        """Meta class attributes for PullRequestFilterSet."""
+
         model = PullRequest
         fields = (
             "title",
@@ -103,10 +113,12 @@ class PullRequestFilterSet(BaseFilterSet):
             "description",
             "creator",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
-        search performs an ORM filter on the PullRequestFilterSet model
+        Search performs an ORM filter on the PullRequestFilterSet model.
+
         :param queryset: The PullRequestFilterSet queryset
         :param name: The modelname
         :param value: The value to be searched for
@@ -130,12 +142,6 @@ class PullRequestDefaultOpenFilterSet(PullRequestFilterSet):
 
     state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
 
-    def __init__(self, data, *args, **kwargs):
-        if not data.get("state"):
-            data = data.copy()
-            data["state"] = PullRequest.OPEN
-        super().__init__(data, *args, **kwargs)
-
 
 class PullRequestReviewFilterSet(BaseFilterSet):
     """PullRequestReviewFilterSet returns a filter for the PullRequestReview model."""
@@ -147,6 +153,8 @@ class PullRequestReviewFilterSet(BaseFilterSet):
     state = django_filters.MultipleChoiceFilter(choices=PullRequest.PR_STATE_CHOICES)
 
     class Meta:
+        """Meta class attributes for PullRequestReviewFilterSet."""
+
         model = PullRequestReview
         fields = (
             "pull_request",
@@ -155,10 +163,12 @@ class PullRequestReviewFilterSet(BaseFilterSet):
             "reviewed_at",
             "summary",
         )
+        exclude = ("id",)
 
     def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
         """
-        search performs an ORM filter on the PullRequestReviewFilterSet model
+        Search performs an ORM filter on the PullRequestReviewFilterSet model.
+
         :param queryset: The PullRequestReviewFilterSet queryset
         :param name: The modelname
         :param value: The value to be searched for

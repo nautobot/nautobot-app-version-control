@@ -1,16 +1,11 @@
-""" This is the main module that contains the code for the Dolt backed Version Control plugin. """
-try:
-    from importlib import metadata
-except ImportError:
-    # Python version < 3.8
-    import importlib_metadata as metadata
-
+"""Plugin declaration for nautobot_version_control."""
+# Metadata is inherited from Nautobot. If not including Nautobot in the environment, this should be added
 from django.db.models.signals import pre_migrate, post_migrate
 import django_tables2
-
 from nautobot.extras.plugins import PluginConfig
-
 from nautobot_version_control.migrations import auto_dolt_commit_migration
+
+from importlib import metadata
 
 __version__ = metadata.version(__name__)
 
@@ -25,8 +20,8 @@ class NautobotVersionControl(PluginConfig):
     version = __version__
     author = "Network to Code, LLC"
     author_email = "opensource@networktocode.com"
-    min_version = "1.2.0-beta.1"
-    max_version = "1.999"
+    min_version = "2.0.0"
+    max_version = "2.999"
     required_settings = []
     default_settings = {
         # TODO: are these respected?
@@ -177,12 +172,12 @@ def register_versioned_models(registry):
             # val must be dict if not bool
             raise err
         # validate nested dict
-        for k, v in val.items():
-            if not isinstance(k, str):
-                # k must be string
+        for inner_key, inner_val in val.items():
+            if not isinstance(inner_key, str):
+                # inner_key must be string
                 raise err
-            if not isinstance(v, bool):
-                # v must be bool
+            if not isinstance(inner_val, bool):
+                # inner_val must be bool
                 raise err
     __VERSIONED_MODEL_REGISTRY___.update(registry)
 
@@ -222,12 +217,12 @@ def register_diff_tables(registry):
         if not isinstance(val, dict):
             # val must be dict
             raise err
-        for k, v in val.items():
-            if not isinstance(k, str):
-                # k must be string
+        for inner_key, inner_val in val.items():
+            if not isinstance(inner_key, str):
+                # inner_key must be string
                 raise err
-            if not issubclass(v, django_tables2.tables.Table):
-                # v must be Table
+            if not issubclass(inner_val, django_tables2.tables.Table):
+                # inner_val must be Table
                 raise err
     __DIFF_TABLE_REGISTRY__.update(registry)
 
@@ -244,11 +239,11 @@ def is_global_router_enabled():
 def switch_global_router_on(**kwargs):
     """Sets __GLOBAL_ROUTER_SWITCH to true"""
 
-    global __GLOBAL_ROUTER_SWITCH__
+    global __GLOBAL_ROUTER_SWITCH__  # pylint: disable=global-statement
     __GLOBAL_ROUTER_SWITCH__ = True
 
 
 def switch_global_router_off(**kwargs):
     """Sets __GLOBAL_ROUTER_SWITCH to false"""
-    global __GLOBAL_ROUTER_SWITCH__
+    global __GLOBAL_ROUTER_SWITCH__  # pylint: disable=global-statement
     __GLOBAL_ROUTER_SWITCH__ = False

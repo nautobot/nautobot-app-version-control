@@ -1,4 +1,4 @@
-"""urls.py contains the main routing for the Nautobot Version Control plugin."""
+"""Routing for the Nautobot Version Control plugin."""
 
 
 from django.urls import path
