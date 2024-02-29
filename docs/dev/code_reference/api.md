@@ -1,5 +1,5 @@
 # Nautobot Version Control API Package
 
-::: nautobot_version_control.api
+::: my_app.api
     options:
         show_submodules: True
