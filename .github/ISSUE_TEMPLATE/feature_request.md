@@ -5,8 +5,8 @@ about: Propose a new feature or enhancement
 ---
 
 ### Environment
-* Nautobot version:  <!-- Example: 1.5.3 -->
-* nautobot-version-control version:  <!-- Example: 0.1.0 -->
+* Nautobot version:  <!-- Example: 2.0.3 -->
+* nautobot-version-control version:  <!-- Example: 1.0.0 -->
 
 <!--
     Describe in detail the new functionality you are proposing.
