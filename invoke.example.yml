@@ -1,4 +1,5 @@
 ---
+# Hosted dolt example, ensure to use `cp development/creds_hosted.example.env development/creds_hosted.env`
 nautobot_version_control:
   project_name: "nautobot-version-control"
   nautobot_ver: "1.5.3"
@@ -8,5 +9,7 @@ nautobot_version_control:
   compose_files:
     - "docker-compose.base.yml"
     - "docker-compose.redis.yml"
-    - "docker-compose.postgres.yml"
+    - "docker-compose.dolt-hosted.yml"
+    - "docker-compose.dolt.yml"
     - "docker-compose.dev.yml"
+  hosted_db: true

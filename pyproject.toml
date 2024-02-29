@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nautobot-version-control"
-version = "0.1.0"
+version = "1.0.0-alpha.0"
 description = "Nautobot Version Control with Dolt"
 authors = ["Network to Code, LLC <opensource@networktocode.com>"]
 license = "Apache-2.0"
@@ -10,7 +10,7 @@ repository = "https://github.com/nautobot/nautobot-app-version-control"
 keywords = ["nautobot", "nautobot-plugin"]
 classifiers = [
     "Intended Audience :: Developers",
-    "Development Status :: 5 - Production/Stable",
+    "Development Status :: 3 - Alpha",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -29,6 +29,7 @@ packages = [
 python = ">=3.8,<3.12"
 # Used for local development
 nautobot = "^1.5.3"
+mysqlclient = "^2.0.3"
 
 [tool.poetry.group.dev.dependencies]
 bandit = "*"

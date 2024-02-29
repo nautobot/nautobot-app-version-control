@@ -54,7 +54,8 @@ namespace.configure(
             "compose_files": [
                 "docker-compose.base.yml",
                 "docker-compose.redis.yml",
-                "docker-compose.postgres.yml",
+                "docker-compose.dolt-hosted.yml",
+                "docker-compose.dolt.yml",
                 "docker-compose.dev.yml",
             ],
             "compose_http_timeout": "86400",
@@ -669,7 +670,7 @@ def unittest_coverage(context):
     }
 )
 def tests(context, failfast=False, keepdb=False, lint_only=False):
-    """Run all tests for this plugin."""
+    """Run all tests for this app."""
     # If we are not running locally, start the docker containers so we don't have to for each test
     if not is_truthy(context.nautobot_version_control.local):
         print("Starting Docker Containers...")

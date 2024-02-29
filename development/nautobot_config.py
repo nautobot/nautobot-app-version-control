@@ -139,3 +139,14 @@ PLUGINS = ["nautobot_version_control"]
 #         'buzz': 'bazz'
 #     }
 # }
+
+# add SSL options if DOLT_SSL_CA is set
+dolt_ssl_ca = os.getenv("DOLT_SSL_CA", None)
+if dolt_ssl_ca:
+    options = {"ssl": {"ca": dolt_ssl_ca}}
+    DATABASES["default"]["OPTIONS"] = options
+    DATABASES["global"]["OPTIONS"] = options
+
+# Pull the list of routers from environment variable to be able to disable all routers when we are running the migrations
+routers = os.getenv("DATABASE_ROUTERS", "").split(",")
+DATABASE_ROUTERS = routers if routers != [""] else []
