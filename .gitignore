@@ -307,3 +307,8 @@ public
 /compose.yaml
 /dump.sql
 /nautobot_version_control/static/nautobot_version_control/docs
+
+# Custom
+hosted_ca.pem
+.idea
+creds_hosted.env

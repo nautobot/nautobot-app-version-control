@@ -56,7 +56,8 @@ namespace.configure(
             "compose_files": [
                 "docker-compose.base.yml",
                 "docker-compose.redis.yml",
-                "docker-compose.postgres.yml",
+                # "docker-compose.dolt-hosted.yml",
+                "docker-compose.dolt.yml",
                 "docker-compose.dev.yml",
             ],
             "compose_http_timeout": "86400",

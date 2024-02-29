@@ -31,48 +31,64 @@ SECRET_KEY = os.getenv("NAUTOBOT_SECRET_KEY", "")
 # Database
 #
 
-nautobot_db_engine = os.getenv("NAUTOBOT_DB_ENGINE", "django.db.backends.postgresql")
-default_db_settings = {
-    "django.db.backends.postgresql": {
-        "NAUTOBOT_DB_PORT": "5432",
-    },
-    "django.db.backends.mysql": {
-        "NAUTOBOT_DB_PORT": "3306",
-    },
-}
+nautobot_db_engine = os.getenv("NAUTOBOT_DB_ENGINE", "django.db.backends.mysql")
+
+# Dolt database configuration. Dolt is compatible with the MySQL database backend.
+# See the Django documentation for a complete list of available parameters:
+#   https://docs.djangoproject.com/en/stable/ref/settings/#databases
 DATABASES = {
     "default": {
         "NAME": os.getenv("NAUTOBOT_DB_NAME", "nautobot"),  # Database name
         "USER": os.getenv("NAUTOBOT_DB_USER", ""),  # Database username
         "PASSWORD": os.getenv("NAUTOBOT_DB_PASSWORD", ""),  # Database password
         "HOST": os.getenv("NAUTOBOT_DB_HOST", "localhost"),  # Database server
-        "PORT": os.getenv(
-            "NAUTOBOT_DB_PORT", default_db_settings[nautobot_db_engine]["NAUTOBOT_DB_PORT"]
-        ),  # Database port, default to postgres
+        "PORT": os.getenv("NAUTOBOT_DB_PORT", "3306"),  # Database port
         "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),  # Database timeout
         "ENGINE": nautobot_db_engine,
-    }
+        "OPTIONS": {"charset": "utf8mb4"},
+    },
+    "global": {
+        "NAME": os.getenv("NAUTOBOT_DB_NAME", "nautobot"),  # Database name
+        "USER": os.getenv("NAUTOBOT_DB_USER", ""),  # Database username
+        "PASSWORD": os.getenv("NAUTOBOT_DB_PASSWORD", ""),  # Database password
+        "HOST": os.getenv("NAUTOBOT_DB_HOST", "localhost"),  # Database server
+        "PORT": os.getenv("NAUTOBOT_DB_PORT", "3306"),  # Database port
+        "CONN_MAX_AGE": int(os.getenv("NAUTOBOT_DB_TIMEOUT", 300)),  # Database timeout
+        "ENGINE": nautobot_db_engine,
+        "OPTIONS": {"charset": "utf8mb4"},
+        "TEST": {
+            "MIRROR": "default",
+        },
+    },
 }
 
 # Ensure proper Unicode handling for MySQL
 if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
     DATABASES["default"]["OPTIONS"] = {"charset": "utf8mb4"}
 
+
 #
 # Redis
 #
 
-# The django-redis cache is used to establish concurrent locks using Redis.
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": parse_redis_connection(redis_database=0),
-        "TIMEOUT": 300,
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
-    }
+# Because Dolt creates branches of the database, the default database sessions cannot be used. We 
+# must tell Nautobot to use Redis for sessions instead. This adds a distinct cache configuration for
+# using Redis cache for sessions.
+# See: https://github.com/jazzband/django-redis#configure-as-session-backend
+CACHES["sessions"] = {
+    "BACKEND": "django_redis.cache.RedisCache",
+    "LOCATION": parse_redis_connection(redis_database=2),
+    "TIMEOUT": 300,
+    "OPTIONS": {
+        "CLIENT_CLASS": "django_redis.client.DefaultClient",
+    },
 }
+
+# Use the sessions alias defined in CACHES for sessions caching
+SESSION_CACHE_ALIAS = "sessions"
+
+# Use the Redis cache as the session engine
+SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 #
 # Celery settings are not defined here because they can be overloaded with
@@ -136,3 +152,14 @@ PLUGINS = ["nautobot_version_control"]
 #         'buzz': 'bazz'
 #     }
 # }
+
+# add SSL options if DOLT_SSL_CA is set
+dolt_ssl_ca = os.getenv("DOLT_SSL_CA", None)
+if dolt_ssl_ca:
+    options = {"ssl": {"ca": dolt_ssl_ca}}
+    DATABASES["default"]["OPTIONS"] = options
+    DATABASES["global"]["OPTIONS"] = options
+
+# Pull the list of routers from environment variable to be able to disable all routers when we are running the migrations
+routers = os.getenv("DATABASE_ROUTERS", "").split(",")
+DATABASE_ROUTERS = routers if routers != [""] else []

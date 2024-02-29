@@ -1,6 +1,6 @@
 # App Overview
 
-This document provides an overview of the App including critical information and important considerations when applying it to your Nautobot environment.
+This document provides an overview of the App including critical information and import considerations when applying it to your Nautobot environment.
 
 !!! note
     Throughout this documentation, the terms "app" and "plugin" will be used interchangeably.
@@ -10,21 +10,17 @@ This document provides an overview of the App including critical information and
 
 ## Audience (User Personas) - Who should use this App?
 
-!!! warning "Developer Note - Remove Me!"
-    Who is this meant for/ who is the common user of this app?
+This application has been for anyone that wishes to stage their data before production is ready. Thie applies to
+
+* Automation Developer - That wishes to test data before it is production to help ensure bad data cannot get in.
+* Network Operator - That wishes to stage all of their data ahead of time, without effecting current production data.
 
 ## Authors and Maintainers
 
-!!! warning "Developer Note - Remove Me!"
-    Add the team and/or the main individuals maintaining this project. Include historical maintainers as well.
+The applicaiton has been co-developed between DoltHub and Network to Code.
+
+TODO: Clarify
 
 ## Nautobot Features Used
 
-!!! warning "Developer Note - Remove Me!"
-    What is shown today in the Installed Apps page in Nautobot. What parts of Nautobot does it interact with, what does it add etc. ?
-
-### Extras
-
-!!! warning "Developer Note - Remove Me!"
-    Custom Fields - things like which CFs are created by this app?
-    Jobs - are jobs, if so, which ones, installed by this app?
+The `__VERSIONED_MODEL_REGISTRY___`

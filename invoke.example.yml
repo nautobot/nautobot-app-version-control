@@ -8,5 +8,6 @@ nautobot_version_control:
   compose_files:
     - "docker-compose.base.yml"
     - "docker-compose.redis.yml"
-    - "docker-compose.postgres.yml"
+    - "docker-compose.dolt-hosted.yml"
     - "docker-compose.dev.yml"
+  hosted_db: true
