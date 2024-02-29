@@ -59,7 +59,7 @@ class GlobalStateRouter:
 
         return self.global_db
 
-    def allow_relation(self, obj1, obj2, **hints):  # pylint: disable=W0613.R0201
+    def allow_relation(self, obj1, obj2, **hints):  # pylint: disable=W0613
         """Allow a relation between obj1 and obj2 too exist."""
         return True
 

@@ -40,7 +40,7 @@ class DoltBranchMiddleware:
         """Override __call__."""
         return self.get_response(request)
 
-    def process_view(self, request, view_func, view_args, view_kwargs):  # pylint: disable=R0201
+    def process_view(self, request, view_func, view_args, view_kwargs):
         """This maintains the dolt branch session cookie and verifies authentication. It then returns the view that needs to be rendered."""
         # Check whether the desired branch was passed in as a querystring
         query_string_branch = request.GET.get(DOLT_BRANCH_KEYWORD, None)

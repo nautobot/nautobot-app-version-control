@@ -53,6 +53,7 @@ def db_for_commit(commit):
     """Uses "database-revision" syntax adds a database entry for the commit e.g. "nautobot/3a5mqdgao8029bf8ji0huobbskq1n1l5"."""
     cm_hash = str(commit)
     if len(cm_hash) != 32:
+        # pylint: disable=broad-exception-raised
         raise Exception("commit hash length is incorrect")
     database = deepcopy(connections.databases["default"])
     database["id"] = cm_hash

@@ -71,11 +71,11 @@ if DATABASES["default"]["ENGINE"] == "django.db.backends.mysql":
 # Redis
 #
 
-# Because Dolt creates branches of the database, the default database sessions cannot be used. We 
+# Because Dolt creates branches of the database, the default database sessions cannot be used. We
 # must tell Nautobot to use Redis for sessions instead. This adds a distinct cache configuration for
 # using Redis cache for sessions.
 # See: https://github.com/jazzband/django-redis#configure-as-session-backend
-CACHES["sessions"] = {
+CACHES["sessions"] = {  # noqa: F405
     "BACKEND": "django_redis.cache.RedisCache",
     "LOCATION": parse_redis_connection(redis_database=2),
     "TIMEOUT": 300,

@@ -4,25 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('nautobot_version_control', '0007_auto_20210818_1708'),
+        ("nautobot_version_control", "0007_auto_20210818_1708"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='branchmeta',
-            name='source_branch',
+            model_name="branchmeta",
+            name="source_branch",
             field=models.CharField(max_length=1024),
         ),
         migrations.AlterField(
-            model_name='pullrequest',
-            name='destination_branch',
+            model_name="pullrequest",
+            name="destination_branch",
             field=models.CharField(max_length=1024),
         ),
         migrations.AlterField(
-            model_name='pullrequest',
-            name='source_branch',
+            model_name="pullrequest",
+            name="source_branch",
             field=models.CharField(max_length=1024),
         ),
     ]
