@@ -46,7 +46,7 @@ namespace = Collection("nautobot_version_control")
 namespace.configure(
     {
         "nautobot_version_control": {
-            "nautobot_ver": "2.0.3",
+            "nautobot_ver": "1.5.3",
             "project_name": "nautobot-version-control",
             "python_ver": "3.11",
             "local": False,
@@ -54,8 +54,7 @@ namespace.configure(
             "compose_files": [
                 "docker-compose.base.yml",
                 "docker-compose.redis.yml",
-                "docker-compose.dolt-hosted.yml",
-                "docker-compose.dolt.yml",
+                "docker-compose.postgres.yml",
                 "docker-compose.dev.yml",
             ],
             "compose_http_timeout": "86400",
@@ -670,7 +669,7 @@ def unittest_coverage(context):
     }
 )
 def tests(context, failfast=False, keepdb=False, lint_only=False):
-    """Run all tests for this app."""
+    """Run all tests for this plugin."""
     # If we are not running locally, start the docker containers so we don't have to for each test
     if not is_truthy(context.nautobot_version_control.local):
         print("Starting Docker Containers...")

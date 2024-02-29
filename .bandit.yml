@@ -1,8 +1,6 @@
 ---
-skips:
-  - "B703"
-  - "B308"
+skips: []
 # No need to check for security issues in the test scripts!
 exclude_dirs:
-  - "./nautobot_version_control/tests/"
+  - "./tests/"
   - "./.venv/"
