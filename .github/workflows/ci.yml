@@ -147,15 +147,10 @@ jobs:
       fail-fast: true
       matrix:
         python-version: ["3.8", "3.11"]
-        db-backend: ["postgresql"]
         nautobot-version: ["stable"]
         include:
           - python-version: "3.11"
-            db-backend: "postgresql"
             nautobot-version: "2.0.3"
-          - python-version: "3.11"
-            db-backend: "mysql"
-            nautobot-version: "stable"
     runs-on: "ubuntu-22.04"
     env:
       INVOKE_NAUTOBOT_VERSION_CONTROL_PYTHON_VER: "${{ matrix.python-version }}"
@@ -184,9 +179,6 @@ jobs:
             PYTHON_VER=${{ matrix.python-version }}
       - name: "Copy credentials"
         run: "cp development/creds.example.env development/creds.env"
-      - name: "Use Mysql invoke settings when needed"
-        run: "cp invoke.mysql.yml invoke.yml"
-        if: "matrix.db-backend == 'mysql'"
       - name: "Run Tests"
         run: "poetry run invoke unittest"
   changelog:
