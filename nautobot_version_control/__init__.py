@@ -1,17 +1,20 @@
-"""Plugin declaration for nautobot_version_control."""
-# Metadata is inherited from Nautobot. If not including Nautobot in the environment, this should be added
-from django.db.models.signals import pre_migrate, post_migrate
-import django_tables2
-from nautobot.extras.plugins import PluginConfig
-from nautobot_version_control.migrations import auto_dolt_commit_migration
+"""App declaration for nautobot_version_control."""
 
+# Metadata is inherited from Nautobot. If not including Nautobot in the environment, this should be added
 from importlib import metadata
+
+import django_tables2
+from django.db.models.signals import post_migrate
+from django.db.models.signals import pre_migrate
+from nautobot.apps import NautobotAppConfig
+
+from nautobot_version_control.migrations import auto_dolt_commit_migration
 
 __version__ = metadata.version(__name__)
 
 
-class NautobotVersionControl(PluginConfig):
-    """NautobotVersionControl initializes the dolt configs, middleware, and sets up migrations."""
+class NautobotVersionControlConfig(NautobotAppConfig):
+    """App configuration for the nautobot_version_control app."""
 
     name = "nautobot_version_control"
     verbose_name = "Nautobot Version Control"
@@ -39,6 +42,7 @@ class NautobotVersionControl(PluginConfig):
     ]
 
     def ready(self):
+        """App ready method."""
         super().ready()
 
         # disable the GlobalStateRouter during migrations.
@@ -49,11 +53,12 @@ class NautobotVersionControl(PluginConfig):
         post_migrate.connect(auto_dolt_commit_migration, sender=self)
 
 
-config = NautobotVersionControl  # pylint: disable=C0103
+config = NautobotVersionControlConfig  # pylint:disable=invalid-name
 
 
 def query_registry(model, registry):
     """Performs a lookup on a content type registry.
+
     Args:
         model: a Django model class
         registry: a python dictionary like
@@ -138,8 +143,8 @@ __VERSIONED_MODEL_REGISTRY___ = {
 
 
 def is_versioned_model(model):
-    """
-    Determines whether a model's is under version control.
+    """Determines whether a model's is under version control.
+
     See __MODELS_UNDER_VERSION_CONTROL__ for more info.
     """
     registry = __VERSIONED_MODEL_REGISTRY___
@@ -148,6 +153,7 @@ def is_versioned_model(model):
 
 def register_versioned_models(registry):
     """Register additional content types to be versioned.
+
     Args:
         registry: a python dict of content types that
             will be placed under version control:
@@ -186,15 +192,13 @@ __DIFF_TABLE_REGISTRY__ = {}
 
 
 def diff_table_for_model(model):
-    """
-    Returns a table object for a model, if it exists in
-    the ` __DIFF_TABLE_REGISTRY__`.
-    """
+    """Returns a table object for a model, if it exists in the ` __DIFF_TABLE_REGISTRY__`."""
     return query_registry(model, __DIFF_TABLE_REGISTRY__)
 
 
 def register_diff_tables(registry):
     """Register additional tables to be used in diffs.
+
     Registry values must be subclasses of django_tables2.Table.
 
     Args:
@@ -231,19 +235,18 @@ __GLOBAL_ROUTER_SWITCH__ = True
 
 
 def is_global_router_enabled():
-    """Returns true if the __GLOBAL_ROUTER_SWITCH__ is turned on"""
+    """Returns true if the __GLOBAL_ROUTER_SWITCH__ is turned on."""
     global __GLOBAL_ROUTER_SWITCH__  # pylint: disable=W0602
     return __GLOBAL_ROUTER_SWITCH__
 
 
 def switch_global_router_on(**kwargs):
-    """Sets __GLOBAL_ROUTER_SWITCH to true"""
-
+    """Sets __GLOBAL_ROUTER_SWITCH to true."""
     global __GLOBAL_ROUTER_SWITCH__  # pylint: disable=global-statement
     __GLOBAL_ROUTER_SWITCH__ = True
 
 
 def switch_global_router_off(**kwargs):
-    """Sets __GLOBAL_ROUTER_SWITCH to false"""
+    """Sets __GLOBAL_ROUTER_SWITCH to false."""
     global __GLOBAL_ROUTER_SWITCH__  # pylint: disable=global-statement
     __GLOBAL_ROUTER_SWITCH__ = False

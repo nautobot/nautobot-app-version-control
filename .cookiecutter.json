@@ -1,25 +1,35 @@
 {
-  "cookiecutter": {
-    "codeowner_github_usernames": "@smith-ntc",
-    "full_name": "Network to Code, LLC",
-    "email": "info@networktocode.com",
-    "github_org": "nautobot",
-    "plugin_name": "nautobot_version_control",
-    "verbose_name": "Nautobot Version Control",
-    "plugin_slug": "nautobot-version-control",
-    "project_slug": "nautobot-plugin-version-control",
-    "repo_url": "https://github.com/nautobot/nautobot-plugin-version-control",
-    "base_url": "nautobot-version-control",
-    "min_nautobot_version": "1.5.3",
-    "max_nautobot_version": "1.9999",
-    "nautobot_version": "latest",
-    "camel_name": "NautobotVersionControl",
-    "project_short_description": "Nautobot Version Control",
-    "version": "0.1.0",
-    "model_class_name": "None",
-    "open_source_license": "Apache-2.0",
-    "docs_base_url": "https://docs.nautobot.com",
-    "docs_app_url": "https://docs.nautobot.com/projects/nautobot-version-control/en/latest",
-    "_template": "../cookiecutter-ntc/nautobot-plugin"
-  }
+    "cookiecutter": {
+        "codeowner_github_usernames": "@smith-ntc",
+        "full_name": "Network to Code, LLC",
+        "email": "opensource@networktocode.com",
+        "github_org": "nautobot",
+        "app_name": "nautobot_version_control",
+        "verbose_name": "Nautobot Version Control",
+        "app_slug": "nautobot-version-control",
+        "project_slug": "nautobot-app-version-control",
+        "repo_url": "https://github.com/nautobot/nautobot-app-version-control",
+        "base_url": "version-control",
+        "min_nautobot_version": "2.0.3",
+        "max_nautobot_version": "2.9999",
+        "camel_name": "NautobotVersionControl",
+        "project_short_description": "Nautobot Version Control with Dolt",
+        "model_class_name": "None",
+        "open_source_license": "Apache-2.0",
+        "docs_base_url": "https://docs.nautobot.com",
+        "docs_app_url": "https://docs.nautobot.com/projects/version-control/en/latest",
+        "_drift_manager": {
+            "template": "https://github.com/nautobot/cookiecutter-nautobot-app.git",
+            "template_dir": "nautobot-app",
+            "template_ref": "develop",
+            "cookie_dir": "",
+            "branch_prefix": "drift-manager",
+            "pull_request_strategy": "create",
+            "post_actions": [
+                "black"
+            ],
+            "draft": true,
+            "baked_commit_ref": "e400b7359a805402f1ec49a9555424e6bfce3856"
+        }
+    }
 }

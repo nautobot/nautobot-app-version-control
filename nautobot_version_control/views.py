@@ -47,8 +47,10 @@ class DoltObjectView(generic.ObjectView):
         # TODO: this feels inelegant - should the tabs lookup be a dedicated endpoint rather than piggybacking
         # on the object-retrieve endpoint?
         # TODO: similar functionality probably needed in NautobotUIViewSet as well, not currently present
+        # pylint: disable=no-else-return
         if request.GET.get("viewconfig", None) == "true":
             # TODO: we shouldn't be importing a private-named function from another module. Should it be renamed?
+            # pylint: disable=import-outside-toplevel
             from nautobot.extras.templatetags.plugins import _get_registered_content
 
             temp_fake_context = {
@@ -315,7 +317,7 @@ class BranchMergePreView(GetReturnURLMixin, View):
         alter_session_branch(sess=request.session, branch=dest)
         return redirect("/")
 
-    def get_extra_context(self, request, src, dest):  # pylint: disable=W0613,C0116,R0201 # noqa: D102
+    def get_extra_context(self, request, src, dest):  # pylint: disable=W0613,C0116 # noqa: D102
         merge_base_c = Commit.merge_base(src, dest)
         source_head = src.hash
         return {
@@ -448,6 +450,7 @@ class CommitRevertView(GetReturnURLMixin, ObjectPermissionRequiredMixin, View):
             if form.is_valid():
                 commits = form.cleaned_data["pk"]
                 msgs = [f"""<strong>"{c.short_message}"</strong>""" for c in commits]
+                # pylint: disable=no-else-return
                 try:
                     _ = Commit.revert(commits, request.user)
                 except Exception as err:  # pylint: disable=broad-except
@@ -490,7 +493,7 @@ class DiffDetailView(View):
 
     template_name = "nautobot_version_control/diff_detail.html"
 
-    def get_required_permission(self):  # pylint: disable=R0201
+    def get_required_permission(self):
         """Returns permissions."""
         return get_permission_for_model(Location, "view")  # TODO: what is this doing?
 
@@ -508,7 +511,7 @@ class DiffDetailView(View):
             },
         )
 
-    def get_model(self, kwargs):  # pylint: disable=no-self-use
+    def get_model(self, kwargs):
         """Returns the underlying model."""
         return ContentType.objects.get(app_label=kwargs["app_label"], model=kwargs["model"]).model_class()
 

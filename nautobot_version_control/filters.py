@@ -29,7 +29,7 @@ class BranchFilterSet(BaseFilterSet):
         )
         exclude = ("id",)
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """
         Search performs an ORM filter on the Branch model.
 
@@ -72,7 +72,7 @@ class CommitFilterSet(BaseFilterSet):
         )
         exclude = ("id",)
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """
         Search performs an ORM filter on the Commit model.
 
@@ -115,7 +115,7 @@ class PullRequestFilterSet(BaseFilterSet):
         )
         exclude = ("id",)
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """
         Search performs an ORM filter on the PullRequestFilterSet model.
 
@@ -165,7 +165,7 @@ class PullRequestReviewFilterSet(BaseFilterSet):
         )
         exclude = ("id",)
 
-    def search(self, queryset, name, value):  # pylint: disable=unused-argument,no-self-use
+    def search(self, queryset, name, value):  # pylint: disable=unused-argument
         """
         Search performs an ORM filter on the PullRequestReviewFilterSet model.
 

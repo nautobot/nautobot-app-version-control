@@ -303,9 +303,10 @@ development/*.txt
 invoke.yml
 
 # Docs
-docs/README.md
-docs/CHANGELOG.md
 public
+/compose.yaml
+/dump.sql
+/nautobot_version_control/static/nautobot_version_control/docs
 
 # Custom
 hosted_ca.pem

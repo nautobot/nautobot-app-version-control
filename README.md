@@ -1,10 +1,10 @@
 # Nautobot Version Control
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/nautobot/nautobot-plugin-version-control/develop/docs/images/icon-nautobot-version-control.png" class="logo" height="200px">
+  <img src="https://raw.githubusercontent.com/nautobot/nautobot-app-version-control/develop/docs/images/icon-nautobot-version-control.png" class="logo" height="200px">
   <br>
-  <a href="https://github.com/nautobot/nautobot-plugin-version-control/actions"><img src="https://github.com/nautobot/nautobot-plugin-version-control/actions/workflows/ci.yml/badge.svg?branch=main"></a>
-  <a href="https://docs.nautobot.com/projects/nautobot-version-control/en/latest"><img src="https://readthedocs.org/projects/nautobot-plugin-version-control/badge/"></a>
+  <a href="https://github.com/nautobot/nautobot-app-version-control/actions"><img src="https://github.com/nautobot/nautobot-app-version-control/actions/workflows/ci.yml/badge.svg?branch=main"></a>
+  <a href="https://docs.nautobot.com/projects/version-control/en/latest/"><img src="https://readthedocs.org/projects/nautobot-plugin-version-control/badge/"></a>
   <a href="https://pypi.org/project/nautobot-version-control/"><img src="https://img.shields.io/pypi/v/nautobot-version-control"></a>
   <a href="https://pypi.org/project/nautobot-version-control/"><img src="https://img.shields.io/pypi/dm/nautobot-version-control"></a>
   <br>
